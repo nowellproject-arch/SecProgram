@@ -109,5 +109,5 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Create New to MasterBackup"
+git commit -m "Closed MOnth date_Entry Adjustment"
 git push origin main
