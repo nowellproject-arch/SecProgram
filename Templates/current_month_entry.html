@@ -1829,6 +1829,20 @@ function saveS21MonthRecord(monthIndex, eventTarget) {
         )
     );
 
+
+    console.log("🚨🚨 DATE ENTERED DEBUG", {
+    targetNumber,
+    activeMonthIndex,
+    currentActiveMonthIndex: window.currentActiveMonthIndex,
+    getMonthIndex: typeof window.getMonthIndex === "function"
+        ? window.getMonthIndex()
+        : "N/A",
+    selectedYear,
+    activeServiceYear,
+    currentMonthClosed: window.currentMonthClosed
+    });
+
+
     const isMinistryChecked =
         document.getElementById(
             `${m.id}-ministry`
@@ -1876,17 +1890,10 @@ function saveS21MonthRecord(monthIndex, eventTarget) {
             `${m.id}-select`
         )?.value || "";
 
-    const isClosed =
-        window.currentMonthClosed === true ||
-        Number(window.currentMonthClosed) === 1;
 
     const dateEnteredValue =
         isMinistryChecked
-            ? (
-                isClosed
-                    ? activeMonthIndex + 1
-                    : activeMonthIndex
-            )
+            ? activeMonthIndex
             : "";
 
     // IMPORTANT:
@@ -2070,7 +2077,6 @@ function saveS21MonthRecord(monthIndex, eventTarget) {
         };
     };
 }
-
 // -------------------------------------------------------------
 // AUTO-CHECK & AUTO-REMARK LISTENER HELPER
 // -------------------------------------------------------------
@@ -2088,10 +2094,9 @@ function attachS21AutoCheckListeners(monthIndex, m, explicitTargetNumber) {
     if (minEl.dataset.s21Bound === "true") return;
     minEl.dataset.s21Bound = "true";
 
-    // Lock targetNumber into listener closure using explicit parameter or activeServiceYear state
-    const targetNumber = explicitTargetNumber 
-        ?? (minEl.dataset.targetNumber ? Number(minEl.dataset.targetNumber) : null)
-        ?? getServiceMonthNumber(activeServiceYear, monthIndex);
+     const targetNumber =
+            Number(explicitTargetNumber) ||
+            getServiceMonthNumber(selectedYear, monthIndex);   
 
     const handleAutoLogic = (e) => {
         if (e && e.isTrusted === false) return;
@@ -2137,18 +2142,14 @@ function attachS21AutoCheckListeners(monthIndex, m, explicitTargetNumber) {
                 window.currentActiveMonthIndex ?? 
                 (typeof window.getMonthIndex === 'function' ? window.getMonthIndex() : targetNumber)
             );
-
-            const isClosed = window.currentMonthClosed === true || Number(window.currentMonthClosed) === 1;
-            const computedEntryDate = minEl.checked ? (isClosed ? activeMonthIndex + 1 : activeMonthIndex) : "";
+            const computedEntryDate = minEl.checked ? activeMonthIndex : "";
 
             if (hasServiceActivity) {
                 if (recIndex !== -1) {
                     const existingRec = window.recordsData[recIndex];
 
                     // 🎯 FIX: Force activeMonthIndex + 1 if month report is closed, otherwise preserve existing date
-                    const finalDateEntered = isClosed 
-                        ? (activeMonthIndex + 1) 
-                        : (existingRec.Date_entered || computedEntryDate);
+                    const finalDateEntered = existingRec.Date_entered || computedEntryDate;
 
                     window.recordsData[recIndex].MINISTRY = minEl.checked ? 1 : 0;
                     window.recordsData[recIndex].AUX = hasAux ? 1 : 0;
@@ -3007,7 +3008,7 @@ function calculateMonthlySummaryMetrics(overrideMonthIndex) {
         return;
     }
 
-    
+     
     openCongregationDB((db) => {
         const storeNames = Array.from(db.objectStoreNames);
         const targetStore = storeNames.find(name =>

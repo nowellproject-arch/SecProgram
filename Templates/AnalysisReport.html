@@ -16,7 +16,7 @@
     }
 
     * {
-      box-sizing: border-box;
+   
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -50,13 +50,13 @@
         padding: 8px 10px;
         display: flex;
         flex-direction: column;
-        height: 89%;          /* Lock card height to the grid cell */
+        height: 100%;          /* Lock card height to the grid cell */
         max-height: 100%;      /* Prevent expanding past the screen */
         overflow: hidden;      /* Keep AI box fixed inside the card boundary */
         }
 
         .card-title {
-        font-size: 11px;
+        font-size: 13px;
         font-weight: 700;
         color: var(--text-main);
         text-transform: uppercase;
@@ -91,53 +91,125 @@
       gap: 3px;
     }
 
-    .dash-link {
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--accent-blue);
-      text-align: left;
-      padding: 2px 5px;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      transition: all 0.1s ease-in-out;
-    }
+/* Base style for Left Column Buttons */
+.dash-link {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--accent-blue);
+  text-align: left;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  transition: all 0.1s ease-in-out;
+}
 
-    .dash-link:hover { background-color: #eff6ff; }
-    .dash-link.active {
-      background-color: #dbeafe;
-      border-color: #bfdbfe;
-      color: #1e40af;
-      font-weight: 600;
-    }
+/* Base style for Right Column Buttons */
+.badge-sy-link {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--accent-blue);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  justify-self: end; /* Pins to right side of Column 2 */
+  width: auto;
+  transition: all 0.1s ease-in-out;
+}
 
-    .dash-link .badge {
-      background: #e2e8f0;
-      color: #334155;
-      padding: 1px 5px;
-      border-radius: 8px;
-      font-size: 10px;
-      font-weight: bold;
-    }
+/* Right Column Yearly Buttons */
+.comparison-grid .badge-sy-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  justify-self: end;    /* Forces it to stay pinned to the right side of Column 2 */
+  display: flex;
+  align-items: center;
+}
 
-    .dash-link.active .badge {
-      background: var(--accent-blue);
-      color: #fff;
-    }
+/* Hover States (Fixed) */
+.dash-link:hover,
+.badge-sy-link:hover {
+  background-color: #eff6ff;
+}
 
-    /* SERVICE YEAR & RECORDS ALIGNMENT GRID */
-    .comparison-grid {
-      display: grid;
-      grid-template-columns: 1fr 110px;
-      row-gap: 2px;
-      column-gap: 8px;
-      align-items: center;
-      margin-top: 6px;
-    }
+/* Active States (Fixed) */
+.dash-link.active,
+.badge-sy-link.active {
+  background-color: #dbeafe;
+  border-color: #bfdbfe;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+
+
+/* Badge Styles inside both buttons (Fixed) */
+.dash-link .badge,
+.badge-sy-link .badge-year {
+  background: #e2e8f0;
+  color: #334155;
+  padding: 1px 8px; /* Adjusted padding for standard badge width */
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* SECTION 2 GRID CONTAINER */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; 
+  column-gap: 32px; /* Reduced from 100px so 1fr 1fr doesn't overflow */
+  row-gap: 3px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+
+/* Left Column Buttons */
+.comparison-grid .dash-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+
+/* Ensure the label text aligns cleanly on the left */
+.comparison-grid .dash-link span:first-child {
+  text-align: left;
+  margin-right: 0; 
+}
+
+        /* Header spans over the label and badge columns */
+        .header-span {
+        grid-column: span 2;
+        font-weight: bold;
+        font-size: 10px;
+        color: var(--text-main);
+        }
+
+        /* Clean up button to act strictly as a label */
+        .dash-link-plain {
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--accent-blue);
+        text-align: left;
+        padding: 2px 0;
+        font-size: 11px;
+        cursor: pointer;
+        width: 100%;
+        }
+  
 
     .badge-year {
       font-size: 11px;
@@ -209,13 +281,6 @@
       flex-shrink: 0;
     }
 
-    .search-input {
-      padding: 2px 6px;
-      font-size: 11px;
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
-      width: 140px;
-    }
 
     .data-table-container {
         flex: 1;
@@ -257,7 +322,8 @@
 
   <div class="card">
     <div class="card-title">
-      <span>Congregation Meetings</span>
+   
+      <span style="font-weight:bold;">Congregation Meetings</span>
       <span style="font-size:10px; color:var(--text-muted);">2026 Service Year</span>
     </div>
     <div class="stats-row">
@@ -288,7 +354,7 @@
     
     <div style="overflow-y: auto; flex: 1; min-height: 0; padding-right: 2px;">
       <!-- SECTION 1: BASED ON PUBLISHER RECORDS -->
-      <div style="font-weight: bold; font-size: 10px; color: var(--text-main); margin-bottom: 4px;">
+      <div style="font-weight: bold; font-size: 13px; color: var(--text-main); margin-bottom: 4px;">
         Analysis based on Publisher Records:
       </div>
 
@@ -330,46 +396,71 @@
       <!-- SECTION 2: SIX-MONTH VS YEARLY COMPARISON GRID -->
       <div class="comparison-grid">
         <!-- HEADER ROW -->
-        <span id="records-period-label" style="font-weight:bold; font-size:10px; color:var(--text-main);">Records from February to July:</span>
-        <span id="records-service-year-label" style="font-weight:bold; font-size:10px; color:var(--text-main); text-align:right; padding-right:6px;">( 2026 Service Year )</span>
+        <span id="records-period-label" style="font-weight:bold; font-size:13px; color:var(--text-main);">Records from February to July:</span>
+        <span id="records-service-year-label" style="font-weight:bold; font-size:13px; color:var(--text-main); text-align:right; padding-right:6px;">( 2026 Service Year )</span>
 
         <!-- ITEM ROWS -->
         <button class="dash-link" onclick="filterData('Auxiliary Pioneers', event)">
           <span>Auxiliary Pioneers</span> 
           <span class="badge" id="AUX-count">0</span>
         </button>
+
+         <button class="badge-sy-link" onclick="filterData('Year Auxiliary Pioneers', event)">
         <span class="badge-year" id="AUX-year-count">0</span>
+        </button>
+
+
 
         <button class="dash-link" onclick="filterData('New Publishers', event)">
           <span>New publishers</span>
           <span class="badge" id="UPB-count">0</span>
         </button>
+        
+        <button class="badge-sy-link" onclick="filterData('Year New Publishers', event)">
         <span class="badge-year" id="UPB-year-count">0</span>
+        </button>
+
 
         <button class="dash-link" onclick="filterData('Inactive', event)">
           <span>Inactive publishers</span> <span class="badge" id="Inactive-count">16</span>
         </button>
+
+       <button class="badge-sy-link" onclick="filterData('Year Inactive', event)">
         <span class="badge-year" id="Inactive-year-count">16</span>
+      </button>
 
         <button class="dash-link" onclick="filterData('Reactivated', event)">
           <span>Reactivated publishers</span> <span class="badge" id="Reactivated-count">0</span>
         </button>
+
+        <button class="badge-sy-link" onclick="filterData('Year Reactivated', event)">
         <span class="badge-year" id="Reactivated-year-count">0</span>
+        </button>
 
         <button class="dash-link" onclick="filterData('Irregular', event)">
           <span>Irregular Publishers</span> <span class="badge" id="Irregular-count">3</span>
         </button>
+
+        <button class="badge-sy-link" onclick="filterData('Year Irregular', event)">      
         <span class="badge-year" id="Irregular-year-count">98</span>
+        </button>    
 
         <button class="dash-link" onclick="filterData('Moved In', event)">
           <span>Moved In</span> <span class="badge" id="Moved-In-count">0</span>
         </button>
-        <span class="badge-year" id="Moved-In-year-count">3</span>
+
+        <button class="badge-sy-link" onclick="filterData('Year Moved In', event)">
+          <span class="badge-year" id="Moved-In-year-count">3</span>
+        </button>
 
         <button class="dash-link" onclick="filterData('Moved Out', event)">
           <span>Moved Out</span> <span class="badge" id="Moved-Out-count">0</span>
         </button>
-        <span class="badge-year" id="Moved-Out-year-count">0</span>
+
+        <button class="badge-sy-link" onclick="filterData('Year Moved Out', event)">
+          <span class="badge-year" id="Moved-Out-year-count">0</span>
+        </button>
+
       </div>
     </div>
 
@@ -390,8 +481,7 @@
       <div class="card-title" style="border:none; padding:0; margin:0;">
         <span id="list-title">ACTIVE PUBLISHERS (93)</span>
       </div>
-      <input type="text" id="search-input" class="search-input" placeholder="Filter names..." onkeyup="filterTableBySearch()">
-    </div>
+      </div>
 
     <div class="data-table-container">
       <table class="data-table">

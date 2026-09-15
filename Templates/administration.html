@@ -1,402 +1,451 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Administration</title>
-<script src="/static/js/indexeddb.js"></script>
-<style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#263238}
-.admin-page{max-width:1400px;margin:0 auto;padding:22px}
-.admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.admin-title{margin:0;font-size:25px;font-weight:700;color:#263238}
-.admin-subtitle{margin:5px 0 0;color:#78909c;font-size:13px}
-.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.card{background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:20px}
-.card-title{font-size:17px;font-weight:700;margin:0 0 4px}
-.card-subtitle{font-size:12px;color:#78909c;margin-bottom:18px}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px 16px}
-.form-group{display:flex;flex-direction:column}
-.form-group.full{grid-column:1/-1}
-.form-group label{font-size:12px;font-weight:700;color:#546e7a;margin-bottom:5px}
-.form-group input{height:38px;border:1px solid #cfd8dc;border-radius:6px;padding:0 10px;font-size:14px;outline:none;background:#fafafa}
-.form-group input:focus{border-color:#607d8b;background:#fff}
-.form-group input.key-field{background:#eceff1;color:#607d8b}
-.section-divider{height:1px;background:#eceff1;margin:22px 0 16px}
-.committee-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px 16px}
-.button-row{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
-.btn{border:0;border-radius:6px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer}
-.btn-save{background:#455a64;color:#fff}
-.btn-save:hover{background:#37474f}
-.btn-reset{background:#eceff1;color:#455a64}
-.table-wrap{overflow-x:auto}
-
-.groups-table{width:100%;border-collapse:collapse;font-size:13px}
-.groups-table th{background:none;color:#455a64;font-size:11px;font-weight:700;padding:7px 8px;text-align:left;border:1px solid #cfd8dc}
-.groups-table td{padding:6px 8px;border:1px solid #cfd8dc}
-.groups-table input{width:100%;height:30px;border:0;padding:0 5px;font-size:12px;background:transparent}
-.groups-table input:focus{outline:none;background:#f7f9fa}
-.group-key{background:#f5f6f7!important;font-weight:600}
-
-
-
-.group-actions{display:flex;gap:5px}
-.small-btn{border:0;border-radius:5px;padding:6px 9px;cursor:pointer;font-size:11px;font-weight:700}
-.add-group{margin-top:12px;background:#607d8b;color:#fff}
-.delete-group{background:#eceff1;color:#c62828}
-.status{font-size:12px;margin-top:10px;text-align:right;min-height:16px}
-.status.saved{color:#2e7d32}
-.status.error{color:#c62828}
-@media(max-width:900px){.admin-grid{grid-template-columns:1fr}}
-@media(max-width:600px){.admin-page{padding:12px}.form-grid,.committee-grid{grid-template-columns:1fr}.form-group.full{grid-column:auto}.admin-header{display:block}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration - Congregation Management</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f4f6f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 0.85rem;
+    }
+    .card {
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    .card-header {
+      background-color: #fff;
+      border-bottom: 1px solid #edf2f7;
+      border-top-left-radius: 8px !important;
+      border-top-right-radius: 8px !important;
+      padding: 8px 12px;
+      font-weight: 600;
+    }
+    .card-body {
+      padding: 12px;
+    }
+    .form-label {
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: #4a5568;
+      font-weight: bold; 
+      margin-bottom: 2px;
+    }
+    
+    .form-control, .form-control-sm {
+      padding: 3px 8px;
+      font-size: 0.82rem;
+      border-radius: 5px;
+    }
+    .btn-custom {
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #718096;
+      margin-top: 6px;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #edf2f7;
+      padding-bottom: 2px;
+      font-weight: bold;
+    }
+    .table td, .table th {
+      padding: 6px 10px;
+      font-size: 0.82rem;
+    }
+  </style>
 </head>
-<body>
-<div class="admin-page">
-    <div class="admin-header">
-        <div>
-            <h1 class="admin-title">Administration</h1>
-            <div class="admin-subtitle">Congregation information and Field Service Groups</div>
+<body class="p-2 p-md-3">
+
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <div>
+      <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-sliders text-primary me-2"></i>Administration</h5>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    
+    <!-- LEFT SIDE: Congregation & Service Committee Form -->
+    <div class="col-lg-5 col-xl-4">
+      <div class="card">
+        <div class="card-header d-flex align-items-center">
+          <i class="fa-solid fa-church text-primary me-2"></i> Congregation Details
         </div>
-        <div id="admin-sync-status"></div>
+        <div class="card-body">
+          <form id="congInfoForm">
+            
+            <!-- General Info -->
+            <div class="section-title"><i class="fa-solid fa-circle-info me-1"></i> General Details</div>
+            
+            <div class="row g-2 mb-2">
+              <div class="col-8">
+                <label for="Congregation" class="form-label">Congregation</label>
+                <input type="text" class="form-control" id="Congregation" required>
+              </div>
+              <div class="col-4">
+                <label for="CongNumber" class="form-label">Cong #</label>
+                <input type="text" class="form-control" id="CongNumber" required>
+              </div>
+            </div>
+
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label for="Address" class="form-label">City/Town</label>
+                <input type="text" class="form-control" id="Address">
+              </div>
+              <div class="col-6">
+                <label for="Province" class="form-label">Province</label>
+                <input type="text" class="form-control" id="Province">
+              </div>
+            </div>
+
+            <!-- Service Committee Section -->
+            <div class="section-title"><i class="fa-solid fa-user-shield me-1"></i> Service Committee</div>
+
+            <div class="mb-1">
+              <label for="CBOE" class="form-label">Coordinator (COBE)</label>
+              <input type="text" class="form-control" id="CBOE">
+            </div>
+
+            <div class="mb-1">
+              <label for="SEC" class="form-label">Secretary (SEC)</label>
+              <input type="text" class="form-control" id="SEC">
+            </div>
+
+            <div class="mb-2">
+              <label for="SO" class="form-label">Service Overseer (SO)</label>
+              <input type="text" class="form-control" id="SO">
+            </div>
+
+            <!-- Access & Account (Read-Only) -->
+            <div class="section-title"><i class="fa-solid fa-lock me-1"></i> System Access Info</div>
+            
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label for="user" class="form-label">User</label>
+                <input type="text" class="form-control bg-light" id="user" readonly>
+              </div>
+              <div class="col-6">
+                <label for="passcode" class="form-label">Passcode (Key)</label>
+                <input type="text" class="form-control bg-light" id="passcode" readonly>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 btn-custom mt-2">
+              <i class="fa-solid fa-floppy-disk me-1"></i> Save Congregation Info
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
 
-    <div class="admin-grid">
-        <!-- LEFT SIDE -->
-        <div class="card">
-            <h2 class="card-title">Congregation Information</h2>
-            <div class="card-subtitle">Edit the congregation information stored on this device.</div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Congregation</label>
-                    <input id="Congregation" type="text">
-                </div>
-                <div class="form-group">
-                    <label>Congregation Number</label>
-                    <input id="CongNumber" type="text">
-                </div>
-                <div class="form-group">
-                    <label>Address</label>
-                    <input id="Address" type="text">
-                </div>
-                <div class="form-group">
-                    <label>Province</label>
-                    <input id="Province" type="text">
-                </div>
-
-
-            </div>
-
-            <div class="section-divider"></div>
-
-            <h2 class="card-title">Service Committee</h2>
-            <div class="card-subtitle">Current congregation service committee members.</div>
-
-            <div class="committee-grid">
-                <div class="form-group">
-                    <label>COBE</label>
-                    <input id="CBOE" type="text">
-                </div>
-                <div class="form-group">
-                    <label>Service Overseer</label>
-                    <input id="SO" type="text">
-                </div>
-                <div class="form-group">
-                    <label>Secretary</label>
-                    <input id="SEC" type="text">
-                </div>
-            </div>
-
-            <div class="button-row">
-                <button class="btn btn-reset" onclick="loadAdministration()">Cancel</button>
-                <button class="btn btn-save" onclick="saveCongInfo()">Save Congregation Information</button>
-            </div>
-            <div id="cong-status" class="status"></div>
+    <!-- RIGHT SIDE: Field Service Groups Table -->
+    <div class="col-lg-7 col-xl-8">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="fa-solid fa-users-rectangle text-primary me-2"></i> Field Service Groups</span>
+          <button class="btn btn-sm btn-success btn-custom" onclick="openAddGroupModal()">
+            <i class="fa-solid fa-plus me-1"></i> Add Group
+          </button>
         </div>
-
-        <!-- RIGHT SIDE -->
-        <div class="card">
-            <h2 class="card-title">Field Service Groups</h2>
-            <div class="card-subtitle">Manage the congregation's Field Service Groups.</div>
-
-            <div class="table-wrap">
-                <table class="groups-table">
-                    <thead>
-                        <tr>
-                            <th style="width:12%;">Group</th>
-                            <th style="width:27%;">Overseer</th>
-                            <th style="width:27%;">Assistant</th>
-                            <th style="width:24%;">Meeting Place</th>
-                            <th style="width:10%;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="groups-body"></tbody>
-                </table>
-            </div>
-
-            <button class="btn add-group" onclick="addGroup()">＋ Add Field Service Group</button>
-            <div id="groups-status" class="status"></div>
+        <div class="card-body p-0 table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" class="ps-3">Group #</th>
+                <th scope="col">Overseer</th>
+                <th scope="col">Assistant</th>
+                <th scope="col">Meeting Place</th>
+                <th scope="col" class="text-end pe-3">Action</th>
+              </tr>
+            </thead>
+            <tbody id="groupsTableBody">
+              <!-- Dynamic Rows Inserted Here -->
+            </tbody>
+          </table>
         </div>
+      </div>
     </div>
+
+  </div>
 </div>
 
+<!-- Modal for Add/Edit Group -->
+<div class="modal fade" id="groupModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content" style="border-radius: 8px;">
+      <div class="modal-header py-2">
+        <h6 class="modal-title fw-bold" id="groupModalLabel">Group Details</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-2">
+        <form id="groupForm">
+          <input type="hidden" id="groupId">
+          <div class="mb-2">
+            <label for="groupNumber" class="form-label">Group Number (Key)</label>
+            <input type="text" class="form-control" id="groupNumber" required>
+          </div>
+          <div class="mb-2">
+            <label for="groupOverseer" class="form-label">Overseer</label>
+            <input type="text" class="form-control" id="groupOverseer">
+          </div>
+          <div class="mb-2">
+            <label for="groupAssistant" class="form-label">Assistant</label>
+            <input type="text" class="form-control" id="groupAssistant">
+          </div>
+          <div class="mb-2">
+            <label for="groupMeetingPlace" class="form-label">Meeting Place</label>
+            <input type="text" class="form-control" id="groupMeetingPlace">
+          </div>
+          <div class="text-end mt-3">
+            <button type="button" class="btn btn-sm btn-secondary me-1" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-sm btn-primary">Save Group</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/indexeddb.js"></script>
+
 <script>
-async function getStoreData(storeName){
-    const db=await openIndexedDB();
-    const data=await new Promise((resolve,reject)=>{
-        const req=db.transaction(storeName,"readonly").objectStore(storeName).getAll();
-        req.onsuccess=()=>resolve(req.result||[]);
-        req.onerror=()=>reject(req.error);
+  let db;
+  let rawGroupsList = [];
+
+  // Initialize Default LocalStorage values if not existing
+  function initLocalStorage() {
+    if (!localStorage.getItem('username')) {
+      localStorage.setItem('username', 'NoelDI');
+    }
+    if (!localStorage.getItem('user_passcode')) {
+      localStorage.setItem('user_passcode', 'C001');
+    }
+  }
+
+  function loadCongInfo(){
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction("CongInfo","readonly");
+      const req = tx.objectStore("CongInfo").getAll();
+      req.onsuccess = e => {
+        const list = e.target.result || [];
+        
+        // Fetch local storage values
+        const localUser = localStorage.getItem('username') || "NoelDI";
+        const localPasscode = localStorage.getItem('user_passcode') || "C001";
+
+        if(list.length){
+          const data = list[0];
+          document.getElementById("Congregation").value = data.Congregation || "";
+          document.getElementById("CongNumber").value = data.CongNumber || "";
+          document.getElementById("Address").value = data.Address || "";
+          document.getElementById("Province").value = data.Province || "";
+          document.getElementById("CBOE").value = data.CBOE || "";
+          document.getElementById("SEC").value = data.SEC || "";
+          document.getElementById("SO").value = data.SO || "";
+          
+          // Prefer object data or fallback to LocalStorage
+          document.getElementById("user").value = data.user && data.user.trim() ? data.user : localUser;
+          document.getElementById("passcode").value = data.passcode && data.passcode.trim() ? data.passcode : localPasscode;
+        } else {
+          // If no IndexedDB record, set local values directly
+          document.getElementById("user").value = localUser;
+          document.getElementById("passcode").value = localPasscode;
+        }
+        resolve();
+      };
+      req.onerror = () => reject(req.error);
     });
-    db.close();
-    return data;
-}
+  }
 
-async function loadAdministration(){
-    try{
-        const congInfo=await getStoreData("CongInfo");
-        const info=congInfo[0]||{};
+  async function saveCongInfo(e) {
+    e.preventDefault();
 
-        const fields=[
-            "Address","CBOE","CongNumber","Congregation","Link",
-            "Province","SEC","SO","SelectedPubID","passcode","user"
-        ];
+    const currentUser = document.getElementById('user').value || localStorage.getItem('username') || "NoelDI";
+    const currentPasscode = document.getElementById('passcode').value || localStorage.getItem('user_passcode') || "C001";
 
-        fields.forEach(field=>{
-            const el=document.getElementById(field);
-            if(el)el.value=info[field]??"";
-        });
+    // Save/Update in localStorage as well
+    localStorage.setItem('username', currentUser);
+    localStorage.setItem('user_passcode', currentPasscode);
 
-        await loadGroups();
-        setAdminStatus("Congregation information loaded.","saved");
-        console.log("✅ Administration loaded",info);
-    }catch(err){
-        console.error("❌ Administration load error:",err);
-        setAdminStatus("Failed to load congregation information.","error");
-    }
-}
+    const txRead = db.transaction('CongInfo', 'readonly');
+    const storeRead = txRead.objectStore('CongInfo');
+    const getReq = storeRead.getAll();
 
-async function saveCongInfo(){
-    try{
-        const db=await openIndexedDB();
-        const tx=db.transaction("CongInfo","readwrite");
-        const store=tx.objectStore("CongInfo");
+    getReq.onsuccess = () => {
+      const existingData = getReq.result.length > 0 ? getReq.result[0] : {};
 
-        const existing=await new Promise((resolve,reject)=>{
-            const req=store.getAll();
-            req.onsuccess=()=>resolve(req.result||[]);
-            req.onerror=()=>reject(req.error);
-        });
+      const infoData = {
+        ...existingData,
+        Address: document.getElementById('Address').value,
+        CBOE: document.getElementById('CBOE').value,
+        CongNumber: document.getElementById('CongNumber').value,
+        Congregation: document.getElementById('Congregation').value,
+        Province: document.getElementById('Province').value,
+        SEC: document.getElementById('SEC').value,
+        SO: document.getElementById('SO').value,
+        passcode: currentPasscode,
+        user: currentUser
+      };
 
-        const old=existing[0]||{};
-        const passcode=document.getElementById("passcode").value.trim();
+      const txWrite = db.transaction('CongInfo', 'readwrite');
+      const storeWrite = txWrite.objectStore('CongInfo');
+      storeWrite.put(infoData);
 
-        if(!passcode){
-            setAdminStatus("Passcode is required.","error");
-            db.close();
-            return;
+      txWrite.oncomplete = () => alert('Congregation Info saved successfully!');
+    };
+  }
+
+  function loadGroups(){
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction("GROUPS","readonly");
+      const req = tx.objectStore("GROUPS").getAll();
+      req.onsuccess = e => {
+        rawGroupsList = e.target.result || [];
+        const tbody = document.getElementById("groupsTableBody");
+        tbody.innerHTML = "";
+        
+        if(!rawGroupsList.length){
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-2">No group records.</td></tr>';
+          resolve();
+          return;
         }
 
-        const info={
-            ...old,
-            Address:document.getElementById("Address").value.trim(),
-            CBOE:document.getElementById("CBOE").value.trim(),
-            CongNumber:document.getElementById("CongNumber").value.trim(),
-            Congregation:document.getElementById("Congregation").value.trim(),
-            Province:document.getElementById("Province").value.trim(),
-            SEC:document.getElementById("SEC").value.trim(),
-            SO:document.getElementById("SO").value.trim(),
-            user:document.getElementById("user").value.trim()
-        };
-
-        store.put(info);
-
-        await new Promise((resolve,reject)=>{
-            tx.oncomplete=resolve;
-            tx.onerror=()=>reject(tx.error);
+        rawGroupsList.sort((a,b) => Number(a.Group) - Number(b.Group));
+        rawGroupsList.forEach((g, index) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="ps-3 fw-bold">Group ${g.Group || ""}</td>
+            <td>${g.Overseer || "-"}</td>
+            <td>${g.Assistant || "-"}</td>
+            <td>${g.MeetingPlace || "-"}</td>
+            <td class="text-end pe-3">
+              <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" onclick="editGroup(${index})">
+                <i class="fa-solid fa-pen-to-square"></i> Edit
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
         });
+        resolve();
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
 
-        db.close();
+  function saveGroupToDB(groupObj) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('GROUPS', 'readwrite');
+      const store = tx.objectStore('GROUPS');
+      const req = store.put(groupObj);
+      req.onsuccess = () => resolve();
+      req.onerror = (evt) => reject(evt.target.error);
+    });
+  }
 
-        setAdminStatus("Congregation information saved.","saved");
-        if(typeof window.setSyncUnsaved==="function")window.setSyncUnsaved();
-        console.log("💾 CongInfo saved:",info);
-    }catch(err){
-        console.error("❌ CongInfo save error:",err);
-        setAdminStatus("Failed to save congregation information.","error");
+  async function handleGroupSubmit(e) {
+    e.preventDefault();
+    const groupNum = document.getElementById('groupNumber').value.trim();
+    const existingId = document.getElementById('groupId').value;
+
+    const existingObj = rawGroupsList.find(g => String(g.Group) === String(groupNum) || String(g.id) === String(existingId)) || {};
+
+    const groupData = {
+      ...existingObj,
+      Group: groupNum,
+      Overseer: document.getElementById('groupOverseer').value,
+      Assistant: document.getElementById('groupAssistant').value,
+      MeetingPlace: document.getElementById('groupMeetingPlace').value,
+      Remarks: existingObj.Remarks || ''
+    };
+
+    if (existingId) {
+      groupData.id = existingId;
+    } else if (!groupData.id) {
+      groupData.id = groupNum;
     }
-}
 
-async function loadGroups(){
-    try{
-        const groups=await getStoreData("GROUPS");
-        groups.sort((a,b)=>Number(a.Group)-Number(b.Group));
-        const tbody=document.getElementById("groups-body");
-        tbody.innerHTML="";
+    try {
+      await saveGroupToDB(groupData);
+      
+      const modalEl = document.getElementById('groupModal');
+      const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modalInstance.hide();
 
-        groups.forEach(group=>renderGroup(group));
-
-        console.log("✅ Groups loaded:",groups);
-    }catch(err){
-        console.error("❌ Groups load error:",err);
-        setGroupsStatus("Failed to load groups.","error");
+      await loadGroups();
+    } catch(err) {
+      console.error("Save group error:", err);
+      alert("Failed to save group details.");
     }
-}
+  }
 
-function renderGroup(group){
-    const tbody=document.getElementById("groups-body");
-    const tr=document.createElement("tr");
-    tr.dataset.group=group.Group;
+  function openAddGroupModal() {
+    clearGroupForm();
+    document.getElementById('groupModalLabel').innerText = "Add New Group";
+    const modalEl = document.getElementById('groupModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modalInstance.show();
+  }
 
-    tr.innerHTML=`
-        <td><input class="group-key" value="${escapeHtml(group.Group??"")}" readonly></td>
-        <td><input data-field="Overseer" value="${escapeHtml(group.Overseer??"")}"></td>
-        <td><input data-field="Assistant" value="${escapeHtml(group.Assistant??"")}"></td>
-        <td><input data-field="MeetingPlace" value="${escapeHtml(group.MeetingPlace??"")}"></td>
-        <td>
-            <div class="group-actions">
-                <button class="small-btn btn-save" onclick="saveGroup(this)">Save</button>
-                <button class="small-btn delete-group" onclick="deleteGroup(this)">Delete</button>
-            </div>
-        </td>
-    `;
-    tbody.appendChild(tr);
-}
+  function editGroup(index) {
+    const group = rawGroupsList[index];
+    if (!group) return;
 
-async function saveGroup(button){
-    const tr=button.closest("tr");
-    const group=tr.dataset.group;
+    document.getElementById('groupModalLabel').innerText = "Edit Group " + group.Group;
+    document.getElementById('groupId').value = group.id || group.Group;
+    document.getElementById('groupNumber').value = group.Group || '';
+    document.getElementById('groupOverseer').value = group.Overseer || '';
+    document.getElementById('groupAssistant').value = group.Assistant || '';
+    document.getElementById('groupMeetingPlace').value = group.MeetingPlace || '';
 
-    try{
-        const db=await openIndexedDB();
-        const tx=db.transaction("GROUPS","readwrite");
-        const store=tx.objectStore("GROUPS");
+    const modalEl = document.getElementById('groupModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modalInstance.show();
+  }
 
-        const existing=await new Promise((resolve,reject)=>{
-            const req=store.get(group);
-            req.onsuccess=()=>resolve(req.result);
-            req.onerror=()=>reject(req.error);
-        });
+  function clearGroupForm() {
+    document.getElementById('groupForm').reset();
+    document.getElementById('groupId').value = '';
+  }
 
-        if(!existing){
-            db.close();
-            setGroupsStatus(`Group ${group} not found.`,"error");
-            return;
-        }
+  // --- Initializer ---
+  window.loadAdministration = async function() {
+    try {
+      initLocalStorage();
+      db = await openIndexedDB();
+      await loadCongInfo();
+      await loadGroups();
 
-        existing.Overseer=tr.querySelector('[data-field="Overseer"]').value.trim();
-        existing.Assistant=tr.querySelector('[data-field="Assistant"]').value.trim();
-        existing.MeetingPlace=tr.querySelector('[data-field="MeetingPlace"]').value.trim();
+      document.getElementById('congInfoForm').addEventListener('submit', saveCongInfo);
+      document.getElementById('groupForm').addEventListener('submit', handleGroupSubmit);
 
-        store.put(existing);
-
-        await new Promise((resolve,reject)=>{
-            tx.oncomplete=resolve;
-            tx.onerror=()=>reject(tx.error);
-        });
-
-        db.close();
-
-        setGroupsStatus(`Group ${group} saved.`,"saved");
-        if(typeof window.setSyncUnsaved==="function")window.setSyncUnsaved();
-    }catch(err){
-        console.error("❌ Group save error:",err);
-        setGroupsStatus(`Failed to save Group ${group}.`,"error");
+      console.log("✅ Administration loaded from IndexedDB");
+    } catch(err) {
+      console.error("❌ Administration database error:", err);
     }
-}
+  };
 
-async function addGroup(){
-    try{
-        const groups=await getStoreData("GROUPS");
-        const maxGroup=groups.reduce((max,g)=>{
-            const n=Number(g.Group);
-            return Number.isFinite(n)&&n>max? n:max;
-        },0);
-
-        const nextGroup=String(maxGroup+1);
-
-        const newGroup={
-            id:nextGroup,
-            Group:nextGroup,
-            Remarks:"",
-            Overseer:"",
-            Assistant:"",
-            MeetingPlace:""
-        };
-
-        const db=await openIndexedDB();
-        const tx=db.transaction("GROUPS","readwrite");
-        tx.objectStore("GROUPS").put(newGroup);
-
-        await new Promise((resolve,reject)=>{
-            tx.oncomplete=resolve;
-            tx.onerror=()=>reject(tx.error);
-        });
-
-        db.close();
-
-        await loadGroups();
-        setGroupsStatus(`Group ${nextGroup} added.`,"saved");
-        if(typeof window.setSyncUnsaved==="function")window.setSyncUnsaved();
-    }catch(err){
-        console.error("❌ Add group error:",err);
-        setGroupsStatus("Failed to add group.","error");
+  window.addEventListener('DOMContentLoaded', () => {
+    if (typeof openIndexedDB === 'function') {
+      window.loadAdministration();
     }
-}
-
-async function deleteGroup(button){
-    const tr=button.closest("tr");
-    const group=tr.dataset.group;
-
-    if(!confirm(`Delete Field Service Group ${group}?`))return;
-
-    try{
-        const db=await openIndexedDB();
-        const tx=db.transaction("GROUPS","readwrite");
-        tx.objectStore("GROUPS").delete(group);
-
-        await new Promise((resolve,reject)=>{
-            tx.oncomplete=resolve;
-            tx.onerror=()=>reject(tx.error);
-        });
-
-        db.close();
-
-        tr.remove();
-        setGroupsStatus(`Group ${group} deleted.`,"saved");
-        if(typeof window.setSyncUnsaved==="function")window.setSyncUnsaved();
-    }catch(err){
-        console.error("❌ Delete group error:",err);
-        setGroupsStatus(`Failed to delete Group ${group}.`,"error");
-    }
-}
-
-function escapeHtml(value){
-    return String(value)
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;")
-        .replace(/'/g,"&#039;");
-}
-
-function setAdminStatus(text,type){
-    const el=document.getElementById("cong-status");
-    if(!el)return;
-    el.textContent=text;
-    el.className=`status ${type||""}`;
-}
-
-function setGroupsStatus(text,type){
-    const el=document.getElementById("groups-status");
-    if(!el)return;
-    el.textContent=text;
-    el.className=`status ${type||""}`;
-}
-
-document.addEventListener("DOMContentLoaded",loadAdministration);
+  });
 </script>
+
 </body>
 </html>
