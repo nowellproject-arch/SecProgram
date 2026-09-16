@@ -1163,3 +1163,94 @@ window.getSixMonthReportingPeriod=async function(){
         sixMonths
     };
 };
+
+
+window.getYearlyReportingPeriod = async function() {
+    const db = await openIndexedDB();
+    const months = await new Promise((resolve, reject) => {
+        const req = db.transaction("MonthlyRecords", "readonly")
+            .objectStore("MonthlyRecords").getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+    });
+    db.close();
+
+    months.sort((a, b) => Number(a.NUMBER) - Number(b.NUMBER));
+
+    // Current service month runs from the 21st to the 20th
+    const today = new Date();
+    const day = today.getDate();
+    const serviceDate = new Date(
+        today.getFullYear(),
+        today.getMonth() - (day < 21 ? 1 : 0),
+        1
+    );
+
+    // Sep 2025 = NUMBER 194
+    const baseDate = new Date(2025, 8, 1);
+    const monthDiff =
+        (serviceDate.getFullYear() - baseDate.getFullYear()) * 12 +
+        (serviceDate.getMonth() - baseDate.getMonth());
+
+    const activeNumber = 194 + monthDiff;
+    const activeMonth = months.find(
+        r => Number(r.NUMBER) === activeNumber
+    ) || null;
+
+    // September is the START of a new service year.
+    // During September, show the COMPLETE previous service year.
+    const activeMonthIndex = serviceDate.getMonth() >= 8
+        ? serviceDate.getMonth() - 8
+        : serviceDate.getMonth() + 4;
+
+    let firstNumber;
+    let lastNumber;
+
+    if (activeMonthIndex === 0) {
+        // September → previous completed service year
+        firstNumber = activeNumber - 12;
+        lastNumber = activeNumber - 1;
+    } else {
+        // October–August → current service year
+        firstNumber = activeNumber - activeMonthIndex;
+        lastNumber = firstNumber + 11;
+    }
+
+    const firstMonth = months.find(
+        r => Number(r.NUMBER) === firstNumber
+    );
+
+    const lastMonth = months.find(
+        r => Number(r.NUMBER) === lastNumber
+    );
+
+    const yearlyMonths = months
+        .filter(r => {
+            const n = Number(r.NUMBER);
+            return n >= firstNumber && n <= lastNumber;
+        })
+        .sort((a, b) => Number(a.NUMBER) - Number(b.NUMBER));
+
+    console.log("🔎 CHECK YEARLY REPORTING PERIOD", {
+        ActiveNumber: activeNumber,
+        ActiveMonth: activeMonth?.MONTH_ || "(not entered yet)",
+        ActiveMonthIndex: activeMonthIndex,
+        FirstNumber: firstNumber,
+        FirstMonth: firstMonth?.MONTH_,
+        LastNumber: lastNumber,
+        LastMonth: lastMonth?.MONTH_,
+        ServiceYear: lastMonth?.ServiceYear,
+        YearlyMonths: yearlyMonths
+    });
+
+    return {
+        activeNumber,
+        activeMonth,
+        firstNumber,
+        firstMonth: firstMonth || null,
+        lastNumber,
+        lastMonth: lastMonth || null,
+        yearlyMonths,
+        serviceYear: Number(lastMonth?.Year)
+    };
+};

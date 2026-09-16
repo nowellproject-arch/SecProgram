@@ -227,7 +227,7 @@
 <div class="top-bar">
 
   <div class="logo-section">
-    SecProgram <span class="version">Version 14.9</span>
+    SecProgram <span class="version">Version 17.0</span>
   </div>
 
   <nav class="top-nav">
@@ -625,48 +625,6 @@ async function switchTab(event,tabId){
     }
 }
 
-
-async function loadSubForm(tabId,filename,callback){
-    try{
-        const response=await fetch(`/Templates/${filename}`);
-        if(!response.ok)throw new Error(`HTTP ${response.status}: Failed to load ${filename}`);
-
-        const html=await response.text();
-        const panel=document.getElementById(tabId);
-        if(!panel)return;
-
-        panel.innerHTML=html;
-
-        /* =====================================================
-           EXECUTE SCRIPTS FROM DYNAMICALLY LOADED HTML
-           -----------------------------------------------------
-           This allows AnalysisReport.html to contain its own
-           JavaScript while still being loaded inside index.html.
-           ===================================================== */
-        const scripts=[...panel.querySelectorAll("script")];
-
-        for(const oldScript of scripts){
-            const newScript=document.createElement("script");
-
-            for(const attr of oldScript.attributes){
-                newScript.setAttribute(attr.name,attr.value);
-            }
-
-            newScript.textContent=oldScript.textContent;
-            oldScript.replaceWith(newScript);
-        }
-
-        /* =====================================================
-           RUN TAB CALLBACK AFTER THE HTML + SCRIPT ARE READY
-           ===================================================== */
-        if(typeof callback==="function"){
-            await callback();
-        }
-
-    }catch(error){
-        console.error(`Error loading subform [${filename}]:`,error);
-    }
-}
 
 
 
@@ -1243,7 +1201,45 @@ async function logout() {
     };
 }
 
+async function loadSubForm(tabId,filename,callback){
+    try{
+        const cacheBuster=`?_=${Date.now()}`;
+        const response=await fetch(`/Templates/${filename}${cacheBuster}`,{
+            cache:"no-store"
+        });
 
+        if(!response.ok){
+            throw new Error(`HTTP ${response.status}: Failed to load ${filename}`);
+        }
+
+        const html=await response.text();
+        const panel=document.getElementById(tabId);
+        if(!panel)return;
+
+        panel.innerHTML=html;
+
+        const scripts=[...panel.querySelectorAll("script")];
+
+        for(const oldScript of scripts){
+            const newScript=document.createElement("script");
+
+            for(const attr of oldScript.attributes){
+                newScript.setAttribute(attr.name,attr.value);
+            }
+
+            newScript.setAttribute("data-template-src",filename);
+            newScript.textContent=oldScript.textContent;
+
+            oldScript.replaceWith(newScript);
+        }
+
+        if(typeof callback==="function"){
+            await callback();
+        }
+    }catch(error){
+        console.error(`Error loading subform [${filename}]:`,error);
+    }
+}
 
   </script>
 

@@ -324,7 +324,7 @@
     <div class="card-title">
    
       <span style="font-weight:bold;">Congregation Meetings</span>
-      <span style="font-size:10px; color:var(--text-muted);">2026 Service Year</span>
+      <span id="analysis-service-year" style="font-size:12px;font-weight:800;color:#111;"></span>
     </div>
     <div class="stats-row">
       <span>Midweek Meetings Average</span>
@@ -484,17 +484,13 @@
       </div>
 
     <div class="data-table-container">
-      <table class="data-table">
+    <table class="data-table">
         <thead>
-          <tr>
-            <th id="col-name">Name</th>
-            <th id="col-role">Privileges</th>
-            <th id="col-status">Years in the Truth</th>
-          </tr>
+            <tr id="analysis-table-header"></tr>
         </thead>
         <tbody id="publishers-table-body"></tbody>
-      </table>
-    </div>
+    </table>
+</div>
   </div>
 
 </div>
@@ -507,8 +503,28 @@
 <script>
 
 /* ============================================================
-   ANALYSIS REPORT
+   ANALYSIS table
    ============================================================ */
+function setAnalysisTable(columns,rows){
+    const header=document.getElementById("analysis-table-header");
+    const tbody=document.getElementById("publishers-table-body");
+
+    if(!header||!tbody)return;
+
+    header.innerHTML=columns.map(col=>
+        `<th>${col.label}</th>`
+    ).join("");
+
+    tbody.innerHTML=rows.map(row=>
+        `<tr>${columns.map(col=>
+            `<td>${typeof col.render==="function"
+                ? col.render(row)
+                : row[col.key]??""}</td>`
+        ).join("")}</tr>`
+    ).join("");
+}
+
+
 
 
 /* ============================================================
@@ -665,6 +681,7 @@ window.loadActivePublishers=async function(){
    ADD FUTURE CATEGORY FILTERS HERE
    ============================================================ */
 function filterData(category,evt){
+   
     const title=document.getElementById("list-title");
 
     if(title)title.innerText=category.toUpperCase();
@@ -678,6 +695,7 @@ function filterData(category,evt){
 
 
   if(category==="Ministerial Servants"){
+
         window.loadMSPublishers?.();
         return;
     }
@@ -709,6 +727,7 @@ function filterData(category,evt){
           window.loadElders?.();
         return;
     }
+
 
     if(category==="Regular Pioneers"){
           window.loadRP?.();
@@ -1251,25 +1270,42 @@ window.loadElders=async function(){
     }
 };
 
-
-
 window.loadRP=async function(){
     try{
+        const period=await window.getYearlyReportingPeriod();
+
+        const serviceYearEl=document.getElementById("analysis-service-year");
+        if(serviceYearEl){
+            serviceYearEl.textContent=`${period.serviceYear} Service Year`;
+        }
+
         const db=await openIndexedDB();
+
         const publishers=await new Promise((resolve,reject)=>{
-            const req=db.transaction("PUBLISHERS","readonly").objectStore("PUBLISHERS").getAll();
+            const req=db.transaction("PUBLISHERS","readonly")
+                .objectStore("PUBLISHERS").getAll();
             req.onsuccess=()=>resolve(req.result||[]);
             req.onerror=()=>reject(req.error);
         });
+        const records=await new Promise((resolve,reject)=>{
+            const req=db.transaction("RECORDS","readonly")
+                .objectStore("RECORDS").getAll();
+            req.onsuccess=()=>resolve(req.result||[]);
+            req.onerror=()=>reject(req.error);
+        });
+
         db.close();
 
+        const firstNumber=Number(period.firstNumber);
+        const lastNumber=Number(period.lastNumber);
+
         const rpPublishers=publishers
-          .filter(p=>String(p.RP??"").trim().toUpperCase()==="TRUE")
-          .filter(p=>{
-              const status=String(p.Status??"").trim().toUpperCase();
-              return status==="ACTIVE"||status==="";
-          })
-                      .filter(p=>String(p.LName??"").trim()||String(p.FNAME??"").trim())
+            .filter(p=>String(p.RP??"").trim().toUpperCase()==="TRUE")
+            .filter(p=>{
+                const status=String(p.Status??"").trim().toUpperCase();
+                return status==="ACTIVE"||status==="";
+            })
+            .filter(p=>String(p.LName??"").trim()||String(p.FNAME??"").trim())
             .sort((a,b)=>{
                 const lastA=String(a.LName??"").trim().toUpperCase();
                 const lastB=String(b.LName??"").trim().toUpperCase();
@@ -1278,55 +1314,94 @@ window.loadRP=async function(){
                 return lastA.localeCompare(lastB)||firstA.localeCompare(firstB);
             });
 
-        const tbody=document.getElementById("publishers-table-body");
         const title=document.getElementById("list-title");
         const badge=document.getElementById("RP-count");
 
-        if(!tbody||!title){
+        if(!title){
             console.error("❌ Analysis result elements not found");
-            return;
+            return [];
         }
 
         if(badge)badge.textContent=rpPublishers.length;
 
-        const colName=document.getElementById("col-name");
-        const colRole=document.getElementById("col-role");
-        const colStatus=document.getElementById("col-status");
-
-        if(colName)colName.textContent="Name";
-        if(colRole)colRole.textContent="Years in Truth";
-        if(colStatus)colStatus.textContent="";
-
         title.textContent=`REGULAR PIONEERS (${rpPublishers.length})`;
 
-        const calculateYearsInTruth=baptism=>{
-            if(!baptism)return "";
-            const d=new Date(baptism);
-            if(isNaN(d))return "";
+        const rows=rpPublishers.map(p=>{
+            const id=String(p.IDPub);
 
-            const now=new Date();
-            let years=now.getFullYear()-d.getFullYear();
-            let months=now.getMonth()-d.getMonth();
+            const rpRecords=records.filter(r=>{
+                const recordId=String(r.IdPubs??"");
+                const number=Number(r.NUMBER);
 
-            if(months<0||(months===0&&now.getDate()<d.getDate())){
-                years--;
-                months+=12;
+                const remarks=String(r.REMARKS??"")
+                    .trim()
+                    .toUpperCase();
+
+                return recordId===id &&
+                    number>=firstNumber &&
+                    number<=lastNumber &&
+                    remarks.includes("RP");
+            });
+
+            let totalHours=0;
+            const reportedMonths=new Set();
+
+            rpRecords.forEach(r=>{
+                const hrs=Number(r.HRS);
+
+                if(Number.isFinite(hrs)){
+                    totalHours+=hrs;
+                }
+
+                if(Number.isFinite(Number(r.NUMBER))){
+                    reportedMonths.add(Number(r.NUMBER));
+                }
+            });
+
+            const monthCount=reportedMonths.size;
+            const average=monthCount>0
+                ? totalHours/monthCount
+                : 0;
+
+            return {
+                publisher:p,
+                totalHours,
+                monthCount,
+                average
+            };
+        });
+
+        setAnalysisTable([
+            {
+                label:"Name",
+                render:row=>`<strong>${row.publisher.LName||""}, ${row.publisher.FNAME||""}</strong>`
+            },
+            {
+                label:"Total Hours",
+                render:row=>row.totalHours
+            },
+            {
+                label:"No. of Month",
+                render:row=>row.monthCount
+            },
+            {
+                label:"Ave/ Month",
+                render:row=>row.average.toFixed(1)
             }
+        ],rows);
 
-            const parts=[];
-            if(years>0)parts.push(`${years} year${years!==1?"s":""}`);
-            if(months>0)parts.push(`${months} month${months!==1?"s":""}`);
+        console.log("✅ RP yearly analysis loaded");
+        console.log("📅 Yearly period:",firstNumber,"→",lastNumber);
 
-            return parts.join(" ")||"0 months";
-        };
+        console.table(rows.map(row=>({
+            Name:`${row.publisher.LName||""}, ${row.publisher.FNAME||""}`,
+            "Total Hours":row.totalHours,
+            "No. of Month":row.monthCount,
+            "Ave/Month":Number(row.average.toFixed(1))
+        })));
 
-        tbody.innerHTML=rpPublishers.map(p=>{
-            const name=`${p.LName||""}, ${p.FNAME||""}`.replace(/^,\s*/,"").trim();
-            return `<tr><td><strong>${name}</strong></td><td>${calculateYearsInTruth(p.Baptism)}</td><td></td></tr>`;
-        }).join("");
+        return rows;
 
-        console.log(`✅ RP Publishers loaded: ${rpPublishers.length}`);
-        return rpPublishers;
     }catch(err){
         console.error("❌ loadRP error:",err);
         return [];
@@ -1336,9 +1411,10 @@ window.loadRP=async function(){
 
 
 
-
 window.loadIrregularPublishers=async function(){
+
     try{
+        
         const period=await window.getSixMonthReportingPeriod();
         if(!period){
             console.warn("⚠️ Reporting period unavailable");
@@ -1897,6 +1973,9 @@ window.loadCOReport=async function(){
         return [];
     }
 };
+
+
+
 
 
 
