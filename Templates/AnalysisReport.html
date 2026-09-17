@@ -564,18 +564,6 @@ function getPublisherPrivilege(p){
    ------------------------------------------------------------
    ADD FUTURE TABLE DISPLAY CHANGES HERE
    ============================================================ */
-function renderTable(items){
-    const tbody=document.getElementById("publishers-table-body");
-    if(!tbody)return;
-
-    tbody.innerHTML=items.map(item=>`
-        <tr>
-            <td><strong>${item.name||""}</strong></td>
-            <td>${item.role?`<span class="tag-role">${item.role}</span>`:""}</td>
-            <td style="color:#16a34a;font-weight:600;">${item.status||""}</td>
-        </tr>
-    `).join("");
-}
 
 
 /* ============================================================
@@ -742,6 +730,11 @@ function filterData(category,evt){
 
     if(category==="CO-AVG"){
         window.open("/COReport","_blank");
+         return;
+    }
+
+     if(category==="New Publishers"){
+        window.loadNewPublishers?.();
          return;
     }
 
@@ -988,28 +981,19 @@ window.loadUnbaptizedPublishers=async function(){
                 return la.localeCompare(lb)||fa.localeCompare(fb);
             });
 
-        const tbody=document.getElementById("publishers-table-body");
         const title=document.getElementById("list-title");
         const badge=document.getElementById("unbaptized-count");
 
-        if(!tbody||!title){
+        if(!title){
             console.error("❌ Analysis result elements not found");
             return [];
         }
 
         if(badge)badge.textContent=unbaptized.length;
 
-        const colName=document.getElementById("col-name");
-        const colRole=document.getElementById("col-role");
-        const colStatus=document.getElementById("col-status");
-
-        if(colName)colName.textContent="Name";
-        if(colRole)colRole.textContent="Age";
-        if(colStatus)colStatus.textContent="Years as Unbaptized";
-
         title.textContent=`UNBAPTIZED PUBLISHERS (${unbaptized.length})`;
 
-        tbody.innerHTML=unbaptized.map(p=>{
+        const rows=unbaptized.map(p=>{
             const pubId=String(p.IDPub??"").trim();
 
             const rec=records
@@ -1027,12 +1011,27 @@ window.loadUnbaptizedPublishers=async function(){
                 ?calculateUnbaptizedTime(rec.NUMBER)
                 :"";
 
-            return `<tr>
-                <td><strong>${name}</strong></td>
-                <td>${calculateAge(p.Birthdate)}</td>
-                <td>${yearsUnbaptized}</td>
-            </tr>`;
-        }).join("");
+            return {
+                name,
+                age:calculateAge(p.Birthdate),
+                yearsUnbaptized
+            };
+        });
+
+        setAnalysisTable([
+            {
+                label:"Name",
+                render:row=>`<strong>${row.name}</strong>`
+            },
+            {
+                label:"Age",
+                render:row=>row.age
+            },
+            {
+                label:"Years as Unbaptized",
+                render:row=>row.yearsUnbaptized
+            }
+        ],rows);
 
         console.log("✅ Current reporting NUMBER:",currentNumber);
         console.log("✅ Unbaptized publishers:",unbaptized.length);
@@ -1070,24 +1069,15 @@ window.loadMSPublishers=async function(){
                 return lastA.localeCompare(lastB)||firstA.localeCompare(firstB);
             });
 
-        const tbody=document.getElementById("publishers-table-body");
         const title=document.getElementById("list-title");
         const badge=document.getElementById("MS-count");
 
-        if(!tbody||!title){
+        if(!title){
             console.error("❌ Analysis result elements not found");
-            return;
+            return [];
         }
 
         if(badge)badge.textContent=msPublishers.length;
-
-        const colName=document.getElementById("col-name");
-        const colRole=document.getElementById("col-role");
-        const colStatus=document.getElementById("col-status");
-
-        if(colName)colName.textContent="Name";
-        if(colRole)colRole.textContent="Years in Truth";
-        if(colStatus)colStatus.textContent="Age";
 
         title.textContent=`MINISTERIAL SERVANTS (${msPublishers.length})`;
 
@@ -1123,15 +1113,31 @@ window.loadMSPublishers=async function(){
             return parts.join(" ")||"0 months";
         };
 
-        const nameOf=p=>`${p.LName||""}, ${p.FNAME||""}`.replace(/^,\s*/,"").trim();
+        const rows=msPublishers.map(p=>{
+            const name=`${p.LName||""}, ${p.FNAME||""}`
+                .replace(/^,\s*/,"").trim();
 
-        tbody.innerHTML=msPublishers.map(p=>{
-            const name=nameOf(p);
-            const yearsInTruth=calculateYearsInTruth(p.Baptism);
-            const age=calculateAge(p.Birthdate);
+            return {
+                name,
+                yearsInTruth:calculateYearsInTruth(p.Baptism),
+                age:calculateAge(p.Birthdate)
+            };
+        });
 
-            return `<tr><td><strong>${name}</strong></td><td>${yearsInTruth}</td><td>${age}</td></tr>`;
-        }).join("");
+        setAnalysisTable([
+            {
+                label:"Name",
+                render:row=>`<strong>${row.name}</strong>`
+            },
+            {
+                label:"Years in Truth",
+                render:row=>row.yearsInTruth
+            },
+            {
+                label:"Age",
+                render:row=>row.age
+            }
+        ],rows);
 
         console.log(`✅ MS Publishers loaded: ${msPublishers.length}`);
         return msPublishers;
@@ -1144,8 +1150,7 @@ window.loadMSPublishers=async function(){
 /* ============================================================
    Baptized
    ============================================================ */
-
-   window.loadActiveBaptizedPublishers=async function(){
+window.loadActiveBaptizedPublishers=async function(){
     try{
         const db=await openIndexedDB();
         const publishers=await new Promise((resolve,reject)=>{
@@ -1182,29 +1187,38 @@ window.loadMSPublishers=async function(){
                 return la.localeCompare(lb)||fa.localeCompare(fb);
             });
 
-        const tbody=document.getElementById("publishers-table-body");
         const title=document.getElementById("list-title");
         const badge=document.getElementById("ActiveBaptized-count");
-        const colName=document.getElementById("col-name");
-        const colRole=document.getElementById("col-role");
-        const colStatus=document.getElementById("col-status");
 
-        if(!tbody||!title)return;
+        if(!title){
+            console.error("❌ Analysis result elements not found");
+            return [];
+        }
 
         if(badge)badge.textContent=result.length;
-        if(colName)colName.textContent="Name";
-        if(colRole)colRole.textContent="Years in the Truth";
-        if(colStatus)colStatus.textContent="";
+
         title.textContent=`ACTIVE BAPTIZED PUBLISHERS (${result.length})`;
 
-        tbody.innerHTML=result.map(p=>{
-            const name=`${p.LName||""}, ${p.FNAME||""}`.replace(/^,\s*/,"").trim();
-            return `<tr>
-                <td><strong>${name}</strong></td>
-                <td>${yearsInTruth(p.Baptism)}</td>
-                <td></td>
-            </tr>`;
-        }).join("");
+        const rows=result.map(p=>{
+            const name=`${p.LName||""}, ${p.FNAME||""}`
+                .replace(/^,\s*/,"").trim();
+
+            return {
+                name,
+                yearsInTruth:yearsInTruth(p.Baptism)
+            };
+        });
+
+        setAnalysisTable([
+            {
+                label:"Name",
+                render:row=>`<strong>${row.name}</strong>`
+            },
+            {
+                label:"Years in the Truth",
+                render:row=>row.yearsInTruth
+            }
+        ],rows);
 
         console.log(`✅ Active baptized publishers loaded: ${result.length}`);
         return result;
@@ -1240,27 +1254,31 @@ window.loadElders=async function(){
                 return la.localeCompare(lb)||fa.localeCompare(fb);
             });
 
-        const tbody=document.getElementById("publishers-table-body");
         const title=document.getElementById("list-title");
-        const colName=document.getElementById("col-name");
-        const colRole=document.getElementById("col-role");
-        const colStatus=document.getElementById("col-status");
         const badge=document.getElementById("Elders-count");
 
-        if(!tbody||!title)return;
-
-        if(colName)colName.textContent="Name";
-        if(colRole)colRole.textContent="";
-        if(colStatus)colStatus.textContent="";
-
-        title.textContent=`ELDERS (${result.length})`;
+        if(!title){
+            console.error("❌ Analysis result elements not found");
+            return [];
+        }
 
         if(badge)badge.textContent=result.length;
 
-        tbody.innerHTML=result.map(p=>{
-            const name=`${p.LName||""}, ${p.FNAME||""}`.replace(/^,\s*/,"").trim();
-            return `<tr><td><strong>${name}</strong></td><td></td><td></td></tr>`;
-        }).join("");
+        title.textContent=`ELDERS (${result.length})`;
+
+        const rows=result.map(p=>{
+            const name=`${p.LName||""}, ${p.FNAME||""}`
+                .replace(/^,\s*/,"").trim();
+
+            return {name};
+        });
+
+        setAnalysisTable([
+            {
+                label:"Name",
+                render:row=>`<strong>${row.name}</strong>`
+            }
+        ],rows);
 
         console.log(`✅ Elders loaded: ${result.length}`);
         return result;
@@ -1410,11 +1428,8 @@ window.loadRP=async function(){
 
 
 
-
 window.loadIrregularPublishers=async function(){
-
     try{
-        
         const period=await window.getSixMonthReportingPeriod();
         if(!period){
             console.warn("⚠️ Reporting period unavailable");
@@ -1453,6 +1468,7 @@ window.loadIrregularPublishers=async function(){
                     return ["NEW UPB","NEW UBP","UPB","UBP"].includes(remark);
                 })
                 .sort((a,b)=>Number(a.NUMBER)-Number(b.NUMBER));
+
             return rows.length?Number(rows[0].NUMBER):null;
         };
 
@@ -1465,7 +1481,10 @@ window.loadIrregularPublishers=async function(){
 
         for(const p of activePublishers){
             const startNumber=getStartNumber(p.IDPub);
-            const applicableMonths=months.filter(n=>startNumber==null||n>=startNumber);
+            const applicableMonths=months.filter(
+                n=>startNumber==null||n>=startNumber
+            );
+
             if(!applicableMonths.length)continue;
 
             const reported=[];
@@ -1486,12 +1505,15 @@ window.loadIrregularPublishers=async function(){
 
             if(missed.length>0){
                 const monthName=n=>{
-                    const m=months.find(x=>Number(x)===Number(n));
-                    return m?period.sixMonths.find(x=>Number(x.NUMBER)===Number(n))?.MONTH_:"";
+                    return period.sixMonths.find(
+                        x=>Number(x.NUMBER)===Number(n)
+                    )?.MONTH_||"";
                 };
+
                 irregular.push({
                     IDPub:p.IDPub,
-                    Name:`${p.LName||""}, ${p.FNAME||""} (FSG ${p.GROUP||""})`.replace(/^,\s*/,"").trim(),
+                    Name:`${p.LName||""}, ${p.FNAME||""} (FSG ${p.GROUP||""})`
+                        .replace(/^,\s*/,"").trim(),
                     StartNumber:startNumber??"Not Found",
                     ApplicableMonths:applicableMonths.length,
                     Reported:reported.length,
@@ -1503,33 +1525,33 @@ window.loadIrregularPublishers=async function(){
 
         irregular.sort((a,b)=>a.Name.localeCompare(b.Name));
 
-        const tbody=document.getElementById("publishers-table-body");
         const title=document.getElementById("list-title");
         const badge=document.getElementById("Irregular-count");
 
-        if(!tbody||!title){
+        if(!title){
             console.error("❌ Analysis result elements not found");
             return irregular;
         }
 
         if(badge)badge.textContent=irregular.length;
 
-        const colName=document.getElementById("col-name");
-        const colRole=document.getElementById("col-role");
-        const colStatus=document.getElementById("col-status");
-
-        if(colName)colName.textContent="Name";
-        if(colRole)colRole.textContent="Missed Months";
-        if(colStatus)colStatus.textContent=" ";
-
         title.textContent=`IRREGULAR PUBLISHERS (${irregular.length})`;
 
-        tbody.innerHTML=irregular.map(p=>`
-            <tr>
-                <td><strong>${p.Name}</strong></td>
-                <td>${p.MissedMonths}</td>
-            </tr>
-        `).join("");
+        const rows=irregular.map(p=>({
+            name:p.Name,
+            missedMonths:p.MissedMonths
+        }));
+
+        setAnalysisTable([
+            {
+                label:"Name",
+                render:row=>`<strong>${row.name}</strong>`
+            },
+            {
+                label:"Missed Months",
+                render:row=>row.missedMonths
+            }
+        ],rows);
 
         console.log(`✅ 6-Month Irregular Publishers loaded: ${irregular.length}`);
         console.log("📅 Reporting period:",months.join(", "));
@@ -1541,7 +1563,6 @@ window.loadIrregularPublishers=async function(){
         return [];
     }
 };
-
 
 
 
@@ -1565,22 +1586,18 @@ window.loadS88Attendance=async function(){
         });
         db.close();
 
-        const tbody=document.getElementById("publishers-table-body");
-        const title=document.getElementById("list-title");
-        const colName=document.getElementById("col-name");
-        const colRole=document.getElementById("col-role");
-        const colStatus=document.getElementById("col-status");
+       const tbody=document.getElementById("publishers-table-body");
+       const title=document.getElementById("list-title");
+       const header=document.getElementById("analysis-table-header");
+      
 
         if(!tbody||!title){
             console.error("❌ Analysis result elements not found");
             return;
         }
 
-        title.textContent=`S-88 ATTENDANCE (${period.lastMonth?.ServiceYear||""} SERVICE YEAR)`;
-
-        if(colName)colName.textContent="";
-        if(colRole)colRole.textContent="";
-        if(colStatus)colStatus.textContent="";
+        if(header)header.innerHTML="";
+        title.textContent="REPORT SUMMARY FOR THE PAST 6 MONTHS";
 
         const getRecord=number=>
             records.find(r=>Number(r.NUMBER)===Number(number));
@@ -1760,222 +1777,128 @@ window.loadS88Attendance=async function(){
 };
 
 
-window.loadCOReport=async function(){
+
+window.loadNewPublishers=async function(){
     try{
         const period=await window.getSixMonthReportingPeriod();
-        if(!period){
-            console.warn("⚠️ Reporting period unavailable");
+
+        const serviceYearEl=document.getElementById("analysis-service-year");
+        if(serviceYearEl)serviceYearEl.textContent="";
+
+        const title=document.getElementById("list-title");
+        const header=document.getElementById("analysis-table-header");
+        const tbody=document.getElementById("publishers-table-body");
+
+        if(!title||!header||!tbody){
+            console.error("❌ New Publishers table elements not found");
             return;
         }
 
+      
+       
+
+        header.innerHTML="";
+
         const db=await openIndexedDB();
+        const tx=db.transaction(["RECORDS","PUBLISHERS"],"readonly");
+
         const records=await new Promise((resolve,reject)=>{
-            const r=db.transaction("RECORDS","readonly")
-                .objectStore("RECORDS").getAll();
+            const r=tx.objectStore("RECORDS").getAll();
             r.onsuccess=()=>resolve(r.result||[]);
             r.onerror=()=>reject(r.error);
         });
+
+        const publishers=await new Promise((resolve,reject)=>{
+            const r=tx.objectStore("PUBLISHERS").getAll();
+            r.onsuccess=()=>resolve(r.result||[]);
+            r.onerror=()=>reject(r.error);
+        });
+
         db.close();
 
-        const tbody=document.getElementById("publishers-table-body");
-        const title=document.getElementById("list-title");
-        const colName=document.getElementById("col-name");
-        const colRole=document.getElementById("col-role");
-        const colStatus=document.getElementById("col-status");
+        const firstNumber=Number(period.firstNumber);
+        const lastNumber=Number(period.lastNumber);
 
-        if(!tbody||!title){
-            console.error("❌ Analysis result elements not found");
-            return;
-        }
+        const newPublishers=records
+            .filter(r=>{
+                const remark=String(r.REMARKS??"").trim().toUpperCase();
+                
+                const number=Number(r.NUMBER);
 
-        title.textContent="REPORT SUMMARY FOR THE PAST 6 MONTHS";
+                return remark==="NEW UBP" &&
+                       number>=firstNumber &&
+                       number<=lastNumber;
+            })
+            .map(r=>{
+                const p=publishers.find(p=>
+                    String(p.IDPub)===String(r.IdPubs)
+                );
 
-        if(colName)colName.textContent="";
-        if(colRole)colRole.textContent="";
-        if(colStatus)colStatus.textContent="";
+                return {record:r,publisher:p};
+            })
+            .filter(x=>{
+                if(!x.publisher)return false;
 
-        const reported=r=>{
-            const m=String(r.MINISTRY??"").trim();
-            return m==="1"||m==="?";
-        };
+                const status=String(x.publisher.Status??"")
+                    .trim()
+                    .toUpperCase();
 
-        const isAux=r=>{
-            const v=String(r.AUX??"").trim();
-            return v==="?"||v==="1";
-        };
+                return status==="ACTIVE"||status==="";
+            })
+            .sort((a,b)=>Number(a.record.NUMBER)-Number(b.record.NUMBER));
 
-        const isRP=r=>{
-            return String(r.REMARKS??"").toUpperCase().includes("RP");
-        };
+            const upbCount=document.getElementById("UPB-count");
+            if(upbCount)upbCount.textContent=newPublishers.length;
 
-        const num=v=>{
-            const n=Number(v);
-            return Number.isFinite(n)?n:0;
-        };
+              title.textContent=`NEW PUBLISHERS(${newPublishers.length})`;
 
-        const monthly=period.sixMonths.map(month=>{
-            const number=Number(month.NUMBER);
-            const rows=records.filter(r=>Number(r.NUMBER)===number);
-
-            const publishers=rows.filter(r=>
-                reported(r)&&
-                !isAux(r)&&
-                !isRP(r)
-            );
-
-            const auxiliary=rows.filter(r=>
-                reported(r)&&
-                isAux(r)
-            );
-
-            const regular=rows.filter(r=>
-                reported(r)&&
-                isRP(r)
-            );
-
-            return{
-                NUMBER:number,
-                MONTH:month.MONTH_||"",
-                pubReporting:publishers.length,
-                pubBS:publishers.reduce((s,r)=>s+num(r.BS),0),
-                auxReporting:auxiliary.length,
-                auxBS:auxiliary.reduce((s,r)=>s+num(r.BS),0),
-                auxHours:auxiliary.reduce((s,r)=>s+num(r.HRS),0),
-                rpReporting:regular.length,
-                rpBS:regular.reduce((s,r)=>s+num(r.BS),0),
-                rpHours:regular.reduce((s,r)=>s+num(r.HRS),0)
-            };
-        });
-
-        const fields=[
-            "pubReporting","pubBS",
-            "auxReporting","auxBS","auxHours",
-            "rpReporting","rpBS","rpHours"
+        const columns=[
+            {
+                label:"Name",
+                render:x=>{
+                    const p=x.publisher;
+                    return `<strong>${p.LName||""}, ${p.FNAME||""}</strong>`;
+                }
+            },
+            {
+                label:"Month Started",
+                render:x=>{
+                    const month=period.sixMonths.find(m=>
+                        Number(m.NUMBER)===Number(x.record.NUMBER)
+                    );
+                    return month?.MONTH_||"";
+                }
+            }
         ];
 
-        const totals={};
-        fields.forEach(f=>{
-            totals[f]=monthly.reduce((s,r)=>s+num(r[f]),0);
-        });
+        header.innerHTML=columns
+            .map(col=>`<th>${col.label}</th>`)
+            .join("");
 
-        const averages={};
-        fields.forEach(f=>{
-            averages[f]=monthly.length
-                ?Math.round(totals[f]/monthly.length)
-                :"";
-        });
-
-        const perPerson={
-            pubBS:totals.pubReporting>0
-                ?Math.round(totals.pubBS/totals.pubReporting)
-                :"",
-            auxBS:totals.auxReporting>0
-                ?Math.round(totals.auxBS/totals.auxReporting)
-                :"",
-            auxHours:totals.auxReporting>0
-                ?Math.round(totals.auxHours/totals.auxReporting)
-                :"",
-            rpBS:totals.rpReporting>0
-                ?Math.round(totals.rpBS/totals.rpReporting)
-                :"",
-            rpHours:totals.rpReporting>0
-                ?Math.round(totals.rpHours/totals.rpReporting)
-                :""
-        };
-
-        const cell='padding:1px 3px;height:20px;font-size:10px;line-height:18px;text-align:center;';
-        const head='padding:2px 2px;font-size:9px;line-height:11px;text-align:center;font-weight:bold;';
-        const section='padding:2px;font-size:9px;line-height:11px;text-align:center;font-weight:bold;background:#f3f3f3;';
-
-        let html=`
-            <tr>
-                <td rowspan="2" style="${head}width:15%;">MONTH</td>
-                <td colspan="2" style="${head}">PUBLISHERS</td>
-                <td colspan="3" style="${head}">AUXILIARY PIONEERS</td>
-                <td colspan="3" style="${head}">REGULAR PIONEERS</td>
-            </tr>
-            <tr>
-                <td style="${head}">REPORTING</td>
-                <td style="${head}">BS</td>
-                <td style="${head}">REPORTING</td>
-                <td style="${head}">BS</td>
-                <td style="${head}">HOURS</td>
-                <td style="${head}">REPORTING</td>
-                <td style="${head}">BS</td>
-                <td style="${head}">HOURS</td>
-            </tr>
-        `;
-
-        monthly.forEach(r=>{
-            html+=`
+        tbody.innerHTML=newPublishers.length
+            ?newPublishers.map(x=>`
                 <tr>
-                    <td style="${cell}text-align:left;"><strong>${r.MONTH}</strong></td>
-                    <td style="${cell}">${r.pubReporting}</td>
-                    <td style="${cell}">${r.pubBS}</td>
-                    <td style="${cell}">${r.auxReporting}</td>
-                    <td style="${cell}">${r.auxBS}</td>
-                    <td style="${cell}">${r.auxHours}</td>
-                    <td style="${cell}">${r.rpReporting}</td>
-                    <td style="${cell}">${r.rpBS}</td>
-                    <td style="${cell}">${r.rpHours}</td>
+                    ${columns.map(col=>`
+                        <td>${col.render(x)}</td>
+                    `).join("")}
                 </tr>
-            `;
+            `).join("")
+            :`<tr>
+                <td colspan="${columns.length}" style="text-align:center;">
+                    No new publishers
+                </td>
+            </tr>`;
+
+        console.log("✅ New Publishers loaded:",{
+            firstNumber,
+            lastNumber,
+            count:newPublishers.length
         });
 
-        html+=`
-            <tr style="font-weight:bold;border-top:1px solid #aaa;">
-                <td style="${cell}text-align:left;">TOTAL</td>
-                <td style="${cell}">${totals.pubReporting}</td>
-                <td style="${cell}">${totals.pubBS}</td>
-                <td style="${cell}">${totals.auxReporting}</td>
-                <td style="${cell}">${totals.auxBS}</td>
-                <td style="${cell}">${totals.auxHours}</td>
-                <td style="${cell}">${totals.rpReporting}</td>
-                <td style="${cell}">${totals.rpBS}</td>
-                <td style="${cell}">${totals.rpHours}</td>
-            </tr>
-            <tr>
-                <td style="${cell}text-align:left;">AVERAGE</td>
-                <td style="${cell}">${averages.pubReporting}</td>
-                <td style="${cell}">${averages.pubBS}</td>
-                <td style="${cell}">${averages.auxReporting}</td>
-                <td style="${cell}">${averages.auxBS}</td>
-                <td style="${cell}">${averages.auxHours}</td>
-                <td style="${cell}">${averages.rpReporting}</td>
-                <td style="${cell}">${averages.rpBS}</td>
-                <td style="${cell}">${averages.rpHours}</td>
-            </tr>
-            <tr>
-                <td style="${cell}text-align:left;">PER PERSON AVERAGE</td>
-                <td style="${cell}"></td>
-                <td style="${cell}">${perPerson.pubBS}</td>
-                <td style="${cell}"></td>
-                <td style="${cell}">${perPerson.auxBS}</td>
-                <td style="${cell}">${perPerson.auxHours}</td>
-                <td style="${cell}"></td>
-                <td style="${cell}">${perPerson.rpBS}</td>
-                <td style="${cell}">${perPerson.rpHours}</td>
-            </tr>
-        `;
-
-        tbody.innerHTML=html;
-
-        console.log("✅ CO Report loaded");
-        console.log("📅 Reporting months:",monthly.map(r=>`${r.NUMBER} ${r.MONTH}`).join(", "));
-        console.table(monthly);
-        console.log("📊 TOTALS:",totals);
-        console.log("📊 AVERAGES:",averages);
-        console.log("📊 PER PERSON AVERAGE:",perPerson);
-
-        return monthly;
-    }catch(err){
-        console.error("❌ loadCOReport error:",err);
-        return [];
+    }catch(error){
+        console.error("❌ loadNewPublishers error:",error);
     }
 };
-
-
-
 
 
 

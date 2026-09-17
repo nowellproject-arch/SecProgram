@@ -109,5 +109,5 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Date_entered solved"
+git commit -m "RP Analysis"
 git push origin main

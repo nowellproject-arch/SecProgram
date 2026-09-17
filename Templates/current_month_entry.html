@@ -716,7 +716,7 @@ function syncGlobalsFromMonthNumber(targetNumber) {
                     <select class="remark-select" id="${m.id}-select" data-month="${index}">
                         <option value=""></option>
                         <option value="INACTIVE">Inactive</option>
-                        <option value="UPB">New UPB</option>
+                        <option value="New UBP">New UBP</option>
                         <option value="MOVED">Moved</option>
                         <option value="NOTE">Note</option>
                         <option value="RP">RP</option>
@@ -1803,409 +1803,193 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
 // ==========================================
 // Automatically inserts a new record or updates an existing one 
 // when any input field in a row is modified.
-function saveS21MonthRecord(monthIndex, eventTarget) {
-    const targetPublisherId =
-        eventTarget?.dataset?.publisherId;
-
+async function saveS21MonthRecord(monthIndex, eventTarget) {
+    const targetPublisherId = eventTarget?.dataset?.publisherId;
     if (!targetPublisherId) {
-        console.warn(
-            "⚠️ Cannot save record: No bound publisher ID found on element."
-        );
+        console.warn("⚠️ S21 save: no publisher ID.");
         return;
     }
 
     const m = s21Months[monthIndex];
+    if (!m) {
+        console.warn("⚠️ S21 save: invalid monthIndex:", monthIndex);
+        return;
+    }
 
-    const targetNumber =
-        getServiceMonthNumber(
-            selectedYear,
-            monthIndex
-        );
+    // NUMBER = service month represented by this S-21 column
+    const targetNumber = getServiceMonthNumber(selectedYear, monthIndex);
 
+    // Date_entered = actual active reporting NUMBER
     const activeMonthIndex = Number(
         window.currentActiveMonthIndex ??
-        (
-            typeof window.getMonthIndex === "function"
-                ? window.getMonthIndex()
-                : targetNumber
-        )
+        (typeof window.getMonthIndex === "function"
+            ? window.getMonthIndex()
+            : monthIndex)
     );
 
+    const dateEnteredNumber = getServiceMonthNumber(
+        activeServiceYear,
+        activeMonthIndex
+    );
 
-    console.log("🚨🚨 DATE ENTERED DEBUG", {
-    targetNumber,
-    activeMonthIndex,
-    currentActiveMonthIndex: window.currentActiveMonthIndex,
-    getMonthIndex: typeof window.getMonthIndex === "function"
-        ? window.getMonthIndex()
-        : "N/A",
-    selectedYear,
-    activeServiceYear,
-    currentMonthClosed: window.currentMonthClosed
-    });
+    const ministryEl = document.getElementById(`${m.id}-ministry`);
+    const bsEl = document.getElementById(`${m.id}-studies`);
+    const auxEl = document.getElementById(`${m.id}-aux`);
+    const hrsEl = document.getElementById(`${m.id}-hours`);
+    const noteEl = document.getElementById(`${m.id}-remark`);
+    const remarksEl = document.getElementById(`${m.id}-select`);
 
+    const ministryVal = ministryEl?.checked ? 1 : 0;
+    const bsVal = bsEl?.value ? Number(bsEl.value) : "";
+    const auxVal = auxEl?.checked ? 1 : 0;
+    const hrsVal = hrsEl?.value ? Number(hrsEl.value) : "";
+    const noteVal = noteEl?.value || "";
+    const remarksVal = remarksEl?.value || "";
 
-    const isMinistryChecked =
-        document.getElementById(
-            `${m.id}-ministry`
-        )?.checked ?? false;
+    const hasData =
+        ministryVal ||
+        bsVal !== "" ||
+        auxVal ||
+        hrsVal !== "" ||
+        noteVal ||
+        remarksVal;
 
-    const ministryVal =
-        isMinistryChecked ? 1 : 0;
+    const db = await openIndexedDB();
 
-    const bsVal =
-        document.getElementById(
-            `${m.id}-studies`
-        )?.value
-            ? Number(
-                document.getElementById(
-                    `${m.id}-studies`
-                ).value
-            )
-            : "";
+    try {
+        const tx = db.transaction("RECORDS", "readwrite");
+        const store = tx.objectStore("RECORDS");
 
-    const auxVal =
-        document.getElementById(
-            `${m.id}-aux`
-        )?.checked
-            ? 1
-            : 0;
+        const existing = await new Promise((resolve, reject) => {
+            const req = store.get([
+                Number(targetNumber),
+                String(targetPublisherId)
+            ]);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
 
-    const hrsVal =
-        document.getElementById(
-            `${m.id}-hours`
-        )?.value
-            ? Number(
-                document.getElementById(
-                    `${m.id}-hours`
-                ).value
-            )
-            : "";
-
-    const noteVal =
-        document.getElementById(
-            `${m.id}-remark`
-        )?.value || "";
-
-    const remarksVal =
-        document.getElementById(
-            `${m.id}-select`
-        )?.value || "";
-
-
-    const dateEnteredValue =
-        isMinistryChecked
-            ? activeMonthIndex
-            : "";
-
-    // IMPORTANT:
-    // Always open CongregationDB using version 5.
-    const request =
-        indexedDB.open(
-            "CongregationDB",
-            10
-        );
-
-    request.onerror = (event) => {
-        console.error(
-            "❌ IndexedDB open error in saveS21MonthRecord:",
-            event.target.error
-        );
-    };
-
-    request.onsuccess = (event) => {
-        const db =
-            event.target.result;
-
-        console.log(
-            "📦 S21 DB VERSION:",
-            db.version
-        );
-
-        if (
-            !db.objectStoreNames.contains(
-                "RECORDS"
-            )
-        ) {
-            console.error(
-                "❌ RECORDS store not found in CongregationDB."
-            );
-
-            db.close();
+        // No activity = remove the existing record
+        if (!hasData) {
+            if (existing) {
+                store.delete([
+                    Number(targetNumber),
+                    String(targetPublisherId)
+                ]);
+                console.log(`🗑️ S21 record removed: ${targetPublisherId}/${targetNumber}`);
+            }
+            await new Promise((resolve, reject) => {
+                tx.oncomplete = resolve;
+                tx.onerror = () => reject(tx.error);
+            });
             return;
         }
 
-        const transaction =
-            db.transaction(
-                ["RECORDS"],
-                "readwrite"
-            );
-
-        const store =
-            transaction.objectStore(
-                "RECORDS"
-            );
-
-        const cursorRequest =
-            store.openCursor();
-
-        let found = false;
-
-        cursorRequest.onsuccess = (e) => {
-            const cursor =
-                e.target.result;
-
-            if (cursor) {
-
-                const rec =
-                    cursor.value;
-
-                if (
-                    String(rec.IdPubs) ===
-                        String(targetPublisherId) &&
-                    Number(rec.NUMBER) ===
-                        Number(targetNumber)
-                ) {
-                    found = true;
-
-                    rec.MINISTRY =
-                        ministryVal;
-
-                    rec.BS =
-                        bsVal;
-
-                    rec.AUX =
-                        auxVal;
-
-                    rec.HRS =
-                        hrsVal;
-
-                    rec.Note =
-                        noteVal;
-
-                    rec.REMARKS =
-                        remarksVal;
-
-                    rec.Date_entered =
-                        dateEnteredValue;
-
-                    // Sync metadata
-                    rec.updated_at =
-                        Date.now();
-
-                    rec.is_deleted = 0;
-
-                    cursor.update(rec);
-
-                    return;
-                }
-
-                cursor.continue();
-
-            } else {
-
-                if (!found) {
-
-                    const payload = {
-                        IdPubs:
-                            String(
-                                targetPublisherId
-                            ),
-
-                        NUMBER:
-                            targetNumber,
-
-                        MINISTRY:
-                            ministryVal,
-
-                        BS:
-                            bsVal,
-
-                        AUX:
-                            auxVal,
-
-                        HRS:
-                            hrsVal,
-
-                        Note:
-                            noteVal,
-
-                        REMARKS:
-                            remarksVal,
-
-                        Date_entered:
-                            dateEnteredValue,
-
-                        // Sync metadata
-                        updated_at:
-                            Date.now(),
-
-                        is_deleted: 0
-                    };
-
-                    setSyncUnsaved();
-
-                    const addReq =
-                        store.add(payload);
-
-                    addReq.onsuccess = () => {
-                        console.log(
-                            `✨ Record saved with sync timestamps for publisher ${targetPublisherId}`
-                        );
-                    };
-
-                    addReq.onerror = (err) => {
-                        console.error(
-                            "❌ Error adding record:",
-                            err.target.error
-                        );
-                    };
-                }
-            }
+        const record = {
+            IdPubs: String(targetPublisherId),
+            NUMBER: Number(targetNumber),
+            MINISTRY: ministryVal,
+            BS: bsVal,
+            AUX: auxVal,
+            HRS: hrsVal,
+            Note: noteVal,
+            REMARKS: remarksVal,
+            Date_entered: ministryVal ? Number(dateEnteredNumber) : "",
+            updated_at: Date.now(),
+            is_deleted: 0
         };
 
+        store.put(record);
+
+        await new Promise((resolve, reject) => {
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+        });
+
+        setSyncUnsaved();
         updateCurrentMonthDebugStorage();
-        transaction.oncomplete = () => {
-            db.close();
-        };
 
-        transaction.onerror = (event) => {
-            console.error(
-                "❌ S21 transaction error:",
-                event.target.error
-            );
-
-            db.close();
-        };
-    };
+        console.log("💾 S21 saved directly to IndexedDB:", {
+            IdPubs: record.IdPubs,
+            NUMBER: record.NUMBER,
+            Date_entered: record.Date_entered,
+            REMARKS: record.REMARKS
+        });
+    } catch (error) {
+        console.error("❌ S21 IndexedDB save failed:", error);
+    } finally {
+        db.close();
+    }
 }
+
 // -------------------------------------------------------------
 // AUTO-CHECK & AUTO-REMARK LISTENER HELPER
 // -------------------------------------------------------------
-
-// 🎯 Added explicitTargetNumber to signature
-function attachS21AutoCheckListeners(monthIndex, m, explicitTargetNumber) {
+function attachS21AutoCheckListeners(monthIndex, m) {
     const minEl = document.getElementById(`${m.id}-ministry`);
     const bsEl = document.getElementById(`${m.id}-studies`);
     const hrsEl = document.getElementById(`${m.id}-hours`);
     const remSelEl = document.getElementById(`${m.id}-select`);
     const auxEl = document.getElementById(`${m.id}-aux`);
 
-    if (!hrsEl || !bsEl || !minEl) return;
-
+    if (!minEl || !bsEl || !hrsEl) return;
     if (minEl.dataset.s21Bound === "true") return;
     minEl.dataset.s21Bound = "true";
 
-     const targetNumber =
-            Number(explicitTargetNumber) ||
-            getServiceMonthNumber(selectedYear, monthIndex);   
-
     const handleAutoLogic = (e) => {
-        if (e && e.isTrusted === false) return;
+        if (e?.isTrusted === false) return;
 
-        const hasHours = Number(hrsEl.value) > 0;
-        const hasStudies = Number(bsEl.value) > 0;
-        const hasMinistry = minEl.checked;
-        const hasAux = auxEl ? auxEl.checked : false;
-        
-        const hasServiceActivity = hasMinistry || hasHours || hasStudies || hasAux;
-
-        if ((hasHours || hasStudies) && !minEl.checked) {
+        // Automatically check Ministry when Hours or Studies are entered
+        if (Number(hrsEl.value) > 0 || Number(bsEl.value) > 0) {
             minEl.checked = true;
         }
 
-        const targetPublisherId = minEl.dataset.publisherId || (typeof selectedPubId !== 'undefined' ? selectedPubId : null);
-        const pubDataList = (typeof publishersData !== 'undefined' && Array.isArray(publishersData)) ? publishersData : [];
-        const currentPub = pubDataList.find(p => String(p.IDPub ?? p.IdPubs ?? "").trim() === String(targetPublisherId).trim());
+        // Automatically set RP remark
+        const publisherId =
+            minEl.dataset.publisherId ||
+            (typeof selectedPubId !== "undefined" ? selectedPubId : null);
 
-        const isTrueMarker = (val) => {
-            if (val === null || val === undefined) return false;
-            if (typeof val === "boolean") return val;
-            if (typeof val === "number") return val !== 0;
-            const str = String(val).trim().toUpperCase();
-            return ["?", "1", "Y", "YES", "TRUE", "-1"].includes(str);
-        };
+        if (publisherId && remSelEl && !remSelEl.value) {
+            const pubs =
+                typeof publishersData !== "undefined" &&
+                Array.isArray(publishersData)
+                    ? publishersData
+                    : [];
 
-        if (currentPub && isTrueMarker(currentPub.RP)) {
-            if (remSelEl && (!remSelEl.value || remSelEl.value.trim() === "")) {
+            const pub = pubs.find(p =>
+                String(p.IDPub ?? "").trim() === String(publisherId).trim()
+            );
+
+            const isTrue = v =>
+                ["1", "TRUE", "YES", "Y", "?", "-1"]
+                    .includes(String(v ?? "").trim().toUpperCase());
+
+            if (pub && isTrue(pub.RP)) {
                 remSelEl.value = "RP";
             }
         }
 
-        if (targetPublisherId) {
-            if (!window.recordsData) window.recordsData = [];
+        // Save through IndexedDB only
+        clearTimeout(minEl._s21SaveTimer);
 
-            let recIndex = window.recordsData.findIndex(r => 
-                String(r.IdPubs ?? r.IDPub ?? r.idpubs ?? "").trim() === String(targetPublisherId).trim() && 
-                Number(r.NUMBER) === Number(targetNumber)
-            );
-
-            const activeMonthIndex = Number(
-                window.currentActiveMonthIndex ?? 
-                (typeof window.getMonthIndex === 'function' ? window.getMonthIndex() : targetNumber)
-            );
-            const computedEntryDate = minEl.checked ? activeMonthIndex : "";
-
-            if (hasServiceActivity) {
-                if (recIndex !== -1) {
-                    const existingRec = window.recordsData[recIndex];
-
-                    // 🎯 FIX: Force activeMonthIndex + 1 if month report is closed, otherwise preserve existing date
-                    const finalDateEntered = existingRec.Date_entered || computedEntryDate;
-
-                    window.recordsData[recIndex].MINISTRY = minEl.checked ? 1 : 0;
-                    window.recordsData[recIndex].AUX = hasAux ? 1 : 0;
-                    window.recordsData[recIndex].HRS = Number(hrsEl.value) || 0;
-                    window.recordsData[recIndex].BS = Number(bsEl.value) || 0;
-                    window.recordsData[recIndex].REMARKS = remSelEl ? remSelEl.value : "";
-                    window.recordsData[recIndex].NUMBER = Number(targetNumber);
-                    window.recordsData[recIndex].Date_entered = minEl.checked ? finalDateEntered : "";
-                } else {
-                    const newRec = {
-                        IdPubs: targetPublisherId,
-                        IDPub: targetPublisherId,
-                        NUMBER: Number(targetNumber),
-                        Date_entered: computedEntryDate,
-                        MINISTRY: minEl.checked ? 1 : 0,
-                        AUX: hasAux ? 1 : 0,
-                        HRS: Number(hrsEl.value) || 0,
-                        BS: Number(bsEl.value) || 0,
-                        REMARKS: remSelEl ? remSelEl.value : ""
-                    };
-                    window.recordsData.push(newRec);
-                }
-            } else {
-                if (recIndex !== -1) {
-                    window.recordsData.splice(recIndex, 1);
-                }
-
-                  
+        minEl._s21SaveTimer = setTimeout(async () => {
+            if (typeof saveS21MonthRecord === "function") {
+                await saveS21MonthRecord(monthIndex, minEl);
             }
-           
-            // Debounce IndexedDB saves & in-place metric updates
-            if (!window._s21SaveTimers) window._s21SaveTimers = {};
-            const timerKey = `${targetPublisherId}-${monthIndex}`;
-            clearTimeout(window._s21SaveTimers[timerKey]);
 
-            window._s21SaveTimers[timerKey] = setTimeout(() => {
-                if (typeof saveS21MonthRecord === 'function') {
-                    saveS21MonthRecord(monthIndex, minEl, targetNumber);
-                }
-
-                if (typeof calculateMonthlySummaryMetrics === 'function') {
-                    calculateMonthlySummaryMetrics();
-                }
-            }, 200);
-        }
+            if (typeof calculateMonthlySummaryMetrics === "function") {
+                calculateMonthlySummaryMetrics();
+            }
+        }, 200);
     };
 
+    minEl.addEventListener("change", handleAutoLogic);
+    bsEl.addEventListener("change", handleAutoLogic);
+    hrsEl.addEventListener("change", handleAutoLogic);
+    if (auxEl) auxEl.addEventListener("change", handleAutoLogic);
+    if (remSelEl) remSelEl.addEventListener("change", handleAutoLogic);
 
-    hrsEl.addEventListener('change', handleAutoLogic);
-    bsEl.addEventListener('change', handleAutoLogic);
-    minEl.addEventListener('change', handleAutoLogic);
-    if (auxEl) auxEl.addEventListener('change', handleAutoLogic);
-    if (remSelEl) remSelEl.addEventListener('change', handleAutoLogic);
-     
+    console.log(`✅ S21 listener attached: ${m.name} [${monthIndex}]`);
 }
 
 // 1. Reusable calculation function
@@ -2491,19 +2275,8 @@ function saveAndCloseNameEdit() {
     savePublisherChanges();
     console.log("✅ Name updated and handed off to savePublisherChanges()");
 }
-// ==========================================
-// 5. AUTO-SAVE EVENT LISTENER
-// ==========================================
-// Listens for changes on any S-21 table input and triggers the saver automatically
-document.addEventListener('change', (e) => {
-    if (e.target.matches('.table-check, .study-input, .hours-input, .remark-text, .remark-select')) {
-        const monthIndex = e.target.getAttribute('data-month');
-        if (monthIndex !== null) {
-            // Pass the element itself into the save function so it reads its own dataset ID
-            saveS21MonthRecord(Number(monthIndex), e.target);
-        }
-    }
-});
+
+
 
 
 // Add this placeholder function anywhere in your global JavaScript
