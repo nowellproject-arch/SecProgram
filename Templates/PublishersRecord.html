@@ -1547,120 +1547,258 @@ function loadS21RecordsForPublisher() {
 // 3. SAVE / UPSERT S-21 MONTHLY RECORD
 // ==========================================
 // Automatically inserts a new record or updates an existing one
-async function saveS21MonthRecord(monthIndex,eventTarget){
-    const targetPublisherId=eventTarget?.dataset?.publisherId;
-    if(!targetPublisherId)return;
+async function saveS21MonthRecord(monthIndex, eventTarget) {
 
-    const m=s21Months[monthIndex];
-    if(!m)return;
+    const targetPublisherId =
+        eventTarget?.dataset?.publisherId ||
+        window.selectedPubId;
 
-    const targetNumber=getServiceMonthNumber(selectedYear,monthIndex);
+    if (!targetPublisherId) {
+        console.warn("⚠️ S21 SAVE: No publisher ID");
+        return;
+    }
 
-    const ministryVal=document.getElementById(`${m.id}-ministry`)?.checked?1:0;
-    const bsVal=document.getElementById(`${m.id}-studies`)?.value
-        ?Number(document.getElementById(`${m.id}-studies`).value):"";
-    const auxVal=document.getElementById(`${m.id}-aux`)?.checked?1:0;
-    const hrsVal=document.getElementById(`${m.id}-hours`)?.value
-        ?Number(document.getElementById(`${m.id}-hours`).value):"";
-    const noteVal=document.getElementById(`${m.id}-remark`)?.value||"";
-    const remarksVal=document.getElementById(`${m.id}-select`)?.value||"";
+    const m = s21Months[monthIndex];
+    if (!m) {
+        console.warn("⚠️ S21 SAVE: Invalid month index", monthIndex);
+        return;
+    }
 
-    const hasData=ministryVal||bsVal||auxVal||hrsVal||noteVal||remarksVal;
+    const targetNumber =
+        getServiceMonthNumber(selectedYear, monthIndex);
 
-    const activeMonthIndex=Number(
+    // ---------------------------------------------------------
+    // READ VALUES FROM HTML
+    // ---------------------------------------------------------
+
+    const ministryEl =
+        document.getElementById(`${m.id}-ministry`);
+
+    const studiesEl =
+        document.getElementById(`${m.id}-studies`);
+
+    const auxEl =
+        document.getElementById(`${m.id}-aux`);
+
+    const hoursEl =
+        document.getElementById(`${m.id}-hours`);
+
+    const noteEl =
+        document.getElementById(`${m.id}-remark`);
+
+    const remarksEl =
+        document.getElementById(`${m.id}-select`);
+
+    const ministryVal =
+        ministryEl?.checked ? 1 : 0;
+
+    const bsVal =
+        studiesEl?.value
+            ? Number(studiesEl.value)
+            : "";
+
+    const auxVal =
+        auxEl?.checked ? 1 : 0;
+
+    const hrsVal =
+        hoursEl?.value
+            ? Number(hoursEl.value)
+            : "";
+
+    // THIS is the Note field
+    const noteVal =
+        noteEl?.value?.trim() || "";
+
+    // THIS is the dropdown REMARKS field
+    const remarksVal =
+        remarksEl?.value || "";
+
+    const hasData =
+        ministryVal ||
+        bsVal ||
+        auxVal ||
+        hrsVal ||
+        noteVal ||
+        remarksVal;
+
+    // ---------------------------------------------------------
+    // DATE ENTERED = ACTIVE REPORTING MONTH
+    // ---------------------------------------------------------
+
+    const activeMonthIndex = Number(
         window.currentActiveMonthIndex ??
-        (typeof window.getMonthIndex==="function"
-            ?window.getMonthIndex()
-            :monthIndex)
+        (
+            typeof window.getMonthIndex === "function"
+                ? window.getMonthIndex()
+                : monthIndex
+        )
     );
 
-    const dateEntered=getServiceMonthNumber(
-        selectedYear,
-        activeMonthIndex
-    );
+    const dateEntered =
+        getServiceMonthNumber(
+            selectedYear,
+            activeMonthIndex
+        );
 
-    console.log("💾 S21 SAVE:",{
-        Publisher:targetPublisherId,
+    console.log("💾 S21 SAVE:", {
+        publisher: targetPublisherId,
         monthIndex,
         targetNumber,
+        ministry: ministryVal,
+        studies: bsVal,
+        aux: auxVal,
+        hours: hrsVal,
+        NOTE: noteVal,
+        REMARKS: remarksVal,
         activeMonthIndex,
-        Date_entered:dateEntered,
-        REMARKS:remarksVal
+        Date_entered: dateEntered
     });
 
-    const db=await openIndexedDB();
+    // ---------------------------------------------------------
+    // INDEXEDDB
+    // RECORDS KEY = [NUMBER, IdPubs]
+    // ---------------------------------------------------------
 
-    try{
-        const transaction=db.transaction(["RECORDS"],"readwrite");
-        const store=transaction.objectStore("RECORDS");
+    const db = await openIndexedDB();
 
-        const request=store.openCursor();
+    try {
 
-        await new Promise((resolve,reject)=>{
-            request.onsuccess=e=>{
-                const cursor=e.target.result;
+        const transaction =
+            db.transaction(["RECORDS"], "readwrite");
 
-                if(cursor){
-                    const rec=cursor.value;
+        const store =
+            transaction.objectStore("RECORDS");
 
-                    if(
-                        String(rec.IdPubs)===String(targetPublisherId)&&
-                        Number(rec.NUMBER)===Number(targetNumber)
-                    ){
-                        if(!hasData){
-                            cursor.delete();
-                            console.log(
-                                `🗑️ Deleted empty record: ${targetPublisherId}-${targetNumber}`
-                            );
-                        }else{
-                            rec.MINISTRY=ministryVal;
-                            rec.BS=bsVal;
-                            rec.AUX=auxVal;
-                            rec.HRS=hrsVal;
-                            rec.Note=noteVal;
-                            rec.REMARKS=remarksVal;
-                            rec.Date_entered=dateEntered;
+        const key = [
+            targetNumber,
+            String(targetPublisherId)
+        ];
 
-                            cursor.update(rec);
+        const existing =
+            await new Promise((resolve, reject) => {
 
-                            console.log(
-                                `✏️ Updated record: ${targetPublisherId}-${targetNumber}`
-                            );
-                        }
+                const request = store.get(key);
 
-                        resolve();
-                        return;
-                    }
+                request.onsuccess = () => {
+                    resolve(request.result || null);
+                };
 
-                    cursor.continue();
-                }else{
-                    if(hasData){
-                        const payload={
-                            IdPubs:String(targetPublisherId),
-                            NUMBER:targetNumber,
-                            MINISTRY:ministryVal,
-                            BS:bsVal,
-                            AUX:auxVal,
-                            HRS:hrsVal,
-                            Note:noteVal,
-                            REMARKS:remarksVal,
-                            Date_entered:dateEntered
-                        };
+                request.onerror = () => {
+                    reject(request.error);
+                };
+            });
 
-                        store.add(payload);
+        console.log("🔎 Existing S21 record:", existing);
 
-                        console.log(
-                            `➕ Added record: ${targetPublisherId}-${targetNumber}`
-                        );
-                    }
+        // -----------------------------------------------------
+        // NO DATA → DELETE EXISTING RECORD
+        // -----------------------------------------------------
 
-                    resolve();
+        if (!hasData) {
+
+            if (existing) {
+
+                await new Promise((resolve, reject) => {
+
+                    const request = store.delete(key);
+
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+
+                });
+
+                console.log(
+                    `🗑️ Deleted empty record: ${targetPublisherId}-${targetNumber}`
+                );
+            }
+
+            return;
+        }
+
+        // -----------------------------------------------------
+        // UPDATE EXISTING RECORD
+        // -----------------------------------------------------
+
+        if (existing) {
+
+            existing.MINISTRY = ministryVal;
+            existing.BS = bsVal;
+            existing.AUX = auxVal;
+            existing.HRS = hrsVal;
+
+            // IMPORTANT
+            existing.Note = noteVal;
+
+            existing.REMARKS = remarksVal;
+            existing.Date_entered = dateEntered;
+
+            await new Promise((resolve, reject) => {
+
+                const request = store.put(existing);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+
+            });
+
+            console.log(
+                `✏️ Updated S21 record: ${targetPublisherId}-${targetNumber}`,
+                {
+                    Note: existing.Note,
+                    REMARKS: existing.REMARKS
                 }
+            );
+
+        }
+
+        // -----------------------------------------------------
+        // CREATE NEW RECORD
+        // -----------------------------------------------------
+
+        else {
+
+            const payload = {
+                IdPubs: String(targetPublisherId),
+                NUMBER: targetNumber,
+                MINISTRY: ministryVal,
+                BS: bsVal,
+                AUX: auxVal,
+                HRS: hrsVal,
+
+                // IMPORTANT
+                Note: noteVal,
+
+                REMARKS: remarksVal,
+                Date_entered: dateEntered
             };
 
-            request.onerror=()=>reject(request.error);
-        });
-    }finally{
+            await new Promise((resolve, reject) => {
+
+                const request = store.add(payload);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+
+            });
+
+            console.log(
+                `➕ Added S21 record: ${targetPublisherId}-${targetNumber}`,
+                {
+                    Note: noteVal,
+                    REMARKS: remarksVal
+                }
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ S21 IndexedDB save failed:",
+            error
+        );
+
+    } finally {
+
         db.close();
     }
 }
