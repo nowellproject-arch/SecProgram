@@ -109,5 +109,5 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Note  Adjsutsted"
+git commit -m "Note  Adjsutsted 2"
 git push origin main

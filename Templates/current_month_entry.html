@@ -3819,39 +3819,77 @@ function updateSidebarClosedState() {
     });
 }
 
-function togglePubStatusDropdown(){
-    const label=document.getElementById("pubStatusDisplay");
-    const select=document.getElementById("pubStatus");
-    if(!label||!select)return;
+function togglePubStatusDropdown() {
+    const label = document.getElementById("pubStatusDisplay");
+    const select = document.getElementById("pubStatus");
 
-    label.style.display="none";
+    if (!label || !select) return;
+
+    label.style.display = "none";
     select.classList.add("show");
     select.focus();
 }
 
-function changePubStatus(value){
-    const label=document.getElementById("pubStatusDisplay");
-    const select=document.getElementById("pubStatus");
-    if(!label||!select)return;
 
-    const text=value||"Active";
-    const statusClass={
-        "":"active",
-        "Inactive":"inactive",
-        "Moved Out":"moved-out",
-        "Removed":"removed",
-        "Disqualified":"disqualified"
-    }[value]||"active";
+function changePubStatus(value) {
+    const label = document.getElementById("pubStatusDisplay");
+    const select = document.getElementById("pubStatus");
 
-    label.textContent=text;
-    label.className=`pub-status-label ${statusClass}`;
+    if (!label || !select) return;
 
+    const text = value || "Active";
+
+    const statusClass = {
+        "": "active",
+        "Inactive": "inactive",
+        "Moved Out": "moved-out",
+        "Removed": "removed",
+        "Disqualified": "disqualified"
+    }[value] || "active";
+
+    label.textContent = text;
+    label.className = `pub-status-label ${statusClass}`;
+
+    // Return immediately to the normal label
     select.classList.remove("show");
-    label.style.display="inline-block";
+    label.style.display = "inline-block";
 
-    console.log("📌 Publisher status changed:",text);
+    console.log("📌 Publisher status changed:", text);
 }
 
+
+// If the dropdown loses focus, return to normal label
+document.addEventListener("click", function (event) {
+    const label = document.getElementById("pubStatusDisplay");
+    const select = document.getElementById("pubStatus");
+
+    if (!label || !select) return;
+
+    // Ignore clicks on the label or dropdown itself
+    if (
+        event.target === label ||
+        event.target === select
+    ) {
+        return;
+    }
+
+    // If dropdown is currently open, close it
+    if (select.classList.contains("show")) {
+        select.classList.remove("show");
+        label.style.display = "inline-block";
+    }
+});
+
+
+// If user tabs away from the dropdown
+document.getElementById("pubStatus")?.addEventListener("blur", function () {
+    const label = document.getElementById("pubStatusDisplay");
+
+    if (!label) return;
+
+    this.classList.remove("show");
+    label.style.display = "inline-block";
+});
 
 
 

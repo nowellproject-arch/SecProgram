@@ -119,6 +119,7 @@
         border-top: 1px dashed #ddd;
         padding-top: 6px;
         margin-top: 4px;
+         margin-bottom: 26px;
         padding-right: 10%; /* Adjust this percentage to move the right item away from the right border */
     }
 
@@ -450,6 +451,54 @@
   border: none; 
 }
     .mt-1 { margin-top: 2px; }
+
+
+.status-control{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+.status-control label{
+    margin:0;
+}
+.pub-status-label{
+    font-weight:700;
+    cursor:pointer;
+    user-select:none;
+}
+.pub-status-label:hover{
+    text-decoration:underline;
+}
+.pub-status-label.active{
+    color:#d32f2f;
+}
+.pub-status-label.inactive{
+    color:#e67e22;
+}
+.pub-status-label.moved-out{
+    color:#7f8c8d;
+}
+.pub-status-label.removed{
+    color:#8e44ad;
+}
+.pub-status-label.disqualified{
+    color:#c0392b;
+}
+.pub-status-dropdown{
+    display:none;
+    height:26px;
+    font-size:12px;
+    border:1px solid #aaa !important;
+    background:#fff !important;
+    cursor:pointer;
+}
+.pub-status-dropdown.show{
+    display:block;
+}
+
+
+
 </style>
 <div class="s21-app-container">
     <!-- Global Year Navigation Header spanning the top of the entire workspace -->
@@ -529,18 +578,21 @@
                 </div>
 
                 <div class="row-group status-spiritual-row">
-                    <div>
-                       <div>
+                     <div>
+                     <div class="status-control">
                         <label>Status:</label>
-                        <select id="pubStatus" class="form-control" style="border: 1px solid #aaa !important; background: #fff !important; height: 26px; font-size: 12px;">
+                        <span id="pubStatusDisplay" class="pub-status-label active" onclick="togglePubStatusDropdown()">Active</span>
+
+                        <select id="pubStatus" class="pub-status-dropdown" onchange="changePubStatus(this.value)">
                             <option value="">Active</option>
                             <option value="Inactive">Inactive</option>
                             <option value="Moved Out">Moved Out</option>
                             <option value="Removed">Removed</option>
                             <option value="Disqualified">Disqualified</option>
                         </select>
-                    </div>
-                    </div>
+
+                        </div>
+                        </div>
                      <div class="privileges-inline">
                         <label><input type="checkbox" id="isElder"> Elder</label>
                         <label><input type="checkbox" id="isMS"> MS</label>
@@ -3461,6 +3513,83 @@ document.addEventListener("DOMContentLoaded", () => {
         handleBatchOptionChange(radioRegPioneers);
     });
 });
+
+
+
+function togglePubStatusDropdown() {
+    const label = document.getElementById("pubStatusDisplay");
+    const select = document.getElementById("pubStatus");
+
+    if (!label || !select) return;
+
+    label.style.display = "none";
+    select.classList.add("show");
+    select.focus();
+}
+
+
+function changePubStatus(value) {
+    const label = document.getElementById("pubStatusDisplay");
+    const select = document.getElementById("pubStatus");
+
+    if (!label || !select) return;
+
+    const text = value || "Active";
+
+    const statusClass = {
+        "": "active",
+        "Inactive": "inactive",
+        "Moved Out": "moved-out",
+        "Removed": "removed",
+        "Disqualified": "disqualified"
+    }[value] || "active";
+
+    label.textContent = text;
+    label.className = `pub-status-label ${statusClass}`;
+
+    // Return immediately to the normal label
+    select.classList.remove("show");
+    label.style.display = "inline-block";
+
+    console.log("📌 Publisher status changed:", text);
+}
+
+
+// If the dropdown loses focus, return to normal label
+document.addEventListener("click", function (event) {
+    const label = document.getElementById("pubStatusDisplay");
+    const select = document.getElementById("pubStatus");
+
+    if (!label || !select) return;
+
+    // Ignore clicks on the label or dropdown itself
+    if (
+        event.target === label ||
+        event.target === select
+    ) {
+        return;
+    }
+
+    // If dropdown is currently open, close it
+    if (select.classList.contains("show")) {
+        select.classList.remove("show");
+        label.style.display = "inline-block";
+    }
+});
+
+
+// If user tabs away from the dropdown
+document.getElementById("pubStatus")?.addEventListener("blur", function () {
+    const label = document.getElementById("pubStatusDisplay");
+
+    if (!label) return;
+
+    this.classList.remove("show");
+    label.style.display = "inline-block";
+});
+
+
+
 
 
 </script>
