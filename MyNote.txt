@@ -109,5 +109,5 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "RP Analysis"
+git commit -m "Remarks Adjsutsted"
 git push origin main

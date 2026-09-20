@@ -132,6 +132,7 @@
         border-top: 1px dashed #ddd;
         padding-top: 6px;
         margin-top: 4px;
+        margin-bottom: 26px;
         padding-right: 10%; /* Adjust this percentage to move the right item away from the right border */
     }
 
@@ -368,6 +369,55 @@
     }
 
     .mt-1 { margin-top: 2px; }
+
+
+.status-control{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+.status-control label{
+    margin:0;
+}
+.pub-status-label{
+    font-weight:700;
+    cursor:pointer;
+    user-select:none;
+}
+.pub-status-label:hover{
+    text-decoration:underline;
+}
+.pub-status-label.active{
+    color:#d32f2f;
+}
+.pub-status-label.inactive{
+    color:#e67e22;
+}
+.pub-status-label.moved-out{
+    color:#7f8c8d;
+}
+.pub-status-label.removed{
+    color:#8e44ad;
+}
+.pub-status-label.disqualified{
+    color:#c0392b;
+}
+.pub-status-dropdown{
+    display:none;
+    height:26px;
+    font-size:12px;
+    border:1px solid #aaa !important;
+    background:#fff !important;
+    cursor:pointer;
+}
+.pub-status-dropdown.show{
+    display:block;
+}
+
+
+
+
 </style>
 
 <div class="s21-app-container">
@@ -449,16 +499,19 @@
 
                 <div class="row-group status-spiritual-row">
                     <div>
-                        <div>
-                            <label>Status:</label>
-                            <select id="pubStatus" class="form-control" style="border: 1px solid #aaa !important; background: #fff !important; height: 26px; font-size: 12px;">
-                                <option value="">Active</option>
-                                <option value="Inactive">Inactive</option>
-                                <option value="Moved Out">Moved Out</option>
-                                <option value="Removed">Removed</option>
-                                <option value="Disqualified">Disqualified</option>
-                            </select>
-                        </div>
+                     <div class="status-control">
+                        <label>Status:</label>
+                        <span id="pubStatusDisplay" class="pub-status-label active" onclick="togglePubStatusDropdown()">Active</span>
+
+                        <select id="pubStatus" class="pub-status-dropdown" onchange="changePubStatus(this.value)">
+                            <option value="">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Moved Out">Moved Out</option>
+                            <option value="Removed">Removed</option>
+                            <option value="Disqualified">Disqualified</option>
+                        </select>
+
+                    </div>
                     </div>
                     <div class="privileges-inline">
                         <label><input type="checkbox" id="isElder"> Elder</label>
@@ -713,14 +766,18 @@ function syncGlobalsFromMonthNumber(targetNumber) {
                 <td><input type="number" min="0" step="0.5" class="text-center hours-input" id="${m.id}-hours" data-month="${index}"></td>
                 <td class="remarks-container">
                     <input type="text" class="remark-text" id="${m.id}-remark" data-month="${index}">
-                    <select class="remark-select" id="${m.id}-select" data-month="${index}">
-                        <option value=""></option>
-                        <option value="INACTIVE">Inactive</option>
-                        <option value="New UBP">New UBP</option>
-                        <option value="MOVED">Moved</option>
-                        <option value="NOTE">Note</option>
-                        <option value="RP">RP</option>
-                    </select>
+                        <select class="remark-select" id="${m.id}-select" data-month="${index}">
+                            <option value=""></option>
+                            <option value="INACTIVE">Inactive</option>
+                            <option value="MOVED OUT">Moved Out</option>
+                            <option value="MOVED IN">Moved In</option>
+                            <option value="NEW UBP">New UBP</option>
+                            <option value="REACTIVATED">Reactivated</option>
+                            <option value="REINSTATED">Reinstated</option>
+                            <option value="DISQUALIFIED">Disqualified</option>
+                            <option value="REMOVED">REMOVED</option>
+                            <option value="RP">RP</option>
+                        </select>
                 </td>
             `;
             tbody.appendChild(row);
@@ -1931,6 +1988,7 @@ function attachS21AutoCheckListeners(monthIndex, m) {
     const hrsEl = document.getElementById(`${m.id}-hours`);
     const remSelEl = document.getElementById(`${m.id}-select`);
     const auxEl = document.getElementById(`${m.id}-aux`);
+    const noteEl = document.getElementById(`${m.id}-remark`);
 
     if (!minEl || !bsEl || !hrsEl) return;
     if (minEl.dataset.s21Bound === "true") return;
@@ -1986,6 +2044,7 @@ function attachS21AutoCheckListeners(monthIndex, m) {
     minEl.addEventListener("change", handleAutoLogic);
     bsEl.addEventListener("change", handleAutoLogic);
     hrsEl.addEventListener("change", handleAutoLogic);
+    if (noteEl) noteEl.addEventListener("change", handleAutoLogic);
     if (auxEl) auxEl.addEventListener("change", handleAutoLogic);
     if (remSelEl) remSelEl.addEventListener("change", handleAutoLogic);
 
@@ -3760,7 +3819,38 @@ function updateSidebarClosedState() {
     });
 }
 
+function togglePubStatusDropdown(){
+    const label=document.getElementById("pubStatusDisplay");
+    const select=document.getElementById("pubStatus");
+    if(!label||!select)return;
 
+    label.style.display="none";
+    select.classList.add("show");
+    select.focus();
+}
+
+function changePubStatus(value){
+    const label=document.getElementById("pubStatusDisplay");
+    const select=document.getElementById("pubStatus");
+    if(!label||!select)return;
+
+    const text=value||"Active";
+    const statusClass={
+        "":"active",
+        "Inactive":"inactive",
+        "Moved Out":"moved-out",
+        "Removed":"removed",
+        "Disqualified":"disqualified"
+    }[value]||"active";
+
+    label.textContent=text;
+    label.className=`pub-status-label ${statusClass}`;
+
+    select.classList.remove("show");
+    label.style.display="inline-block";
+
+    console.log("📌 Publisher status changed:",text);
+}
 
 
 

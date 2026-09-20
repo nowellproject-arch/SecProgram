@@ -724,14 +724,18 @@ const calendarMonthNames = [
                 <td><input type="number" min="0" step="0.5" class="text-center hours-input" id="${m.id}-hours" data-month="${index}"></td>
                 <td class="remarks-container">
                     <input type="text" class="remark-text" id="${m.id}-remark" data-month="${index}">
-                    <select class="remark-select" id="${m.id}-select" data-month="${index}">
-                        <option value=""></option>
-                        <option value="INACTIVE">Inactive</option>
-                        <option value="New UBP">New UBP</option>
-                        <option value="MOVED">Moved</option>
-                        <option value="NOTE">Note</option>
-                        <option value="RP">RP</option>
-                    </select>
+                         <select class="remark-select" id="${m.id}-select" data-month="${index}">
+                            <option value=""></option>
+                            <option value="INACTIVE">Inactive</option>
+                            <option value="MOVED OUT">Moved Out</option>
+                            <option value="MOVED IN">Moved In</option>
+                            <option value="NEW UBP">New UBP</option>
+                            <option value="REACTIVATED">Reactivated</option>
+                            <option value="REINSTATED">Reinstated</option>
+                            <option value="DISQUALIFIED">Disqualified</option>
+                            <option value="REMOVED">REMOVED</option>
+                            <option value="RP">RP</option>
+                        </select>
                 </td>
             `;
             tbody.appendChild(row);
@@ -1670,6 +1674,7 @@ function attachS21AutoCheckListeners(monthIndex, m) {
     const hrsEl = document.getElementById(`${m.id}-hours`);
     const auxEl = document.getElementById(`${m.id}-aux`);
     const remSelEl = document.getElementById(`${m.id}-select`);
+    const noteEl = document.getElementById(`${m.id}-remark`);
 
     if (!minEl || !bsEl || !hrsEl) {
         console.warn(`⚠️ S-21 elements missing for ${m.id}`);
@@ -1723,7 +1728,7 @@ function attachS21AutoCheckListeners(monthIndex, m) {
         minEl._s21Timer = setTimeout(handleAutoLogic, 200);
     };
 
-    [minEl, bsEl, hrsEl, auxEl, remSelEl].forEach(el => {
+    [minEl, bsEl, hrsEl, auxEl, noteEl, remSelEl].forEach(el => {    
         if (el) el.addEventListener("change", debounced);
     });
 
