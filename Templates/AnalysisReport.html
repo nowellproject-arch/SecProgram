@@ -340,7 +340,7 @@
     <div class="card-title">Field Service Activity</div>
     <div style="display:flex; gap:6px;">
       <button class="dash-link" onclick="filterData('S-88', event)">
-        <span>S-88 Attendance</span> <span>→</span>
+        <span>S-88 Attendance Entries</span> <span>→</span>
       </button>
       <button class="dash-link" onclick="filterData('CO-AVG', event)">
         <span>Circuit Overseer (6-Mo Avg)</span> <span>→</span>
@@ -1722,10 +1722,10 @@ window.loadS88Attendance=async function(){
         const weekendAttendance=tbody.querySelector(`[data-s88-number="${number}"][data-s88-field="AttendcPublickTotal"]`);
         const midweekAvg=document.getElementById(`s88-midweek-avg-${number}`);
         const weekendAvg=document.getElementById(`s88-weekend-avg-${number}`);
-        const mwM=Number(midweekMeetings?.value||0);
-        const mwA=Number(midweekAttendance?.value||0);
-        const weM=Number(weekendMeetings?.value||0);
-        const weA=Number(weekendAttendance?.value||0);
+        const mwM = midweekMeetings?.value === "" ? "" : Number(midweekMeetings.value);
+        const mwA = midweekAttendance?.value === "" ? "" : Number(midweekAttendance.value);
+        const weM = weekendMeetings?.value === "" ? "" : Number(weekendMeetings.value);
+        const weA = weekendAttendance?.value === "" ? "" : Number(weekendAttendance.value);
         if(midweekAvg)midweekAvg.textContent=mwM>0&&mwA>0?Math.round(mwA/mwM):"";
         if(weekendAvg)weekendAvg.textContent=weM>0&&weA>0?Math.round(weA/weM):"";
 

@@ -586,14 +586,14 @@
                     <!-- Midweek Row -->
                     <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px; color: #555;">Midweek</div>
                     <div style="display: flex; gap: 5px; margin-bottom: 6px;">
-                        <input type="number" id="noMtgs1" class="form-control text-center" placeholder="Mtgs" style="height: 22px; width: 50%;" title="Midweek Meetings Count">
+                        <input type="number" id="noMtgs1" class="form-control text-center" placeholder="No of Mtgs" style="height: 22px; width: 50%;" title="Midweek Meetings Count">
                         <input type="number" id="attendcMidweekTotal" class="form-control text-center" placeholder="Total Att." style="height: 22px; width: 50%;" title="Total Midweek Attendance">
                     </div>
 
                     <!-- Weekend Row -->
                     <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px; color: #555;">Weekend</div>
                     <div style="display: flex; gap: 5px;">
-                        <input type="number" id="noMtgs2" class="form-control text-center" placeholder="Mtgs" style="height: 22px; width: 50%;" title="Weekend Meetings Count">
+                        <input type="number" id="noMtgs2" class="form-control text-center" placeholder="No of Mtgs" style="height: 22px; width: 50%;" title="Weekend Meetings Count">
                         <input type="number" id="attendcPublickTotal" class="form-control text-center" placeholder="Total Att." style="height: 22px; width: 50%;" title="Total Weekend Attendance">
                     </div>
                 </div>
@@ -2557,8 +2557,15 @@ function saveMonthlyAttendanceData() {
         const activePublisher = Number(document.getElementById('activePublishersInput')?.value) || 0;
         const inputMidweek = Number(document.getElementById('attendcMidweekTotal')?.value) || 0;
         const inputPublic = Number(document.getElementById('attendcPublickTotal')?.value) || 0;
-        const inputNoMtgs1 = Number(document.getElementById('noMtgs1')?.value) || 0;
-        const inputNoMtgs2 = Number(document.getElementById('noMtgs2')?.value) || 0;
+        const inputNoMtgs1 =
+            document.getElementById('noMtgs1')?.value === ""
+                ? ""
+                : Number(document.getElementById('noMtgs1').value);
+
+        const inputNoMtgs2 =
+            document.getElementById('noMtgs2')?.value === ""
+                ? ""
+                : Number(document.getElementById('noMtgs2').value);
 
         console.group(`💾 [saveMonthlyAttendanceData] Saving NUMBER: ${targetNumber}`);
 
@@ -2682,17 +2689,19 @@ function logAllSavedAttendanceRecords() {
 
 // Calculate Weekend Average Attendance
 function calculateWeekendAverage() {
-    const mtgs = parseFloat(document.getElementById('noMtgs2').value) || 0;
-    const total = parseFloat(document.getElementById('attendcPublickTotal').value) || 0;
+    const mtgsValue = document.getElementById('noMtgs2')?.value;
+    const totalValue = document.getElementById('attendcPublickTotal')?.value;
     const avgDisplayEl = document.getElementById('avgWeekendDisplay');
 
-    if (mtgs > 0) {
+    const mtgs = mtgsValue === "" ? "" : parseFloat(mtgsValue);
+    const total = totalValue === "" ? "" : parseFloat(totalValue);
+
+    if (mtgs !== "" && total !== "" && mtgs > 0) {
         avgDisplayEl.value = (total / mtgs).toFixed(1);
     } else {
         avgDisplayEl.value = "";
     }
 }
-
 
 // ==========================================
 // 3. INITIALIZATION & EVENT LISTENERS / page load
