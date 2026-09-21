@@ -1711,11 +1711,11 @@ window.loadS88Attendance=async function(){
         tbody.innerHTML=html;
 
         // Recalculate average immediately while typing
-        tbody.querySelectorAll("input").forEach(input=>{
+    tbody.querySelectorAll("input").forEach(input=>{
      input.addEventListener("input",async function(){
-        const number=Number(this.dataset.s88Number);
+        const number=this.dataset.s88Number;
         const field=this.dataset.s88Field;
-        const value=this.value;
+        const value = this.value === "" ? 0 : Number(this.value);
         const midweekMeetings=tbody.querySelector(`[data-s88-number="${number}"][data-s88-field="NoMtgs1"]`);
         const midweekAttendance=tbody.querySelector(`[data-s88-number="${number}"][data-s88-field="AttendcMidweekTotal"]`);
         const weekendMeetings=tbody.querySelector(`[data-s88-number="${number}"][data-s88-field="NoMtgs2"]`);
