@@ -99,6 +99,66 @@ tx.onerror=()=>console.error("❌ Transaction error:",tx.error);
     console.log("📦 COMPLETE RAW ROWS:",euzziel);
 })();
 
+====================
+MonthlyRecord upodater
+
+(async () => {
+    const number = "200";
+    const activePublishers = "93";
+
+    const db = await openIndexedDB();
+
+    const tx = db.transaction("MonthlyRecords", "readwrite");
+    const store = tx.objectStore("MonthlyRecords");
+
+    const req = store.get(number);
+
+    req.onsuccess = () => {
+        const record = req.result;
+
+        if (!record) {
+            console.error("❌ NUMBER", number, "not found");
+            db.close();
+            return;
+        }
+
+        console.log("Before:", record);
+
+        record.ActivePublishers = activePublishers;
+
+        const putReq = store.put(record);
+
+        putReq.onsuccess = () => {
+            console.log(
+                "✅ Updated NUMBER",
+                number,
+                "ActivePublishers =",
+                activePublishers
+            );
+        };
+
+        putReq.onerror = () => {
+            console.error("❌ Update failed:", putReq.error);
+        };
+    };
+
+    req.onerror = () => {
+        console.error("❌ Read failed:", req.error);
+    };
+
+    tx.oncomplete = () => {
+        db.close();
+        console.log("✅ Transaction complete");
+    };
+
+    tx.onerror = () => {
+        console.error("❌ Transaction error:", tx.error);
+        db.close();
+    };
+})();
+
+
+
 
 
 //  setup AI
@@ -109,5 +169,5 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m " Blank s-88 default"
+git commit -m "Print s21 adjustment"
 git push origin main

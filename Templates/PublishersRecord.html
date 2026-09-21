@@ -787,6 +787,7 @@ const calendarMonthNames = [
                             <option value="DISQUALIFIED">Disqualified</option>
                             <option value="REMOVED">REMOVED</option>
                             <option value="RP">RP</option>
+                            <option value="SP">SP</option>
                         </select>
                 </td>
             `;
@@ -2933,11 +2934,17 @@ async function buildPublisherPayloadForGAS() {
                         value == null ||
                         ["", "0", "FALSE", "NO", "N"].includes(norm(value));
 
+                    const isActive = p => {
+                        const status = norm(p.Status);
+                        return status === "" || status === "ACTIVE";
+                    };
+
                     const hasValue = value =>
                         value != null && norm(value) !== "";
 
                     if (batchRegPioneers) {
                         selectedPublishers = allPublishers.filter(p =>
+                            isActive(p) &&
                             isTrue(p.RP)
                         );
 
@@ -2946,6 +2953,7 @@ async function buildPublisherPayloadForGAS() {
 
                     else if (batchUnbaptized) {
                         selectedPublishers = allPublishers.filter(p =>
+                            isActive(p) &&
                             !hasValue(p.Baptism)
                         );
 
@@ -2954,6 +2962,7 @@ async function buildPublisherPayloadForGAS() {
 
                     else if (batchPublishers) {
                         selectedPublishers = allPublishers.filter(p =>
+                              isActive(p) &&
                             isFalseOrEmpty(p.RP) &&
                             isFalseOrEmpty(p.SF) &&
                             hasValue(p.Baptism)

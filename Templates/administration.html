@@ -33,7 +33,7 @@
     .form-label {
       font-weight: 600;
       font-size: 0.75rem;
-      color: #4a5568;
+      color: #063d9d;
       font-weight: bold; 
       margin-bottom: 2px;
     }
@@ -82,7 +82,15 @@
     <div class="col-lg-5 col-xl-4">
       <div class="card">
         <div class="card-header d-flex align-items-center">
-          <i class="fa-solid fa-church text-primary me-2"></i> Congregation Details
+        
+
+          <svg class="text-primary me-2" style="height: 1em; width: auto; vertical-align: -0.125em;" viewBox="0 0 50 45" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 5 10 H 45 V 40 H 5 Z M 8 13 V 37 H 42 V 13 Z" fill-rule="evenodd"/>
+          <rect x="15" y="25" width="8" height="12" fill="currentColor"/>
+          <rect x="27" y="16" width="12" height="16" fill="currentColor"/>
+          <text x="33" y="28" font-family="sans-serif" font-weight="bold" font-size="8" fill="#ffffff" text-anchor="middle">JW</text>
+          <line x1="1" y1="40" x2="49" y2="40" stroke="currentColor" stroke-width="2"/>
+        </svg> Congregation Details
         </div>
         <div class="card-body">
           <form id="congInfoForm">
@@ -144,9 +152,6 @@
               </div>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 btn-custom mt-2">
-              <i class="fa-solid fa-floppy-disk me-1"></i> Save Congregation Info
-            </button>
           </form>
         </div>
       </div>
@@ -273,43 +278,94 @@
     });
   }
 
-  async function saveCongInfo(e) {
-    e.preventDefault();
+function setupCongInfoAutoSave() {
 
-    const currentUser = document.getElementById('user').value || localStorage.getItem('username') || "NoelDI";
-    const currentPasscode = document.getElementById('passcode').value || localStorage.getItem('user_passcode') || "C001";
+    const fields = [
+        "Congregation",
+        "CongNumber",
+        "Address",
+        "Province",
+        "CBOE",
+        "SEC",
+        "SO"
+    ];
 
-    // Save/Update in localStorage as well
-    localStorage.setItem('username', currentUser);
-    localStorage.setItem('user_passcode', currentPasscode);
+    fields.forEach(id => {
 
-    const txRead = db.transaction('CongInfo', 'readonly');
-    const storeRead = txRead.objectStore('CongInfo');
-    const getReq = storeRead.getAll();
+        const el = document.getElementById(id);
 
-    getReq.onsuccess = () => {
-      const existingData = getReq.result.length > 0 ? getReq.result[0] : {};
+        if(!el) return;
 
-      const infoData = {
-        ...existingData,
-        Address: document.getElementById('Address').value,
-        CBOE: document.getElementById('CBOE').value,
-        CongNumber: document.getElementById('CongNumber').value,
-        Congregation: document.getElementById('Congregation').value,
-        Province: document.getElementById('Province').value,
-        SEC: document.getElementById('SEC').value,
-        SO: document.getElementById('SO').value,
-        passcode: currentPasscode,
-        user: currentUser
-      };
+        el.addEventListener("change", () => {
+            saveCongInfo();
+        });
 
-      const txWrite = db.transaction('CongInfo', 'readwrite');
-      const storeWrite = txWrite.objectStore('CongInfo');
-      storeWrite.put(infoData);
+    });
 
-      txWrite.oncomplete = () => alert('Congregation Info saved successfully!');
-    };
-  }
+    console.log("✅ Congregation Info auto-save enabled");
+}
+
+
+ async function saveCongInfo() {
+
+    try {
+        const txRead = db.transaction('CongInfo', 'readonly');
+        const storeRead = txRead.objectStore('CongInfo');
+        const getReq = storeRead.getAll();
+
+        getReq.onsuccess = () => {
+
+            const existingData =
+                getReq.result.length > 0
+                    ? getReq.result[0]
+                    : {};
+
+            // Keep user and passcode exactly as already stored
+            const infoData = {
+                ...existingData,
+
+                Address: document.getElementById('Address').value,
+                CBOE: document.getElementById('CBOE').value,
+                CongNumber: document.getElementById('CongNumber').value,
+                Congregation: document.getElementById('Congregation').value,
+                Province: document.getElementById('Province').value,
+                SEC: document.getElementById('SEC').value,
+                SO: document.getElementById('SO').value
+            };
+
+            const txWrite = db.transaction('CongInfo', 'readwrite');
+            const storeWrite = txWrite.objectStore('CongInfo');
+
+            storeWrite.put(infoData);
+
+            txWrite.oncomplete = () => {
+                console.log("💾 Congregation Info auto-saved");
+                
+                if(typeof window.setSyncUnsaved === "function"){
+                    window.setSyncUnsaved();
+                }
+            };
+
+            txWrite.onerror = () => {
+                console.error(
+                    "❌ Failed to save Congregation Info:",
+                    txWrite.error
+                );
+            };
+        };
+
+        getReq.onerror = () => {
+            console.error(
+                "❌ Failed to read Congregation Info:",
+                getReq.error
+            );
+        };
+
+    } catch(err) {
+        console.error("❌ Congregation Info save error:", err);
+    }
+}
+
 
   function loadGroups(){
     return new Promise((resolve,reject)=>{
@@ -429,9 +485,9 @@
       initLocalStorage();
       db = await openIndexedDB();
       await loadCongInfo();
+      setupCongInfoAutoSave();
       await loadGroups();
 
-      document.getElementById('congInfoForm').addEventListener('submit', saveCongInfo);
       document.getElementById('groupForm').addEventListener('submit', handleGroupSubmit);
 
       console.log("✅ Administration loaded from IndexedDB");

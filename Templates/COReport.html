@@ -221,6 +221,9 @@
             font-weight: 600;
             font-variant-numeric: tabular-nums;
         }
+
+
+
     </style>
 </head>
 <body>
@@ -233,27 +236,39 @@
     <h1 class="section-title">Report Summary for the Past 6 Months</h1>
 
     <table class="summary-table">
-    <thead>
-        <tr>
-            <th rowspan="2" class="main-header-month" style="width: 18%;">MONTH</th>
-            <th colspan="2" style="width: 22%;">PUBLISHERS</th>
-            <th colspan="3" style="width: 30%;">AUXILIARY PIONEERS</th>
-            <th colspan="3" style="width: 30%;">REGULAR PIONEERS</th>
-        </tr>
-        <tr>
-            <th style="width: 12%;">REPORTING</th>
-            <th style="width: 10%;">BS</th>
-            <th style="width: 12%;">REPORTING</th>
-            <th style="width: 8%;">BS</th>
-            <th style="width: 10%;">HOURS</th>
-            <th style="width: 12%;">REPORTING</th>
-            <th style="width: 8%;">BS</th>
-            <th style="width: 10%;">HOURS</th>
-        </tr>
-    </thead>
+        <thead>
+            <tr>
+                <th rowspan="2" class="main-header-month" style="width: 12%;">MONTH</th>
+                <th rowspan="2" style="width: 8%;">ACTIVE<br>PUBS</th>
+                <th colspan="2" style="width: 20%; font-weight: bold;">PUBLISHERS</th>
+                <th colspan="3" style="width: 28%; font-weight: bold;">AUXILIARY PIONEERS</th>
+                <th colspan="3" style="width: 28%; font-weight: bold;">REGULAR PIONEERS</th>
+            </tr>
+
+            <tr>
+                <th style="width: 12%;">
+                    <span style="display:inline-block; transform:scaleX(0.8);">No. of Reports</span>
+                </th>
+                                
+                <th style="width: 6%;">BS</th>
+
+                <th style="width: 12%;">
+                    <span style="display:inline-block; transform:scaleX(0.8);">No. of Reports</span>
+                </th>
+                <th style="width: 6%;">BS</th>
+                <th style="width: 6%;">HOURS</th>
+
+                <th style="width: 12%;">
+                    <span style="display:inline-block; transform:scaleX(0.8);">No. of Reports</span>
+                </th>
+                <th style="width: 6%;">BS</th>
+                <th style="width: 6%;">HOURS</th>
+            </tr>
+        </thead>
     <tbody>
         <tr>
             <td class="text-left row-header" id="MONTH_1"></td>
+            <td id="M1_ACTIVE_PUBS"></td>
             <td id="M1_PUB_REP"></td>
             <td id="M1_PUB_BS"></td>
             <td id="M1_AUX_REP"></td>
@@ -265,6 +280,7 @@
         </tr>
         <tr>
             <td class="text-left row-header" id="MONTH_2"></td>
+            <td id="M2_ACTIVE_PUBS"></td>
             <td id="M2_PUB_REP"></td>
             <td id="M2_PUB_BS"></td>
             <td id="M2_AUX_REP"></td>
@@ -276,6 +292,7 @@
         </tr>
         <tr>
             <td class="text-left row-header" id="MONTH_3"></td>
+            <td id="M3_ACTIVE_PUBS"></td>
             <td id="M3_PUB_REP"></td>
             <td id="M3_PUB_BS"></td>
             <td id="M3_AUX_REP"></td>
@@ -287,6 +304,7 @@
         </tr>
         <tr>
             <td class="text-left row-header" id="MONTH_4"></td>
+            <td id="M4_ACTIVE_PUBS"></td>
             <td id="M4_PUB_REP"></td>
             <td id="M4_PUB_BS"></td>
             <td id="M4_AUX_REP"></td>
@@ -298,6 +316,7 @@
         </tr>
         <tr>
             <td class="text-left row-header" id="MONTH_5"></td>
+            <td id="M5_ACTIVE_PUBS"></td>
             <td id="M5_PUB_REP"></td>
             <td id="M5_PUB_BS"></td>
             <td id="M5_AUX_REP"></td>
@@ -309,6 +328,7 @@
         </tr>
         <tr>
             <td class="text-left row-header" id="MONTH_6"></td>
+            <td id="M6_ACTIVE_PUBS"></td>
             <td id="M6_PUB_REP"></td>
             <td id="M6_PUB_BS"></td>
             <td id="M6_AUX_REP"></td>
@@ -319,7 +339,9 @@
             <td id="M6_REG_HRS"></td>
         </tr>
         <tr>
+         <tr>
             <td class="bold text-left row-header">TOTAL</td>
+            <td></td>
             <td id="TOTAL_PUB_REP"></td>
             <td id="TOTAL_PUB_BS"></td>
             <td id="TOTAL_AUX_REP"></td>
@@ -329,8 +351,10 @@
             <td id="TOTAL_REG_BS"></td>
             <td id="TOTAL_REG_HRS"></td>
         </tr>
+
         <tr>
             <td class="bold text-left row-header">AVERAGE</td>
+            <td></td>
             <td id="AVG_PUB_REP"></td>
             <td id="AVG_PUB_BS"></td>
             <td id="AVG_AUX_REP"></td>
@@ -340,8 +364,10 @@
             <td id="AVG_REG_BS"></td>
             <td id="AVG_REG_HRS"></td>
         </tr>
+
         <tr>
             <td class="bold text-left row-header">PER PERSON AVERAGE</td>
+            <td></td>
             <td></td>
             <td id="PPA_PUB_BS"></td>
             <td></td>
@@ -353,6 +379,9 @@
         </tr>
     </tbody>
 </table>
+
+
+
 
 <!-- BOTTOM SECTION: CONGREGATION MEETING ATTENDANCE RECORD -->
 <div class="attendance-section">
@@ -530,6 +559,13 @@ window.loadCOReport=async function(){
             return String(r.REMARKS??"").toUpperCase().includes("RP");
         };
 
+        const isSP = r => {
+            return String(r.REMARKS ?? "")
+                .trim()
+                .toUpperCase()
+                .includes("SP");
+        };
+
         const num=v=>{
             const n=Number(v);
             return Number.isFinite(n)?n:0;
@@ -539,10 +575,11 @@ window.loadCOReport=async function(){
             const number=Number(month.NUMBER);
             const rows=records.filter(r=>Number(r.NUMBER)===number);
 
-            const publishers=rows.filter(r=>
-                reported(r)&&
-                !isAux(r)&&
-                !isRP(r)
+            const publishers = rows.filter(r =>
+                reported(r) &&
+                !isAux(r) &&
+                !isRP(r) &&
+                !isSP(r)
             );
 
             const auxiliary=rows.filter(r=>
@@ -666,6 +703,7 @@ window.loadCOReport=async function(){
 
         dbAttendance.close();
 
+      
         const attendanceMonthly=period.sixMonths.map(month=>{
             const number=Number(month.NUMBER);
 
@@ -682,6 +720,7 @@ window.loadCOReport=async function(){
             return{
                 NUMBER:number,
                 MONTH:month.MONTH_||"",
+                activePublishers: record.ActivePublishers ?? "",
                 mwMeetings,
                 mwAttendance,
                 mwAverage:mwMeetings>0&&mwAttendance>0
@@ -697,8 +736,12 @@ window.loadCOReport=async function(){
 
         attendanceMonthly.forEach((r,i)=>{
             const n=i+1;
+
+            set(`M${n}_ACTIVE_PUBS`,r.activePublishers);
+
             set("MW_SERVICE_YEAR",period.lastMonth?.ServiceYear||""); 
             set("WE_SERVICE_YEAR",period.lastMonth?.ServiceYear||"");   
+
             set(`MW_MONTH_${n}`,r.MONTH);
             set(`MW_M${n}_MEETINGS`,r.mwMeetings);
             set(`MW_M${n}_ATTENDANCE`,r.mwAttendance);
