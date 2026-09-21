@@ -1877,18 +1877,16 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
         return;
     }
 
+    // NUMBER = service month represented by this S-21 column
+    const targetNumber = getServiceMonthNumber(selectedYear, monthIndex);
 
-
-        // NUMBER = service month represented by this S-21 column
-        const targetNumber = getServiceMonthNumber(selectedYear, monthIndex);
-
-        // Date_entered = actual active reporting NUMBER
-        const dateEnteredNumber = Number(
-            window.currentActiveMonthIndex ??
-            (typeof window.getMonthIndex === "function"
-                ? window.getMonthIndex()
-                : targetNumber)
-        );
+    // Date_entered = actual active reporting NUMBER
+    const dateEnteredNumber = Number(
+        window.currentActiveMonthIndex ??
+        (typeof window.getMonthIndex === "function"
+            ? window.getMonthIndex()
+            : targetNumber)
+    );
 
     const ministryEl = document.getElementById(`${m.id}-ministry`);
     const bsEl = document.getElementById(`${m.id}-studies`);
@@ -1902,7 +1900,7 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
     const auxVal = auxEl?.checked ? 1 : 0;
     const hrsVal = hrsEl?.value ? Number(hrsEl.value) : "";
     const noteVal = noteEl?.value || "";
-    const remarksVal = remarksEl?.value || "";
+    let remarksVal = remarksEl?.value || "";
 
     const hasData =
         ministryVal ||
@@ -1915,6 +1913,49 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
     const db = await openIndexedDB();
 
     try {
+        // ---------------------------------------------------------
+        // Get publisher information
+        // ---------------------------------------------------------
+        const pub = await new Promise((resolve, reject) => {
+            const tx = db.transaction("PUBLISHERS", "readonly");
+            const req = tx.objectStore("PUBLISHERS")
+                .get(String(targetPublisherId));
+
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+
+        const isTrue = v =>
+            ["1", "TRUE", "YES", "Y", "?", "-1"]
+                .includes(String(v ?? "").trim().toUpperCase());
+
+        const isRP = pub && isTrue(pub.RP);
+        const isNewOrSF =
+            pub &&
+            (isTrue(pub.New) || isTrue(pub.SF));
+
+        // ---------------------------------------------------------
+        // Automatically determine Remarks
+        // ---------------------------------------------------------
+        if (!remarksVal) {
+            if (isRP) {
+                remarksVal = "RP";
+            } else if (isNewOrSF) {
+                remarksVal = "SP";
+            }
+        }
+
+        // ---------------------------------------------------------
+        // Date_entered
+        //
+        // New or SF publishers do NOT get Date_entered.
+        // Everyone else uses the active reporting NUMBER.
+        // ---------------------------------------------------------
+        const finalDateEntered =
+            isNewOrSF
+                ? null
+                : (ministryVal ? Number(dateEnteredNumber) : null);
+
         const tx = db.transaction("RECORDS", "readwrite");
         const store = tx.objectStore("RECORDS");
 
@@ -1923,6 +1964,7 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
                 Number(targetNumber),
                 String(targetPublisherId)
             ]);
+
             req.onsuccess = () => resolve(req.result);
             req.onerror = () => reject(req.error);
         });
@@ -1934,12 +1976,17 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
                     Number(targetNumber),
                     String(targetPublisherId)
                 ]);
-                console.log(`🗑️ S21 record removed: ${targetPublisherId}/${targetNumber}`);
+
+                console.log(
+                    `🗑️ S21 record removed: ${targetPublisherId}/${targetNumber}`
+                );
             }
+
             await new Promise((resolve, reject) => {
                 tx.oncomplete = resolve;
                 tx.onerror = () => reject(tx.error);
             });
+
             return;
         }
 
@@ -1952,7 +1999,7 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
             HRS: hrsVal,
             Note: noteVal,
             REMARKS: remarksVal,
-            Date_entered: ministryVal ? Number(dateEnteredNumber) : "",
+            Date_entered: finalDateEntered,
             updated_at: Date.now(),
             is_deleted: 0
         };
@@ -1971,8 +2018,12 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
             IdPubs: record.IdPubs,
             NUMBER: record.NUMBER,
             Date_entered: record.Date_entered,
-            REMARKS: record.REMARKS
+            REMARKS: record.REMARKS,
+            RP: isRP,
+            New: pub?.New,
+            SF: pub?.SF
         });
+
     } catch (error) {
         console.error("❌ S21 IndexedDB save failed:", error);
     } finally {
@@ -2003,12 +2054,13 @@ function attachS21AutoCheckListeners(monthIndex, m) {
             minEl.checked = true;
         }
 
-        // Automatically set RP remark
+        // Automatically set Remarks based on publisher status
         const publisherId =
             minEl.dataset.publisherId ||
             (typeof selectedPubId !== "undefined" ? selectedPubId : null);
 
         if (publisherId && remSelEl && !remSelEl.value) {
+
             const pubs =
                 typeof publishersData !== "undefined" &&
                 Array.isArray(publishersData)
@@ -2023,8 +2075,15 @@ function attachS21AutoCheckListeners(monthIndex, m) {
                 ["1", "TRUE", "YES", "Y", "?", "-1"]
                     .includes(String(v ?? "").trim().toUpperCase());
 
-            if (pub && isTrue(pub.RP)) {
-                remSelEl.value = "RP";
+            if (pub) {
+                if (isTrue(pub.RP)) {
+                    // RP publisher
+                    remSelEl.value = "RP";
+
+                } else if (isTrue(pub.New) || isTrue(pub.SF)) {
+                    // New publisher or SF publisher
+                    remSelEl.value = "SP";
+                }
             }
         }
 

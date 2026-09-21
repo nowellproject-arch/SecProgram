@@ -1888,20 +1888,35 @@ function attachS21AutoCheckListeners(monthIndex, m) {
         }
 
         // Auto-set RP remark for RP publishers
-        if (remSelEl && !remSelEl.value) {
-            const db = await openIndexedDB();
-            const pub = await new Promise((resolve, reject) => {
-                const req = db.transaction("PUBLISHERS", "readonly")
-                    .objectStore("PUBLISHERS")
-                    .get(String(publisherId));
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(req.error);
-            });
-            db.close();
+        // Auto-set Remarks based on publisher status
+            if (remSelEl && !remSelEl.value) {
+                const db = await openIndexedDB();
 
-            const isTrue = v => ["1","TRUE","YES","Y","?","-1"].includes(String(v ?? "").trim().toUpperCase());
-            if (pub && isTrue(pub.RP)) remSelEl.value = "RP";
-        }
+                const pub = await new Promise((resolve, reject) => {
+                    const req = db.transaction("PUBLISHERS", "readonly")
+                        .objectStore("PUBLISHERS")
+                        .get(String(publisherId));
+
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+
+                db.close();
+
+                const isTrue = v =>
+                    ["1", "TRUE", "YES", "Y", "?", "-1"]
+                        .includes(String(v ?? "").trim().toUpperCase());
+
+                if (pub) {
+                    if (isTrue(pub.RP)) {
+                        // RP publisher
+                        remSelEl.value = "RP";
+                    } else if (isTrue(pub.New) || isTrue(pub.SF)) {
+                        // New publisher OR Special Field Service
+                        remSelEl.value = "SP";
+                    }
+                }
+            }
 
         // Save only through IndexedDB
         if (typeof saveS21MonthRecord === "function") {

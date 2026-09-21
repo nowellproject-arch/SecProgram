@@ -157,7 +157,38 @@ MonthlyRecord upodater
     };
 })();
 
+=====================
+DATE_ENTERED = ACTIVE MNUMBER
 
+(async () => {
+    const db = await openIndexedDB();
+
+    const activeNumber = Number(
+        window.currentActiveMonthIndex ??
+        (typeof window.getMonthIndex === "function"
+            ? window.getMonthIndex()
+            : 0)
+    );
+
+    const rows = await new Promise((resolve, reject) => {
+        const tx = db.transaction("RECORDS", "readonly");
+        const request = tx.objectStore("RECORDS").getAll();
+
+        request.onsuccess = () => {
+            resolve(
+                request.result.filter(
+                    r => Number(r.Date_entered) === activeNumber
+                )
+            );
+        };
+
+        request.onerror = () => reject(request.error);
+    });
+
+    console.log(`📊 Active NUMBER: ${activeNumber}`);
+    console.log(`📊 Records with Date_entered = ${activeNumber}: ${rows.length}`);
+    console.table(rows);
+})();
 
 
 
