@@ -169,5 +169,5 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Print s21 adjustment"
+git commit -m "Date_Entered returned"
 git push origin main
