@@ -625,35 +625,43 @@ window.loadCOReport=async function(){
                     : "";
             })
 
-       const averages={};
-            fields.forEach(f=>{
-                if(f==="pubBS" || f==="auxBS" || f==="auxHours" || f==="rpBS" || f==="rpHours"){
-                    averages[f]=monthly.length
-                        ?(totals[f]/monthly.length).toFixed(1)
-                        :"";
-                }else{
-                    averages[f]=monthly.length
-                        ?Math.round(totals[f]/monthly.length)
-                        :"";
+       const averages = {};
+            fields.forEach(f => {
+                if (!monthly.length) {
+                    averages[f] = "";
+                    return;
+                }
+
+                if (f === "pubBS" || f === "auxBS" || f === "auxHours" || f === "rpBS" || f === "rpHours") {
+                    // Keeps 1 decimal place for Bible Studies and Hours (e.g., 23.5, 243.0)
+                    averages[f] = (totals[f] / monthly.length).toFixed(1);
+                } else if (f === "auxReporting") {
+                    // Keeps 1 decimal place for Auxiliary Pioneers reporting to get 9.5 instead of rounding to 10
+                    averages[f] = (totals[f] / monthly.length).toFixed(1);
+                } else {
+                    // Rounds Publishers and Regular Pioneers reporting to whole numbers (e.g., 56, 25)
+                    averages[f] = Math.round(totals[f] / monthly.length);
                 }
             });
-        const perPerson={
-            pubBS:totals.pubReporting>0
-                ?(totals.pubBS/totals.pubReporting).toFixed(1)
-                :"",
-            auxBS:totals.auxReporting>0
-                ?(totals.auxBS/totals.auxReporting).toFixed(1)
-                :"",
-            auxHours:totals.auxReporting>0
-                ?(totals.auxHours/totals.auxReporting).toFixed(1)
-                :"",
-            rpBS:totals.rpReporting>0
-                ?(totals.rpBS/totals.rpReporting).toFixed(1)
-                :"",
-            rpHours:totals.rpReporting>0
-                ?(totals.rpHours/totals.rpReporting).toFixed(1)
-                :""
-        };
+
+
+        const perPerson = {
+                pubBS: num(totals.pubReporting) > 0
+                    ? (totals.pubBS / totals.pubReporting).toFixed(1)
+                    : "",
+                auxBS: num(totals.auxReporting) > 0
+                    ? (totals.auxBS / totals.auxReporting).toFixed(1)
+                    : "",
+                auxHours: num(totals.auxReporting) > 0
+                    ? (totals.auxHours / totals.auxReporting).toFixed(1)
+                    : "",
+                rpBS: num(totals.rpReporting) > 0
+                    ? (totals.rpBS / totals.rpReporting).toFixed(1)
+                    : "",
+                rpHours: num(totals.rpReporting) > 0
+                    ? (totals.rpHours / totals.rpReporting).toFixed(1)
+                    : ""
+            };
 
         const set=(id,value)=>{
             const el=document.getElementById(id);
