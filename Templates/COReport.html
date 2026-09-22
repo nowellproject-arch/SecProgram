@@ -340,16 +340,16 @@
         </tr>
         <tr>
          <tr>
-            <td class="bold text-left row-header">TOTAL</td>
-            <td></td>
-            <td id="TOTAL_PUB_REP"></td>
-            <td id="TOTAL_PUB_BS"></td>
-            <td id="TOTAL_AUX_REP"></td>
-            <td id="TOTAL_AUX_BS"></td>
-            <td id="TOTAL_AUX_HRS"></td>
-            <td id="TOTAL_REG_REP"></td>
-            <td id="TOTAL_REG_BS"></td>
-            <td id="TOTAL_REG_HRS"></td>
+            <td class="bold text-left row-header">PEAK</td>
+             <td id="PEAK_ACT_PUB"></td>
+            <td id="PEAK_PUB_REP"></td>
+            <td id="PEAK_PUB_BS"></td>
+            <td id="PEAK_AUX_REP"></td>
+            <td id="PEAK_AUX_BS"></td>
+            <td id="PEAK_AUX_HRS"></td>
+            <td id="PEAK_REG_REP"></td>
+            <td id="PEAK_REG_BS"></td>
+            <td id="PEAK_REG_HRS"></td>
         </tr>
 
         <tr>
@@ -617,6 +617,14 @@ window.loadCOReport=async function(){
             totals[f]=monthly.reduce((s,r)=>s+num(r[f]),0);
         });
 
+        const peaks = {};
+
+            fields.forEach(f => {
+                peaks[f] = monthly.length
+                    ? Math.max(...monthly.map(r => num(r[f])))
+                    : "";
+            })
+
        const averages={};
             fields.forEach(f=>{
                 if(f==="pubBS" || f==="auxBS" || f==="auxHours" || f==="rpBS" || f==="rpHours"){
@@ -665,14 +673,15 @@ window.loadCOReport=async function(){
             set(`M${n}_REG_HRS`,r.rpHours);
         });
 
-        set("TOTAL_PUB_REP",totals.pubReporting);
-        set("TOTAL_PUB_BS",totals.pubBS);
-        set("TOTAL_AUX_REP",totals.auxReporting);
-        set("TOTAL_AUX_BS",totals.auxBS);
-        set("TOTAL_AUX_HRS",totals.auxHours);
-        set("TOTAL_REG_REP",totals.rpReporting);
-        set("TOTAL_REG_BS",totals.rpBS);
-        set("TOTAL_REG_HRS",totals.rpHours);
+  
+        set("PEAK_PUB_REP",peaks.pubReporting);
+        set("PEAK_PUB_BS",peaks.pubBS);
+        set("PEAK_AUX_REP",peaks.auxReporting);
+        set("PEAK_AUX_BS",peaks.auxBS);
+        set("PEAK_AUX_HRS",peaks.auxHours);
+        set("PEAK_REG_REP",peaks.rpReporting);
+        set("PEAK_REG_BS",peaks.rpBS);
+        set("PEAK_REG_HRS",peaks.rpHours);
 
         set("AVG_PUB_REP",averages.pubReporting);
         set("AVG_PUB_BS",averages.pubBS);
@@ -733,6 +742,14 @@ window.loadCOReport=async function(){
                     :""
             };
         });
+
+        const peakActivePublishers = attendanceMonthly.length
+            ? Math.max(
+                ...attendanceMonthly.map(r => Number(r.activePublishers) || 0)
+            )
+            : "";
+
+            set("PEAK_ACT_PUB", peakActivePublishers);
 
         attendanceMonthly.forEach((r,i)=>{
             const n=i+1;
