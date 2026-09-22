@@ -1228,7 +1228,10 @@ function populateForm(p) {
     currentSelectedPublisher = p;
     
     const fullName = `${p.FNAME || ''} ${p.LName || ''}`.trim();
-    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    };
     
     // Accept IndexedDB "1"/"0" and CSV/PostgreSQL "True"/"False"
     const setCheck = (id, val) => {
@@ -1249,6 +1252,42 @@ function populateForm(p) {
     setVal('pubBaptism', formatDateForInput(p.Baptism));
     setVal('pubGroup', p.GROUP || '');
     setVal('pubStatus', p.Status ? p.Status.trim() : "");
+
+    // =====================================================
+    // UPDATE STATUS DISPLAY
+    // =====================================================
+    const statusDisplay = document.getElementById('pubStatusDisplay');
+
+    if (statusDisplay) {
+        const status = p.Status
+            ? String(p.Status).trim()
+            : "";
+
+        // Show Active when Status is blank
+        statusDisplay.textContent = status || "Active";
+
+        // Remove previous status classes
+        statusDisplay.classList.remove(
+            'active',
+            'inactive',
+            'moved-out'
+        );
+
+        // Apply current status class
+        switch (status.toUpperCase()) {
+            case 'INACTIVE':
+                statusDisplay.classList.add('inactive');
+                break;
+
+            case 'MOVED OUT':
+                statusDisplay.classList.add('moved-out');
+                break;
+
+            default:
+                statusDisplay.classList.add('active');
+                break;
+        }
+    }
     
     setCheck('isMale', p.Male);
     setCheck('isFemale', p.Female);
@@ -1257,6 +1296,7 @@ function populateForm(p) {
     setCheck('isRP', p.RP);
     setCheck('isSP', p.SF); // Maps database property 'SF' to HTML ID 'isSP'
 }
+
 
 // 8. Direct Edit / Auto-Save to IndexedDB
 function savePublisherChanges() {

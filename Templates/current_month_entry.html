@@ -1251,7 +1251,10 @@ function populateForm(p) {
     currentSelectedPublisher = p;
     
     const fullName = `${p.FNAME || ''} ${p.LName || ''}`.trim();
-    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    };
     
     // Accept IndexedDB "1"/"0" and CSV/PostgreSQL "True"/"False"
     const setCheck = (id, val) => {
@@ -1272,7 +1275,43 @@ function populateForm(p) {
     setVal('pubBaptism', formatDateForInput(p.Baptism));
     setVal('pubGroup', p.GROUP || '');
     setVal('pubStatus', p.Status ? p.Status.trim() : "");
-    
+
+    // =====================================================
+    // UPDATE STATUS DISPLAY
+    // =====================================================
+    const statusDisplay = document.getElementById('pubStatusDisplay');
+
+    if (statusDisplay) {
+        const status = p.Status
+            ? String(p.Status).trim()
+            : "";
+
+        // Display status
+        statusDisplay.textContent = status || "Active";
+
+        // Remove previous status classes
+        statusDisplay.classList.remove(
+            'active',
+            'inactive',
+            'moved-out'
+        );
+
+        // Apply current status class
+        switch (status.toUpperCase()) {
+            case 'INACTIVE':
+                statusDisplay.classList.add('inactive');
+                break;
+
+            case 'MOVED OUT':
+                statusDisplay.classList.add('moved-out');
+                break;
+
+            default:
+                statusDisplay.classList.add('active');
+                break;
+        }
+    }
+
     setCheck('isMale', p.Male);
     setCheck('isFemale', p.Female);
     setCheck('isElder', p.Elder);
@@ -1280,7 +1319,6 @@ function populateForm(p) {
     setCheck('isRP', p.RP);
     setCheck('isSP', p.SF); // Maps database property 'SF' to HTML ID 'isSP'
 }
-
 
 // 8. Direct Edit / Auto-Save to IndexedDB
 function savePublisherChanges() {
@@ -1864,14 +1902,17 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
 // ==========================================
 // Automatically inserts a new record or updates an existing one 
 // when any input field in a row is modified.
+// when any input field in a row is modified.
 async function saveS21MonthRecord(monthIndex, eventTarget) {
     const targetPublisherId = eventTarget?.dataset?.publisherId;
+
     if (!targetPublisherId) {
         console.warn("⚠️ S21 save: no publisher ID.");
         return;
     }
 
     const m = s21Months[monthIndex];
+
     if (!m) {
         console.warn("⚠️ S21 save: invalid monthIndex:", monthIndex);
         return;
@@ -1901,23 +1942,24 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
     const hrsVal = hrsEl?.value ? Number(hrsEl.value) : "";
     const noteVal = noteEl?.value || "";
     let remarksVal = remarksEl?.value || "";
+        console.log("📝 REMARKS VALUE AT SAVE:", JSON.stringify(remarksVal));
 
-    const hasData =
-        ministryVal ||
-        bsVal !== "" ||
-        auxVal ||
-        hrsVal !== "" ||
-        noteVal ||
-        remarksVal;
+    // ---------------------------------------------------------
+    // Was the Remarks dropdown manually changed?
+    // ---------------------------------------------------------
+    const userChangedRemarks =
+        remarksEl?.dataset.userChanged === "true";
 
     const db = await openIndexedDB();
 
     try {
+
         // ---------------------------------------------------------
         // Get publisher information
         // ---------------------------------------------------------
         const pub = await new Promise((resolve, reject) => {
             const tx = db.transaction("PUBLISHERS", "readonly");
+
             const req = tx.objectStore("PUBLISHERS")
                 .get(String(targetPublisherId));
 
@@ -1927,24 +1969,52 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
 
         const isTrue = v =>
             ["1", "TRUE", "YES", "Y", "?", "-1"]
-                .includes(String(v ?? "").trim().toUpperCase());
+                .includes(
+                    String(v ?? "").trim().toUpperCase()
+                );
 
         const isRP = pub && isTrue(pub.RP);
+
         const isNewOrSF =
             pub &&
-            (isTrue(pub.New) || isTrue(pub.SF));
+            (
+                isTrue(pub.New) ||
+                isTrue(pub.NEW) ||
+                isTrue(pub.SF)
+            );
+
+        // ---------------------------------------------------------
+        // Get existing S-21 record
+        // ---------------------------------------------------------
+        const existing = await new Promise((resolve, reject) => {
+            const tx = db.transaction("RECORDS", "readonly");
+
+            const req = tx.objectStore("RECORDS").get([
+                Number(targetNumber),
+                String(targetPublisherId)
+            ]);
+
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+
+        console.log("🔎 Existing S21 record:", existing);
 
         // ---------------------------------------------------------
         // Automatically determine Remarks
+        //
+        // ONLY do this when the user did NOT manually change
+        // the Remarks dropdown.
         // ---------------------------------------------------------
-        if (!remarksVal) {
+        if (!userChangedRemarks && !remarksVal) {
+
             if (isRP) {
                 remarksVal = "RP";
             } else if (isNewOrSF) {
                 remarksVal = "SP";
             }
         }
-
+            console.log("📝 REMARKS VALUE AFTER AUTO:", JSON.stringify(remarksVal));
         // ---------------------------------------------------------
         // Date_entered
         //
@@ -1954,42 +2024,71 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
         const finalDateEntered =
             isNewOrSF
                 ? null
-                : (ministryVal ? Number(dateEnteredNumber) : null);
+                : (ministryVal
+                    ? Number(dateEnteredNumber)
+                    : null);
 
-        const tx = db.transaction("RECORDS", "readwrite");
-        const store = tx.objectStore("RECORDS");
+        // ---------------------------------------------------------
+        // Determine whether this row contains data
+        //
+        // IMPORTANT:
+        // If the user manually changed Remarks, we save the row
+        // even when Remarks was changed to blank.
+        // ---------------------------------------------------------
+        const hasData =
+            ministryVal ||
+            bsVal !== "" ||
+            auxVal ||
+            hrsVal !== "" ||
+            noteVal !== "" ||
+            remarksVal !== "" ||
+            userChangedRemarks;
 
-        const existing = await new Promise((resolve, reject) => {
-            const req = store.get([
+        // ---------------------------------------------------------
+        // No activity and no existing record
+        // ---------------------------------------------------------
+        if (!hasData && !existing) {
+            console.log(
+                "ℹ️ S21 nothing to save:",
+                targetPublisherId,
+                targetNumber
+            );
+            return;
+        }
+
+        // ---------------------------------------------------------
+        // No activity but existing record
+        //
+        // This is the normal "clear the row" behavior.
+        // ---------------------------------------------------------
+        if (!hasData && existing) {
+
+            const tx = db.transaction("RECORDS", "readwrite");
+            const store = tx.objectStore("RECORDS");
+
+            store.delete([
                 Number(targetNumber),
                 String(targetPublisherId)
             ]);
-
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => reject(req.error);
-        });
-
-        // No activity = remove the existing record
-        if (!hasData) {
-            if (existing) {
-                store.delete([
-                    Number(targetNumber),
-                    String(targetPublisherId)
-                ]);
-
-                console.log(
-                    `🗑️ S21 record removed: ${targetPublisherId}/${targetNumber}`
-                );
-            }
 
             await new Promise((resolve, reject) => {
                 tx.oncomplete = resolve;
                 tx.onerror = () => reject(tx.error);
             });
 
+            console.log(
+                `🗑️ S21 record removed: ${targetPublisherId}/${targetNumber}`
+            );
+
+            setSyncUnsaved();
+            updateCurrentMonthDebugStorage();
+
             return;
         }
 
+        // ---------------------------------------------------------
+        // Save complete record
+        // ---------------------------------------------------------
         const record = {
             IdPubs: String(targetPublisherId),
             NUMBER: Number(targetNumber),
@@ -2004,6 +2103,9 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
             is_deleted: 0
         };
 
+        const tx = db.transaction("RECORDS", "readwrite");
+        const store = tx.objectStore("RECORDS");
+        console.log("💾 REMARKS BEING WRITTEN:", JSON.stringify(record.REMARKS));
         store.put(record);
 
         await new Promise((resolve, reject) => {
@@ -2019,13 +2121,19 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
             NUMBER: record.NUMBER,
             Date_entered: record.Date_entered,
             REMARKS: record.REMARKS,
+            userChangedRemarks,
             RP: isRP,
             New: pub?.New,
             SF: pub?.SF
         });
 
     } catch (error) {
-        console.error("❌ S21 IndexedDB save failed:", error);
+
+        console.error(
+            "❌ S21 IndexedDB save failed:",
+            error
+        );
+
     } finally {
         db.close();
     }
@@ -2106,7 +2214,30 @@ function attachS21AutoCheckListeners(monthIndex, m) {
     hrsEl.addEventListener("change", handleAutoLogic);
     if (noteEl) noteEl.addEventListener("change", handleAutoLogic);
     if (auxEl) auxEl.addEventListener("change", handleAutoLogic);
-    if (remSelEl) remSelEl.addEventListener("change", handleAutoLogic);
+    if (remSelEl) {
+            remSelEl.addEventListener("change", (e) => {
+
+                console.log(
+                    "🟡 REMARKS DROPDOWN:",
+                    "publisher =", minEl?.dataset?.publisherId,
+                    "month =", monthIndex,
+                    "value =", JSON.stringify(remSelEl.value),
+                    "text =", JSON.stringify(
+                        remSelEl.options[remSelEl.selectedIndex]?.text
+                    ),
+                    "flagBefore =", remSelEl.dataset.userChanged
+                );
+
+                remSelEl.dataset.userChanged = "true";
+
+                console.log("🟢 REMARKS USER CHANGE FLAG:", {
+                    userChangedRemarks: remSelEl.dataset.userChanged,
+                    valueNow: remSelEl.value
+                });
+
+                handleAutoLogic(e);
+            });
+        }
 
     console.log(`✅ S21 listener attached: ${m.name} [${monthIndex}]`);
 }

@@ -765,12 +765,264 @@ window.loadCOReport=async function(){
         );
 
         set("WE_MONTHLY_AVG",
-            weTotalMeetings>0
-                ?(weTotalAttendance/weTotalMeetings).toFixed(1)
-                :""
+    weTotalMeetings > 0
+        ? (weTotalAttendance / weTotalMeetings).toFixed(1)
+        : ""
         );
 
+
+        // ============================================================
+        // PERCENTAGE INCREASE / DECREASE
+        // PRESENT 6 MONTHS vs PREVIOUS 6 MONTHS
+        // ============================================================
+
+        // The current period is the 6 months already loaded above.
+        //
+        // Example:
+        //
+        // Present:
+        //   NUMBER 200 → 205
+        //
+        // Previous:
+        //   NUMBER 194 → 199
+        //
+        // We use NUMBER to get the immediately preceding 6 months.
+        // ============================================================
+
+
+        const currentNumbers = attendanceMonthly.map(r =>
+            Number(r.NUMBER)
+        );
+
+        if (currentNumbers.length > 0) {
+
+            const firstCurrentNumber =
+                Math.min(...currentNumbers);
+
+            const previousNumbers = [];
+
+            for (
+                let n = firstCurrentNumber - 6;
+                n < firstCurrentNumber;
+                n++
+            ) {
+                previousNumbers.push(n);
+            }
+
+
+            console.log(
+                "📊 CO Report previous 6-month NUMBERS:",
+                previousNumbers
+            );
+
+
+            // --------------------------------------------------------
+            // GET PREVIOUS 6-MONTH RECORDS
+            // --------------------------------------------------------
+
+            const previousAttendanceMonthly =
+                previousNumbers.map(number => {
+
+                    const record =
+                        attendanceRecords.find(
+                            r => Number(r.NUMBER) === number
+                        ) || {};
+
+                    const mwMeetings =
+                        Number(record.NoMtgs1 || 0);
+
+                    const mwAttendance =
+                        Number(
+                            record.AttendcMidweekTotal || 0
+                        );
+
+                    const weMeetings =
+                        Number(record.NoMtgs2 || 0);
+
+                    const weAttendance =
+                        Number(
+                            record.AttendcPublickTotal || 0
+                        );
+
+                    return {
+                        NUMBER: number,
+
+                        mwMeetings,
+                        mwAttendance,
+
+                        weMeetings,
+                        weAttendance
+                    };
+                });
+
+
+            // --------------------------------------------------------
+            // PREVIOUS 6-MONTH TOTALS
+            // --------------------------------------------------------
+
+            const previousMwTotalMeetings =
+                previousAttendanceMonthly.reduce(
+                    (sum, r) => sum + r.mwMeetings,
+                    0
+                );
+
+            const previousMwTotalAttendance =
+                previousAttendanceMonthly.reduce(
+                    (sum, r) => sum + r.mwAttendance,
+                    0
+                );
+
+
+            const previousWeTotalMeetings =
+                previousAttendanceMonthly.reduce(
+                    (sum, r) => sum + r.weMeetings,
+                    0
+                );
+
+            const previousWeTotalAttendance =
+                previousAttendanceMonthly.reduce(
+                    (sum, r) => sum + r.weAttendance,
+                    0
+                );
+
+
+            // --------------------------------------------------------
+            // PREVIOUS 6-MONTH AVERAGES
+            //
+            // Same calculation as the present period:
+            //
+            // total attendance / total meetings
+            // --------------------------------------------------------
+
+            const previousMwAverage =
+                previousMwTotalMeetings > 0
+                    ? previousMwTotalAttendance /
+                    previousMwTotalMeetings
+                    : null;
+
+            const previousWeAverage =
+                previousWeTotalMeetings > 0
+                    ? previousWeTotalAttendance /
+                    previousWeTotalMeetings
+                    : null;
+
+
+            // --------------------------------------------------------
+            // PRESENT 6-MONTH AVERAGES
+            // --------------------------------------------------------
+
+            const presentMwAverage =
+                mwTotalMeetings > 0
+                    ? mwTotalAttendance /
+                    mwTotalMeetings
+                    : null;
+
+            const presentWeAverage =
+                weTotalMeetings > 0
+                    ? weTotalAttendance /
+                    weTotalMeetings
+                    : null;
+
+
+            // --------------------------------------------------------
+            // PERCENTAGE CHANGE FUNCTION
+            // --------------------------------------------------------
+
+            function calculatePercentageChange(
+                presentAverage,
+                previousAverage
+            ) {
+
+                if (
+                    previousAverage === null ||
+                    previousAverage === 0 ||
+                    presentAverage === null
+                ) {
+                    return "";
+                }
+
+                const percentage =
+                    (
+                        (presentAverage - previousAverage) /
+                        previousAverage
+                    ) * 100;
+
+                return percentage.toFixed(1) + "%";
+            }
+
+
+            // --------------------------------------------------------
+            // MIDWEEK PERCENTAGE
+            // --------------------------------------------------------
+
+            const mwPercentIncrease =
+                calculatePercentageChange(
+                    presentMwAverage,
+                    previousMwAverage
+                );
+
+
+            // --------------------------------------------------------
+            // WEEKEND PERCENTAGE
+            // --------------------------------------------------------
+
+            const wePercentIncrease =
+                calculatePercentageChange(
+                    presentWeAverage,
+                    previousWeAverage
+                );
+
+
+            // --------------------------------------------------------
+            // PUT VALUES INTO CO REPORT
+            // --------------------------------------------------------
+
+            set(
+                "MW_PERCENT_INCREASE",
+                mwPercentIncrease
+            );
+
+            set(
+                "WE_PERCENT_INCREASE",
+                wePercentIncrease
+            );
+
+
+            // --------------------------------------------------------
+            // DEBUG
+            // --------------------------------------------------------
+
+            console.log("📈 CO REPORT 6-MONTH COMPARISON:", {
+
+                presentNumbers: currentNumbers,
+
+                previousNumbers,
+
+                midweek: {
+                    previousAverage: previousMwAverage,
+                    presentAverage: presentMwAverage,
+                    percentage: mwPercentIncrease
+                },
+
+                weekend: {
+                    previousAverage: previousWeAverage,
+                    presentAverage: presentWeAverage,
+                    percentage: wePercentIncrease
+                }
+
+            });
+
+        } else {
+
+            set("MW_PERCENT_INCREASE", "");
+            set("WE_PERCENT_INCREASE", "");
+
+        }
+
+
         return monthly;
+
+  
     }catch(err){
         console.error("❌ loadCOReport error:",err);
         return [];

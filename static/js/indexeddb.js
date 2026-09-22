@@ -346,61 +346,109 @@ async function saveAllTablesToIndexedDB(allTablesData) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(storeNames, "readwrite");
         let failed = false;
+
         transaction.oncomplete = () => {
             db.close();
             console.log("✅ All 5 IndexedDB stores imported successfully.");
             resolve(true);
         };
+
         transaction.onerror = () => {
             console.error("❌ IndexedDB TRANSACTION ERROR:", transaction.error);
             db.close();
             reject(transaction.error || new Error("IndexedDB transaction failed."));
         };
+
         transaction.onabort = () => {
             console.error("❌ IndexedDB TRANSACTION ABORTED:", transaction.error);
             db.close();
             reject(transaction.error || new Error("IndexedDB transaction aborted."));
         };
+
         for (const storeName of storeNames) {
             const store = transaction.objectStore(storeName);
             const rows = allTablesData[storeName];
-            console.log(`📥 Importing ${storeName}:`, Array.isArray(rows) ? rows.length : 0, "records");
+
+            console.log(
+                `📥 Importing ${storeName}:`,
+                Array.isArray(rows) ? rows.length : 0,
+                "records"
+            );
+
             // ---------------------------------------------
             // CLEAR EXISTING DATA
             // ---------------------------------------------
             store.clear();
+
             if (!Array.isArray(rows)) {
                 continue;
             }
+
             // ---------------------------------------------
             // INSERT RECORDS
             // ---------------------------------------------
             rows.forEach((row, index) => {
                 if (failed) return;
 
+                // ---------------------------------------------
                 // Transform zero hours to empty string
-                if (row.HRS === 0 || row.HRS === "0") row.HRS = "";
+                // ---------------------------------------------
+                if (row.HRS === 0 || row.HRS === "0") {
+                    row.HRS = "";
+                }
 
-                // =========================================
-                // SPECIAL CHECK FOR RECORDS
-                // =========================================
+                // =====================================================
+                // RECORDS: FORCE NUMBER AND Date_entered TO NUMBERS
+                // =====================================================
                 if (storeName === "RECORDS") {
+
+                    // NUMBER must always be a JavaScript Number
+                    if (
+                        row.NUMBER !== undefined &&
+                        row.NUMBER !== null &&
+                        row.NUMBER !== ""
+                    ) {
+                        row.NUMBER = Number(row.NUMBER);
+                    }
+
+                    // Date_entered must always be a JavaScript Number
+                    if (
+                        row.Date_entered !== undefined &&
+                        row.Date_entered !== null &&
+                        row.Date_entered !== ""
+                    ) {
+                        row.Date_entered = Number(row.Date_entered);
+                    }
+
+                    // ---------------------------------------------
+                    // DEBUG: VERIFY TYPES AFTER CONVERSION
+                    // ---------------------------------------------
                     if (index >= 2720 && index <= 2730) {
                         console.log("🔍 RECORDS DEBUG:", {
                             index: index,
                             row: row,
                             IdPubs: row.IdPubs,
                             NUMBER: row.NUMBER,
+                            Date_entered: row.Date_entered,
                             IdPubsType: typeof row.IdPubs,
                             NUMBERType: typeof row.NUMBER,
+                            DateEnteredType: typeof row.Date_entered,
                             keys: Object.keys(row)
                         });
                     }
+
+                    // ---------------------------------------------
                     // Check property existence
-                    const hasIdPubs = Object.prototype.hasOwnProperty.call(row, "IdPubs");
-                    const hasNUMBER = Object.prototype.hasOwnProperty.call(row, "NUMBER");
+                    // ---------------------------------------------
+                    const hasIdPubs =
+                        Object.prototype.hasOwnProperty.call(row, "IdPubs");
+
+                    const hasNUMBER =
+                        Object.prototype.hasOwnProperty.call(row, "NUMBER");
+
                     if (!hasIdPubs || !hasNUMBER) {
                         failed = true;
+
                         console.error("🚨 INVALID RECORD FOUND", {
                             store: storeName,
                             index: index,
@@ -411,32 +459,58 @@ async function saveAllTablesToIndexedDB(allTablesData) {
                             NUMBER: row.NUMBER,
                             keys: Object.keys(row)
                         });
+
                         transaction.abort();
-                        reject(new Error(`RECORDS row ${index} is missing ${!hasIdPubs ? "IdPubs" : ""}${!hasNUMBER ? " NUMBER" : ""}`));
+
+                        reject(
+                            new Error(
+                                `RECORDS row ${index} is missing ${
+                                    !hasIdPubs ? "IdPubs" : ""
+                                }${!hasNUMBER ? " NUMBER" : ""}`
+                            )
+                        );
+
                         return;
                     }
+
+                    // ---------------------------------------------
                     // Check undefined/null
-                    if (row.IdPubs === undefined || row.IdPubs === null || row.NUMBER === undefined || row.NUMBER === null) {
+                    // ---------------------------------------------
+                    if (
+                        row.IdPubs === undefined ||
+                        row.IdPubs === null ||
+                        row.NUMBER === undefined ||
+                        row.NUMBER === null
+                    ) {
                         failed = true;
+
                         console.error("🚨 INVALID RECORD KEY", {
                             index: index,
                             IdPubs: row.IdPubs,
                             NUMBER: row.NUMBER,
                             row: row
                         });
+
                         transaction.abort();
-                        reject(new Error(`RECORDS row ${index} has invalid IdPubs or NUMBER`));
+
+                        reject(
+                            new Error(
+                                `RECORDS row ${index} has invalid IdPubs or NUMBER`
+                            )
+                        );
+
                         return;
                     }
                 }
 
                 // =========================================
-                // PUT
+                // PUT INTO INDEXEDDB
                 // =========================================
                 try {
                     store.put(row);
                 } catch (error) {
                     failed = true;
+
                     console.error("❌ PUT FAILED", {
                         store: storeName,
                         index: index,
@@ -444,8 +518,14 @@ async function saveAllTablesToIndexedDB(allTablesData) {
                         error: error,
                         message: error.message
                     });
+
                     transaction.abort();
-                    reject(new Error(`IndexedDB PUT failed in ${storeName}, row ${index}: ${error.message}`));
+
+                    reject(
+                        new Error(
+                            `IndexedDB PUT failed in ${storeName}, row ${index}: ${error.message}`
+                        )
+                    );
                 }
             });
         }

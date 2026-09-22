@@ -45,7 +45,6 @@ def get_db_connection():
         ssl_context=True
     )
 
-
 @router.post("/import-crb")
 async def import_crb_file(
     username: str = Form(...),
@@ -53,18 +52,20 @@ async def import_crb_file(
     congregation: str = Form(...),
     file: UploadFile | None = File(None)
 ):
-    conn=None
-    current_time=datetime.now(timezone.utc)
-    clean_passcode=passcode.strip()
-    clean_username=username.strip()
-    clean_congregation=congregation.strip()
+    conn = None
+    current_time = datetime.now(timezone.utc)
+    clean_passcode = passcode.strip()
+    clean_username = username.strip()
+    clean_congregation = congregation.strip()
 
     try:
-        conn=get_db_connection()
+        conn = get_db_connection()
         conn.run(CREATE_SCHEMA_SQL)
 
-        # 1. Check if passcode already exists
-        existing_user=conn.run(
+        # =====================================================
+        # 1. CHECK IF PASSCODE ALREADY EXISTS
+        # =====================================================
+        existing_user = conn.run(
             'SELECT "passcode" FROM "MasterList" WHERE "passcode"=:passcode;',
             passcode=clean_passcode
         )
@@ -75,20 +76,30 @@ async def import_crb_file(
                 detail="This code already exists. Please use Login."
             )
 
-        # 2. Prepare CRB payload
-        required_stores=["CongInfo","GROUPS","PUBLISHERS","MonthlyRecords","RECORDS"]
+        # =====================================================
+        # 2. PREPARE CRB PAYLOAD
+        # =====================================================
+        required_stores = [
+            "CongInfo",
+            "GROUPS",
+            "PUBLISHERS",
+            "MonthlyRecords",
+            "RECORDS"
+        ]
 
         if file is not None:
-            content=await file.read()
+            content = await file.read()
 
             try:
-                text=content.decode("cp1252")
-                payload_data=json.loads(text)
+                text = content.decode("cp1252")
+                payload_data = json.loads(text)
+
             except UnicodeDecodeError as e:
                 raise HTTPException(
                     status_code=400,
                     detail=f"CRB encoding error: {str(e)}"
                 )
+
             except json.JSONDecodeError as e:
                 raise HTTPException(
                     status_code=400,
@@ -96,31 +107,98 @@ async def import_crb_file(
                 )
 
             # Make sure it is actually an object
-            if not isinstance(payload_data,dict):
+            if not isinstance(payload_data, dict):
                 raise HTTPException(
                     status_code=400,
                     detail="Invalid CRB file format."
                 )
 
+            # Make sure all required stores exist
             for store in required_stores:
                 if store not in payload_data:
-                    payload_data[store]=[]
+                    payload_data[store] = []
 
         else:
-            # No CRB supplied — create blank database payload
-            payload_data={
-                "CongInfo":[{
-                    "passcode":clean_passcode,
-                    "user":clean_username,
-                    "Congregation":clean_congregation
+            # =================================================
+            # NO CRB SUPPLIED — CREATE BLANK DATABASE PAYLOAD
+            # =================================================
+            payload_data = {
+                "CongInfo": [{
+                    "passcode": clean_passcode,
+                    "user": clean_username,
+                    "Congregation": clean_congregation
                 }],
-                "GROUPS":[],
-                "PUBLISHERS":[],
-                "MonthlyRecords":[],
-                "RECORDS":[]
+                "GROUPS": [],
+                "PUBLISHERS": [],
+                "MonthlyRecords": [],
+                "RECORDS": []
             }
 
-        # 3. Register NEW account in PostgreSQL
+        # =====================================================
+        # 3. NORMALIZE RECORDS NUMERIC FIELDS
+        #
+        # Regardless of whether CRB contains:
+        #
+        #     "NUMBER": "204"
+        # or
+        #     "NUMBER": 204
+        #
+        # PostgreSQL payload will receive:
+        #
+        #     "NUMBER": 204
+        #
+        # Same for Date_entered.
+        # =====================================================
+        records = payload_data.get("RECORDS", [])
+
+        if isinstance(records, list):
+
+            for index, row in enumerate(records):
+
+                if not isinstance(row, dict):
+                    continue
+
+                # ---------------------------------------------
+                # NUMBER
+                # ---------------------------------------------
+                if (
+                    "NUMBER" in row and
+                    row["NUMBER"] is not None and
+                    row["NUMBER"] != ""
+                ):
+                    try:
+                        row["NUMBER"] = int(row["NUMBER"])
+                    except (ValueError, TypeError):
+                        raise HTTPException(
+                            status_code=400,
+                            detail=(
+                                f"Invalid NUMBER in RECORDS row {index}: "
+                                f"{row['NUMBER']!r}"
+                            )
+                        )
+
+                # ---------------------------------------------
+                # Date_entered
+                # ---------------------------------------------
+                if (
+                    "Date_entered" in row and
+                    row["Date_entered"] is not None and
+                    row["Date_entered"] != ""
+                ):
+                    try:
+                        row["Date_entered"] = int(row["Date_entered"])
+                    except (ValueError, TypeError):
+                        raise HTTPException(
+                            status_code=400,
+                            detail=(
+                                f"Invalid Date_entered in RECORDS row {index}: "
+                                f"{row['Date_entered']!r}"
+                            )
+                        )
+
+        # =====================================================
+        # 4. REGISTER NEW ACCOUNT IN POSTGRESQL
+        # =====================================================
         conn.run(
             """
             INSERT INTO "MasterList"
@@ -133,7 +211,9 @@ async def import_crb_file(
             created_at=current_time
         )
 
-        # 4. Save cloud backup
+        # =====================================================
+        # 5. SAVE CLOUD BACKUP
+        # =====================================================
         conn.run(
             """
             UPDATE "MasterList"
@@ -142,25 +222,31 @@ async def import_crb_file(
             WHERE "passcode"=:passcode;
             """,
             passcode=clean_passcode,
-            payload=json.dumps(payload_data,default=str),
+            payload=json.dumps(payload_data, default=str),
             updated_at=current_time
         )
 
+        # =====================================================
+        # 6. RETURN NORMALIZED DATA
+        # =====================================================
         return {
-            "status":"success",
-            "action":"created",
-            "message":"New account created successfully.",
-            "data":payload_data
+            "status": "success",
+            "action": "created",
+            "message": "New account created successfully.",
+            "data": payload_data
         }
 
     except HTTPException as http_ex:
         raise http_ex
+
     except Exception as e:
         traceback.print_exc()
+
         raise HTTPException(
             status_code=500,
             detail=f"Database error: {str(e)}"
         )
+
     finally:
         if conn:
             conn.close()
