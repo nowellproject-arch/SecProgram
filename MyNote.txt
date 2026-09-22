@@ -160,15 +160,15 @@ MonthlyRecord upodater
 =====================
 DATE_ENTERED = ACTIVE MNUMBER
 
-(async () => {
-    const db = await openIndexedDB();
-
     const activeNumber = Number(
         window.currentActiveMonthIndex ??
         (typeof window.getMonthIndex === "function"
             ? window.getMonthIndex()
             : 0)
     );
+(async () => {
+    const db = await openIndexedDB();
+
 
     const rows = await new Promise((resolve, reject) => {
         const tx = db.transaction("RECORDS", "readonly");
@@ -200,5 +200,5 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Date_Entered returned"
+git commit -m "Version added and S88"
 git push origin main

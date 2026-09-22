@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Congregation Meeting Attendance Record</title>
+    <style>
+        /* US Letter Page Dimensions */
+        @page {
+            size: letter portrait;
+            margin: 0.5in;
+        }
+
+        body {
+            font-family: "Times New Roman", Times, serif;
+            color: #000;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Printable Letter Container */
+        .page {
+            width: 8.5in;
+            min-height: 11in;
+            padding: 0.5in;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 16pt;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin-top: 0;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            font-size: 13pt;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+
+        /* Table Styling matching image layout */
+        .record-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            table-layout: fixed;
+        }
+
+        .record-table th, .record-table td {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            font-size: 10pt;
+            text-align: center;
+            height: 22px;
+            box-sizing: border-box;
+        }
+
+        .record-table th {
+            font-weight: bold;
+            vertical-align: middle;
+            background-color: #fff;
+        }
+
+        .month-col {
+            text-align: left !important;
+            padding-left: 8px !important;
+        }
+
+        .year-header {
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        .footer-row td {
+            font-weight: bold;
+        }
+
+        /* Form Input Styling */
+        input {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 10pt;
+            text-align: center;
+        }
+
+        input.year-input {
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        /* Hide interface styles on print */
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                padding: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        .actions {
+            margin-bottom: 15px;
+            text-align: right;
+            width: 8.5in;
+        }
+
+        .btn {
+            background: #0056b3;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            font-size: 10pt;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .btn:hover {
+            background: #003d80;
+        }
+    </style>
+</head>
+<body>
+
+<div>
+    <div class="actions no-print">
+        <button class="btn" onclick="window.print()">Print / Save PDF</button>
+    </div>
+
+    <div class="page">
+        <h1>Congregation Meeting Attendance Record</h1>
+
+        <!-- MIDWEEK MEETING -->
+        <h2>Midweek Meeting</h2>
+        <table class="record-table" id="midweek-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Service Year<br><input type="number" id="midweek_year_1" class="year-input" placeholder="2025" onchange="saveData()"></th>
+                    <th style="width: 11%;">Number of<br>Meetings</th>
+                    <th style="width: 12%;">Total<br>Attendance</th>
+                    <th style="width: 12%;">Average<br>Attendance<br>Each Week</th>
+                    <th style="width: 15%;">Service Year<br><input type="number" id="midweek_year_2" class="year-input" placeholder="2026" onchange="saveData()"></th>
+                    <th style="width: 11%;">Number of<br>Meetings</th>
+                    <th style="width: 12%;">Total<br>Attendance</th>
+                    <th style="width: 12%;">Average<br>Attendance<br>Each Week</th>
+                </tr>
+            </thead>
+            <tbody id="midweek-body"></tbody>
+            <tfoot>
+                <tr class="footer-row">
+                    <td colspan="3" style="text-align: right; padding-right: 10px;">Average Attendance Each Month</td>
+                    <td id="midweek_avg_1">0</td>
+                    <td colspan="3" style="text-align: right; padding-right: 10px;">Average Attendance Each Month</td>
+                    <td id="midweek_avg_2">0</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- WEEKEND MEETING -->
+        <h2>Weekend Meeting</h2>
+        <table class="record-table" id="weekend-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Service Year<br><input type="number" id="weekend_year_1" class="year-input" placeholder="2025" onchange="saveData()"></th>
+                    <th style="width: 11%;">Number of<br>Meetings</th>
+                    <th style="width: 12%;">Total<br>Attendance</th>
+                    <th style="width: 12%;">Average<br>Attendance<br>Each Week</th>
+                    <th style="width: 15%;">Service Year<br><input type="number" id="weekend_year_2" class="year-input" placeholder="2026" onchange="saveData()"></th>
+                    <th style="width: 11%;">Number of<br>Meetings</th>
+                    <th style="width: 12%;">Total<br>Attendance</th>
+                    <th style="width: 12%;">Average<br>Attendance<br>Each Week</th>
+                </tr>
+            </thead>
+            <tbody id="weekend-body"></tbody>
+            <tfoot>
+                <tr class="footer-row">
+                    <td colspan="3" style="text-align: right; padding-right: 10px;">Average Attendance Each Month</td>
+                    <td id="weekend_avg_1">0</td>
+                    <td colspan="3" style="text-align: right; padding-right: 10px;">Average Attendance Each Month</td>
+                    <td id="weekend_avg_2">0</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<script>
+const months = [
+    "September", "October", "November", "December", 
+    "January", "February", "March", "April", 
+    "May", "June", "July", "August"
+];
+
+// Build Table Structure dynamically
+function buildTables() {
+    ['midweek', 'weekend'].forEach(section => {
+        const tbody = document.getElementById(`${section}-body`);
+        tbody.innerHTML = '';
+        
+        months.forEach((month, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="month-col">${month}</td>
+                <td><input type="number" id="${section}_y1_m${idx}_num" oninput="calculateRow('${section}', 1, ${idx}); saveData();"></td>
+                <td><input type="number" id="${section}_y1_m${idx}_tot" oninput="calculateRow('${section}', 1, ${idx}); saveData();"></td>
+                <td id="${section}_y1_m${idx}_avg"></td>
+                
+                <td class="month-col">${month}</td>
+                <td><input type="number" id="${section}_y2_m${idx}_num" oninput="calculateRow('${section}', 2, ${idx}); saveData();"></td>
+                <td><input type="number" id="${section}_y2_m${idx}_tot" oninput="calculateRow('${section}', 2, ${idx}); saveData();"></td>
+                <td id="${section}_y2_m${idx}_avg"></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+}
+
+// Automatic Average Calculations
+function calculateRow(section, yearGroup, monthIdx) {
+    const num = parseFloat(document.getElementById(`${section}_y${yearGroup}_m${monthIdx}_num`).value) || 0;
+    const tot = parseFloat(document.getElementById(`${section}_y${yearGroup}_m${monthIdx}_tot`).value) || 0;
+    const avgTd = document.getElementById(`${section}_y${yearGroup}_m${monthIdx}_avg`);
+    
+    if (num > 0 && tot > 0) {
+        avgTd.innerText = Math.round(tot / num);
+    } else {
+        avgTd.innerText = '';
+    }
+    
+    calculateMonthAverage(section, yearGroup);
+}
+
+function calculateMonthAverage(section, yearGroup) {
+    let totalAvgSum = 0;
+    let monthCount = 0;
+
+    for (let i = 0; i < 12; i++) {
+        const avgVal = parseFloat(document.getElementById(`${section}_y${yearGroup}_m${i}_avg`).innerText);
+        if (!isNaN(avgVal) && avgVal > 0) {
+            totalAvgSum += avgVal;
+            monthCount++;
+        }
+    }
+
+    const overallAvg = monthCount > 0 ? Math.round(totalAvgSum / monthCount) : '';
+    document.getElementById(`${section}_avg_${yearGroup}`).innerText = overallAvg;
+}
+
+// ============================================================
+// S-88 — LOAD FROM EXISTING CongregationDB / MonthlyRecords
+// ============================================================
+
+async function openS88DB() {
+
+    if (typeof openIndexedDB === "function") {
+        return await openIndexedDB();
+    }
+
+    return await new Promise((resolve, reject) => {
+
+        const request = indexedDB.open("CongregationDB");
+
+        request.onsuccess = () => {
+            resolve(request.result);
+        };
+
+        request.onerror = () => {
+            reject(request.error);
+        };
+    });
+}
+
+
+// ============================================================
+// POPULATE S-88
+// ============================================================
+// ============================================================
+// POPULATE S-88 FROM CongregationDB / MonthlyRecords
+// ============================================================
+
+async function populateS88() {
+
+    try {
+
+        // --------------------------------------------------------
+        // BUILD THE 12 MONTH ROWS FIRST
+        // --------------------------------------------------------
+
+        buildTables();
+
+
+        // --------------------------------------------------------
+        // DETERMINE CURRENT SERVICE YEAR
+        //
+        // Service year runs:
+        // September → August
+        //
+        // Example:
+        // September 2026 = Service Year 2027
+        // August 2026    = Service Year 2026
+        // --------------------------------------------------------
+
+        const today = new Date();
+
+        const calendarMonth = today.getMonth(); // 0 = January
+        const calendarYear = today.getFullYear();
+
+        const currentServiceYear =
+            calendarMonth >= 8
+                ? calendarYear + 1
+                : calendarYear;
+
+        const previousServiceYear =
+            currentServiceYear - 1;
+
+
+        // --------------------------------------------------------
+        // SET SERVICE YEAR HEADERS DYNAMICALLY
+        // --------------------------------------------------------
+
+        document.getElementById("midweek_year_1").value =
+            previousServiceYear;
+
+        document.getElementById("midweek_year_2").value =
+            currentServiceYear;
+
+        document.getElementById("weekend_year_1").value =
+            previousServiceYear;
+
+        document.getElementById("weekend_year_2").value =
+            currentServiceYear;
+
+
+        console.log("📅 S-88 SERVICE YEARS:", {
+            previousServiceYear,
+            currentServiceYear
+        });
+
+
+        // --------------------------------------------------------
+        // OPEN EXISTING CongregationDB
+        // --------------------------------------------------------
+
+        const db = await openS88DB();
+
+
+        // --------------------------------------------------------
+        // READ MonthlyRecords
+        // --------------------------------------------------------
+
+        const records = await new Promise((resolve, reject) => {
+
+            const tx = db.transaction(
+                "MonthlyRecords",
+                "readonly"
+            );
+
+            const store =
+                tx.objectStore("MonthlyRecords");
+
+            const request =
+                store.getAll();
+
+            request.onsuccess = () => {
+                resolve(request.result || []);
+            };
+
+            request.onerror = () => {
+                reject(request.error);
+            };
+
+        });
+
+
+        db.close();
+
+
+        console.log(
+            "📊 S-88 MonthlyRecords loaded:",
+            records.length
+        );
+
+
+        // --------------------------------------------------------
+        // FIND MONTHLY RECORD
+        //
+        // IMPORTANT:
+        // ServiceYear is the service year.
+        //
+        // September 2026:
+        //     MONTH_      = September
+        //     ServiceYear = 2027
+        //     NUMBER      = 206
+        //
+        // Therefore we use ServiceYear + MONTH_
+        // and NOT calendar year.
+        // --------------------------------------------------------
+
+        function findRecord(serviceYear, monthName) {
+
+            return records.find(record => {
+
+                const recordYear =
+                    String(
+                        record.ServiceYear ?? ""
+                    ).trim();
+
+                const recordMonth =
+                    String(
+                        record.MONTH_ ?? ""
+                    ).trim();
+
+                return (
+                    recordYear ===
+                        String(serviceYear) &&
+
+                    recordMonth.toLowerCase() ===
+                        monthName.toLowerCase()
+                );
+
+            });
+
+        }
+
+
+        // --------------------------------------------------------
+        // POPULATE ALL 12 MONTHS
+        //
+        // LEFT:
+        //     previousServiceYear
+        //
+        // RIGHT:
+        //     currentServiceYear
+        //
+        // EVERY MONTH follows the same rule.
+        //
+        // No special September-December logic.
+        // No special January-August logic.
+        // --------------------------------------------------------
+
+        months.forEach((monthName, monthIdx) => {
+
+
+            // ====================================================
+            // LEFT COLUMN
+            // ====================================================
+
+            const record1 =
+                findRecord(
+                    previousServiceYear,
+                    monthName
+                );
+
+
+            if (record1) {
+
+                // ------------------------------
+                // MIDWEEK
+                // ------------------------------
+
+                const midweekNum1 =
+                    document.getElementById(
+                        `midweek_y1_m${monthIdx}_num`
+                    );
+
+                const midweekTot1 =
+                    document.getElementById(
+                        `midweek_y1_m${monthIdx}_tot`
+                    );
+
+
+                if (midweekNum1) {
+                    midweekNum1.value =
+                        record1.NoMtgs1 ?? "";
+                }
+
+                if (midweekTot1) {
+                    midweekTot1.value =
+                        record1.AttendcMidweekTotal ?? "";
+                }
+
+
+                // ------------------------------
+                // WEEKEND
+                // ------------------------------
+
+                const weekendNum1 =
+                    document.getElementById(
+                        `weekend_y1_m${monthIdx}_num`
+                    );
+
+                const weekendTot1 =
+                    document.getElementById(
+                        `weekend_y1_m${monthIdx}_tot`
+                    );
+
+
+                if (weekendNum1) {
+                    weekendNum1.value =
+                        record1.NoMtgs2 ?? "";
+                }
+
+                if (weekendTot1) {
+                    weekendTot1.value =
+                        record1.AttendcPublickTotal ?? "";
+                }
+
+
+                console.log(
+                    `📘 S-88 ${previousServiceYear} ${monthName}:`,
+                    record1
+                );
+
+            }
+
+
+            // ====================================================
+            // RIGHT COLUMN
+            // ====================================================
+
+            const record2 =
+                findRecord(
+                    currentServiceYear,
+                    monthName
+                );
+
+
+            if (record2) {
+
+                // ------------------------------
+                // MIDWEEK
+                // ------------------------------
+
+                const midweekNum2 =
+                    document.getElementById(
+                        `midweek_y2_m${monthIdx}_num`
+                    );
+
+                const midweekTot2 =
+                    document.getElementById(
+                        `midweek_y2_m${monthIdx}_tot`
+                    );
+
+
+                if (midweekNum2) {
+                    midweekNum2.value =
+                        record2.NoMtgs1 ?? "";
+                }
+
+                if (midweekTot2) {
+                    midweekTot2.value =
+                        record2.AttendcMidweekTotal ?? "";
+                }
+
+
+                // ------------------------------
+                // WEEKEND
+                // ------------------------------
+
+                const weekendNum2 =
+                    document.getElementById(
+                        `weekend_y2_m${monthIdx}_num`
+                    );
+
+                const weekendTot2 =
+                    document.getElementById(
+                        `weekend_y2_m${monthIdx}_tot`
+                    );
+
+
+                if (weekendNum2) {
+                    weekendNum2.value =
+                        record2.NoMtgs2 ?? "";
+                }
+
+                if (weekendTot2) {
+                    weekendTot2.value =
+                        record2.AttendcPublickTotal ?? "";
+                }
+
+
+                console.log(
+                    `📗 S-88 ${currentServiceYear} ${monthName}:`,
+                    record2
+                );
+
+            }
+
+
+            // ====================================================
+            // CALCULATE AVERAGES
+            // ====================================================
+
+            calculateRow(
+                "midweek",
+                1,
+                monthIdx
+            );
+
+            calculateRow(
+                "midweek",
+                2,
+                monthIdx
+            );
+
+            calculateRow(
+                "weekend",
+                1,
+                monthIdx
+            );
+
+            calculateRow(
+                "weekend",
+                2,
+                monthIdx
+            );
+
+        });
+
+
+        // --------------------------------------------------------
+        // FINAL OVERALL AVERAGES
+        // --------------------------------------------------------
+
+        calculateMonthAverage(
+            "midweek",
+            1
+        );
+
+        calculateMonthAverage(
+            "midweek",
+            2
+        );
+
+        calculateMonthAverage(
+            "weekend",
+            1
+        );
+
+        calculateMonthAverage(
+            "weekend",
+            2
+        );
+
+
+        // --------------------------------------------------------
+        // DEBUG SUMMARY
+        // --------------------------------------------------------
+
+        console.log("✅ S-88 populated successfully");
+
+        console.log("📋 S-88 mapping:", {
+            leftServiceYear: previousServiceYear,
+            rightServiceYear: currentServiceYear,
+
+            leftMonths:
+                `${previousServiceYear}: September → August`,
+
+            rightMonths:
+                `${currentServiceYear}: September → August`
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ S-88 population failed:",
+            error
+        );
+
+    }
+
+}
+
+
+
+// ============================================================
+// INITIALIZE
+// ============================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    populateS88
+);
+
+
+</script>
+</body>
+</html>

@@ -9,6 +9,7 @@ from typing import Any, Dict, Union
 from urllib.parse import unquote, urlparse
 
 
+
 from fastapi import Body, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -327,7 +328,43 @@ class LoginRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html"
+    )
+
+
+# ============================================================
+# APPLICATION VERSION
+# ============================================================
+
+@app.get("/api/version")
+async def get_version():
+
+    version_file = Path(__file__).resolve().parent / "version.json"
+
+    try:
+
+        with open(
+            version_file,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            data = json.load(f)
+
+        return {
+            "version": data.get("version", "18.3")
+        }
+
+    except Exception as e:
+
+        print("❌ Could not read version.json:", e)
+
+        return {
+            "version": "18.3"
+        }
 
 @app.get("/current-month", response_class=HTMLResponse)
 async def serve_index(request: Request):
@@ -351,6 +388,10 @@ async def get_template_file(request: Request, form_name: str):
     if not file_path.exists():
         raise HTTPException(status_code=404, detail=f"Subform file '{form_name}' not found in {TEMPLATES_DIR}")
     return templates.TemplateResponse(request=request, name=form_name)
+
+@app.get("/s88", response_class=HTMLResponse)
+async def s88_page():
+    return FileResponse("Templates/s88.html")
 
 # -------------------------------------------------------------------
 # Core API Endpoints
