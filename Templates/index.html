@@ -560,7 +560,18 @@
 const TAB_CONFIG={
     'tab-1':{
         form:'current_month_entry.html',
-        callback:()=>window.renderCurrentMonthData?.()
+        callback:()=>{
+            const iframe = document.getElementById("tab-1")?.querySelector("iframe");
+
+            if (!iframe?.contentWindow) return;
+
+            iframe.contentWindow.recordsData = null;
+            iframe.contentWindow._recordsLoaded = false;
+            iframe.contentWindow._recordsFetchStarted = false;
+            iframe.contentWindow.currentMonthSummary = null;
+
+            iframe.contentWindow.renderListbox?.();
+        }
     },
     'tab-2':{
         form:'PublishersRecord.html',

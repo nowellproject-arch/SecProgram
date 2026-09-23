@@ -200,5 +200,5 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Add Peak on CO report"
+git commit -m "Analysis 6mos added"
 git push origin main

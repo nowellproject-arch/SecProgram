@@ -448,6 +448,7 @@
                         <option value="ALL PUBLISHERS REPORTED">ALL PUBLISHERS REPORTED</option>
                         <option value="ALL AUX REPORTED">ALL AUX REPORTED</option>
                         <option value="ALL RP REPORTED">ALL RP REPORTED</option>
+                           <option value="MONTH AUX APPLIED">CURRENT MONTH AUX</option>
                         <option value="REGULAR PIONEERS">REGULAR PIONEERS</option>
                         <option value="INACTIVES">INACTIVES</option>
                     </select>
@@ -911,35 +912,48 @@ function renderListbox(filter = "", category = "ACTIVE PUBLISHERS") {
 
     if (!Array.isArray(window.recordsData)) window.recordsData = [];
 
-    if (!window._recordsLoaded && !window._recordsFetchStarted && typeof openCongregationDB === 'function') {
-        window._recordsFetchStarted = true;
-        openCongregationDB((db) => {
-            const targetStore = Array.from(db.objectStoreNames).find(name =>
-                name.toUpperCase() === "RECORDS" ||
-                name.toUpperCase() === "S21RECORDS"
-            );
+    if (
+            !window._recordsLoaded &&
+            !window._recordsFetchStarted &&
+            typeof openCongregationDB === 'function'
+        ) {
+            window._recordsFetchStarted = true;
 
-            if (!targetStore) {
-                window._recordsLoaded = true;
-                window._recordsFetchStarted = false;
-                return;
-            }
+            openCongregationDB((db) => {
 
-            const tx = db.transaction(targetStore, "readonly");
-            const req = tx.objectStore(targetStore).getAll();
+                const targetStore = Array.from(db.objectStoreNames).find(name =>
+                    name.toUpperCase() === "RECORDS" ||
+                    name.toUpperCase() === "S21RECORDS"
+                );
 
-            req.onsuccess = (e) => {
-                window.recordsData = e.target.result || [];
-                window._recordsLoaded = true;
-                window._recordsFetchStarted = false;
-                renderListbox(filter, category);
-            };
+                if (!targetStore) {
+                    window._recordsLoaded = true;
+                    window._recordsFetchStarted = false;
+                    return;
+                }
 
-            req.onerror = () => {
-                window._recordsFetchStarted = false;
-                console.error("❌ Failed to load RECORDS:", req.error);
-            };
-        });
+                const tx = db.transaction(targetStore, "readonly");
+                const req = tx.objectStore(targetStore).getAll();
+
+                req.onsuccess = (e) => {
+                    window.recordsData = e.target.result || [];
+                    window._recordsLoaded = true;
+                    window._recordsFetchStarted = false;
+
+                    // Now that fresh RECORDS are loaded,
+                    // render the listbox exactly once.
+                    renderListbox(filter, category);
+                };
+
+                req.onerror = () => {
+                    window._recordsFetchStarted = false;
+                    console.error("❌ Failed to load RECORDS:", req.error);
+                };
+            });
+
+            // IMPORTANT:
+            // Do NOT continue rendering using stale RECORDS.
+            return;
     }
 
     listbox.innerHTML = "";
@@ -1064,49 +1078,40 @@ function renderListbox(filter = "", category = "ACTIVE PUBLISHERS") {
                 matchesCategory = reportedRpIds.has(pubIdStr);
                 break;
 
-            // --- ROLES & STATUS CATEGORIES ---
-            case "ELDERS":
-                matchesCategory = isTrueMarker(p.Elder);
-                break;
-
-            case "MINISTERIAL SERVANTS":
-                matchesCategory = isTrueMarker(p.MS);
-                break;
-
-            case "BY GROUP":
+              case "BY GROUP":
                 matchesCategory = p.GROUP !== undefined && p.GROUP !== null && String(p.GROUP).trim() !== "";
                 break;
 
-            case "UNBAPTIZED":
-                matchesCategory = !p.Baptism || p.Baptism === "";
-                break;
+
 
             case "REGULAR PIONEERS":
                 matchesCategory = isTrueMarker(p.RP);
                 break;
 
-            case "SP / MISSIONARIES":
-                matchesCategory = isTrueMarker(p.SP) || String(p.SpecialPioneer || "").toLowerCase() === "1";
-                break;
+
 
             case "INACTIVES":
                 matchesCategory = statusVal === "inactive" || statusVal === "inactives";
                 break;
 
-            case "MOVED OUT":
-                matchesCategory = (statusVal === "moved out" || statusVal === "disqualified" || statusVal === "removed") &&
-                                  statusVal !== "inactive" && statusVal !== "inactives";
-                break;
 
-            case "1 YEAR BAPTIZED":
-                if (!p.Baptism) {
-                    matchesCategory = false;
-                } else {
-                    const bDate = new Date(p.Baptism);
-                    const now = new Date();
-                    const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-                    matchesCategory = bDate >= oneYearAgo;
-                }
+            case "MONTH AUX APPLIED":
+                matchesCategory = recData.some(r => {
+                    const recordNumber = Number(r.NUMBER);
+                    const recordPubId = String(
+                        r.IdPubs ?? r.IDPub ?? r.idpubs ?? ""
+                    ).trim();
+
+                    const auxChecked = isTrueMarker(
+                        r.AUX ?? r.aux ?? r.AuxPioneer
+                    );
+
+                    return (
+                        recordNumber === targetMonthIndex &&
+                        recordPubId === pubIdStr &&
+                        auxChecked
+                    );
+                });
                 break;
 
             case "ALL":
@@ -1246,6 +1251,9 @@ function renderListbox(filter = "", category = "ACTIVE PUBLISHERS") {
     });
 }
 
+
+
+
 // 7. Populate Form Fields
 function populateForm(p) {
     currentSelectedPublisher = p;
@@ -1335,7 +1343,7 @@ function savePublisherChanges() {
     currentSelectedPublisher.Baptism = document.getElementById('pubBaptism').value;
     
     const groupVal = document.getElementById('pubGroup')?.value || "";
-    currentSelectedPublisher.GROUP_ = groupVal; 
+    currentSelectedPublisher.GROUP = groupVal; 
     
     const maleEl = document.getElementById('isMale');
     const femaleEl = document.getElementById('isFemale');
@@ -1351,7 +1359,7 @@ function savePublisherChanges() {
     currentSelectedPublisher.RP = document.getElementById('isRP')?.checked ? "1" : "0";
     currentSelectedPublisher.SF = document.getElementById('isSP')?.checked ? "1" : "0"; 
     
-    const request = indexedDB.open("CongregationDB", 10);
+    const request = indexedDB.open("CongregationDB");
     request.onsuccess = (event) => {
         const db = event.target.result;
         const transaction = db.transaction(["PUBLISHERS"], "readwrite");
@@ -2076,6 +2084,11 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
                 tx.onerror = () => reject(tx.error);
             });
 
+            // Invalidate cached RECORDS so the listbox reloads fresh data
+            window.recordsData = null;
+            window._recordsLoaded = false;
+            window._recordsFetchStarted = false;
+
             console.log(
                 `🗑️ S21 record removed: ${targetPublisherId}/${targetNumber}`
             );
@@ -2112,6 +2125,12 @@ async function saveS21MonthRecord(monthIndex, eventTarget) {
             tx.oncomplete = resolve;
             tx.onerror = () => reject(tx.error);
         });
+
+        // RECORDS changed — invalidate listbox caches
+        window.recordsData = null;
+        window._recordsLoaded = false;
+        window._recordsFetchStarted = false;
+        window.currentMonthSummary = null;
 
         setSyncUnsaved();
         updateCurrentMonthDebugStorage();
@@ -2203,6 +2222,16 @@ function attachS21AutoCheckListeners(monthIndex, m) {
                 await saveS21MonthRecord(monthIndex, minEl);
             }
 
+            if (typeof renderListbox === "function") {
+                const searchInput = document.getElementById("publisherSearch");
+                const categorySelect = document.getElementById("categorySelect");
+
+                renderListbox(
+                    searchInput?.value || "",
+                    categorySelect?.value || "ACTIVE PUBLISHERS"
+                );
+            }         
+      
             if (typeof calculateMonthlySummaryMetrics === "function") {
                 calculateMonthlySummaryMetrics();
             }

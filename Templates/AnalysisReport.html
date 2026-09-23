@@ -739,6 +739,33 @@ function filterData(category,evt){
          return;
     }
 
+
+   if(category==="Auxiliary Pioneers"){
+        window.loadSixMonthAuxPioneers?.();
+         return;
+    }
+
+    if(category==="Inactive"){
+        window.loadSixMonthInactive?.();
+         return;
+    }
+    
+    if(category==="Moved In"){
+        window.loadSixMonthMovedIn?.();
+         return;
+    }
+
+    if(category==="Moved Out"){
+        window.loadSixMonthMovedOut?.();
+         return;
+    }
+
+       if(category==="Reactivated"){
+        window.loadSixMonthReactivated?.();
+         return;
+    }
+
+
     renderTable(currentData);
 }
 
@@ -1901,6 +1928,1333 @@ window.loadNewPublishers=async function(){
     }
 };
 
+
+
+window.loadSixMonthAuxPioneers = async function(){
+    try{
+        const period = await window.getSixMonthReportingPeriod();
+
+        const serviceYearEl = document.getElementById("analysis-service-year");
+        if(serviceYearEl) serviceYearEl.textContent = "";
+
+        const title = document.getElementById("list-title");
+        const header = document.getElementById("analysis-table-header");
+        const tbody = document.getElementById("publishers-table-body");
+
+        if(!title || !header || !tbody){
+            console.error("❌ 6 Month Aux Pioneer table elements not found");
+            return;
+        }
+
+        header.innerHTML = "";
+
+        const db = await openIndexedDB();
+
+        const tx = db.transaction(["RECORDS","PUBLISHERS"],"readonly");
+
+        const records = await new Promise((resolve,reject)=>{
+            const r = tx.objectStore("RECORDS").getAll();
+            r.onsuccess = () => resolve(r.result || []);
+            r.onerror = () => reject(r.error);
+        });
+
+        const publishers = await new Promise((resolve,reject)=>{
+            const r = tx.objectStore("PUBLISHERS").getAll();
+            r.onsuccess = () => resolve(r.result || []);
+            r.onerror = () => reject(r.error);
+        });
+
+        db.close();
+
+        const firstNumber = Number(period.firstNumber);
+        const lastNumber = Number(period.lastNumber);
+
+        const isTrue = value => {
+            if(value === null || value === undefined) return false;
+            if(typeof value === "boolean") return value;
+            if(typeof value === "number") return value !== 0;
+
+            return ["1","TRUE","YES","Y","?","-1"]
+                .includes(String(value).trim().toUpperCase());
+        };
+
+        /*
+         * Group AUX records by publisher.
+         * A month counts only when:
+         * AUX = checked
+         * HRS > 0
+         */
+        const auxByPublisher = new Map();
+
+        records
+            .filter(r=>{
+                const number = Number(r.NUMBER);
+                const hrs = Number(r.HRS ?? r.Hours ?? 0);
+                const aux = isTrue(r.AUX ?? r.aux ?? r.AuxPioneer);
+
+                return number >= firstNumber &&
+                       number <= lastNumber &&
+                       aux &&
+                       hrs > 0;
+            })
+            .forEach(r=>{
+                const pubId = String(
+                    r.IdPubs ?? r.IDPub ?? r.idpubs ?? ""
+                ).trim();
+
+                if(!pubId) return;
+
+                if(!auxByPublisher.has(pubId)){
+                    auxByPublisher.set(pubId,new Set());
+                }
+
+                // Set prevents the same publisher/month being counted twice
+                auxByPublisher.get(pubId).add(Number(r.NUMBER));
+            });
+
+        const auxPioneers = Array.from(auxByPublisher.entries())
+            .map(([pubId,monthSet])=>{
+                const publisher = publishers.find(p=>
+                    String(p.IDPub) === pubId
+                );
+
+                return {
+                    publisher,
+                    monthCount: monthSet.size
+                };
+            })
+            .filter(x=>{
+                if(!x.publisher) return false;
+
+                const status = String(x.publisher.Status ?? "")
+                    .trim()
+                    .toUpperCase();
+
+                return status === "ACTIVE" || status === "";
+            })
+            .sort((a,b)=>{
+                const nameA =
+                    `${a.publisher.LName || ""}, ${a.publisher.FNAME || ""}`;
+
+                const nameB =
+                    `${b.publisher.LName || ""}, ${b.publisher.FNAME || ""}`;
+
+                return nameA.localeCompare(nameB);
+            });
+
+        const auxCount = document.getElementById("AUX-count");
+        if(auxCount) auxCount.textContent = auxPioneers.length;
+
+        title.textContent =
+            `6 MONTH AUX PIONEERS (${auxPioneers.length})`;
+
+        const columns = [
+            {
+                label:"Name",
+                render:x=>{
+                    const p = x.publisher;
+
+                    return `<strong>${p.LName || ""}, ${p.FNAME || ""}</strong>`;
+                }
+            },
+            {
+                label:"No. of Months as Aux",
+                render:x=>{
+                    return `<strong>${x.monthCount}</strong>`;
+                }
+            }
+        ];
+
+        header.innerHTML = columns
+            .map(col=>`<th>${col.label}</th>`)
+            .join("");
+
+        tbody.innerHTML = auxPioneers.length
+            ? auxPioneers.map(x=>`
+                <tr>
+                    ${columns.map(col=>`
+                        <td>${col.render(x)}</td>
+                    `).join("")}
+                </tr>
+            `).join("")
+            : `<tr>
+                <td colspan="${columns.length}" style="text-align:center;">
+                    No auxiliary pioneers
+                </td>
+            </tr>`;
+
+        console.log("✅ 6 Month Aux Pioneers loaded:",{
+            firstNumber,
+            lastNumber,
+            count:auxPioneers.length
+        });
+
+    }catch(error){
+        console.error("❌ loadSixMonthAuxPioneers error:",error);
+    }
+};
+
+
+window.loadSixMonthInactive = async function(){
+    try{
+        const period = await window.getSixMonthReportingPeriod();
+
+        const serviceYearEl =
+            document.getElementById("analysis-service-year");
+
+        if(serviceYearEl){
+            serviceYearEl.textContent = "";
+        }
+
+        const title =
+            document.getElementById("list-title");
+
+        const header =
+            document.getElementById("analysis-table-header");
+
+        const tbody =
+            document.getElementById("publishers-table-body");
+
+        if(!title || !header || !tbody){
+            console.error(
+                "❌ 6 Month Inactive table elements not found"
+            );
+            return;
+        }
+
+        header.innerHTML = "";
+
+        const db = await openIndexedDB();
+
+        const tx = db.transaction(
+            ["RECORDS", "PUBLISHERS"],
+            "readonly"
+        );
+
+        const records = await new Promise((resolve, reject) => {
+            const r =
+                tx.objectStore("RECORDS").getAll();
+
+            r.onsuccess = () =>
+                resolve(r.result || []);
+
+            r.onerror = () =>
+                reject(r.error);
+        });
+
+        const publishers = await new Promise((resolve, reject) => {
+            const r =
+                tx.objectStore("PUBLISHERS").getAll();
+
+            r.onsuccess = () =>
+                resolve(r.result || []);
+
+            r.onerror = () =>
+                reject(r.error);
+        });
+
+        db.close();
+
+        const firstNumber =
+            Number(period.firstNumber);
+
+        const lastNumber =
+            Number(period.lastNumber);
+
+        // --------------------------------------------------
+        // GROUP INACTIVE RECORDS BY PUBLISHER
+        // --------------------------------------------------
+
+        const inactiveByPublisher = new Map();
+
+        records
+            .filter(r => {
+
+                const number =
+                    Number(r.NUMBER);
+
+                const remark =
+                    String(
+                        r.REMARKS ??
+                        r.Remarks ??
+                        ""
+                    )
+                    .trim()
+                    .toUpperCase();
+
+                return number >= firstNumber &&
+                       number <= lastNumber &&
+                       remark === "INACTIVE";
+            })
+            .forEach(r => {
+
+                const pubId =
+                    String(
+                        r.IdPubs ??
+                        r.IDPub ??
+                        r.idpubs ??
+                        ""
+                    )
+                    .trim();
+
+                if(!pubId) return;
+
+                if(!inactiveByPublisher.has(pubId)){
+                    inactiveByPublisher.set(
+                        pubId,
+                        new Set()
+                    );
+                }
+
+                inactiveByPublisher
+                    .get(pubId)
+                    .add(Number(r.NUMBER));
+            });
+
+        // --------------------------------------------------
+        // BUILD RESULT
+        // --------------------------------------------------
+
+        const inactivePublishers =
+            Array.from(
+                inactiveByPublisher.entries()
+            )
+            .map(([pubId, numbers]) => {
+
+                const publisher =
+                    publishers.find(p =>
+                        String(p.IDPub) === pubId
+                    );
+
+                const months =
+                    [...numbers]
+                    .sort((a, b) => a - b)
+                    .map(number => {
+
+                        const month =
+                            period.sixMonths.find(m =>
+                                Number(m.NUMBER) ===
+                                Number(number)
+                            );
+
+                        return month?.MONTH_ ||
+                               `NUMBER ${number}`;
+                    });
+
+                return {
+                    IDPub: pubId,
+
+                    Name: publisher
+                        ? `${publisher.LName || ""}, ${publisher.FNAME || ""}`
+                        : "UNKNOWN",
+
+                    MonthsAsInactive:
+                        months.length,
+
+                    Months:
+                        months.join(", ")
+                };
+            })
+            .filter(x =>
+                x.Name !== "UNKNOWN"
+            );
+
+        // --------------------------------------------------
+        // COUNT
+        // --------------------------------------------------
+
+        const inactiveCount =
+            document.getElementById(
+                "Inactive-count"
+            );
+
+        if(inactiveCount){
+            inactiveCount.textContent =
+                inactivePublishers.length;
+        }
+
+        // --------------------------------------------------
+        // TITLE
+        // --------------------------------------------------
+
+        title.textContent =
+            `6 MONTH INACTIVE (${inactivePublishers.length})`;
+
+        // --------------------------------------------------
+        // TABLE COLUMNS
+        // --------------------------------------------------
+
+        const columns = [
+            {
+                label: "Name",
+
+                render: x =>
+                    `<strong>${x.Name}</strong>`
+            },
+
+            {
+                label: "No. of Months Inactive",
+
+                render: x =>
+                    `<strong>${x.MonthsAsInactive}</strong>`
+            },
+
+            {
+                label: "Months as Inactive",
+
+                render: x =>
+                    x.Months
+            }
+        ];
+
+        header.innerHTML =
+            columns
+                .map(col =>
+                    `<th>${col.label}</th>`
+                )
+                .join("");
+
+        // --------------------------------------------------
+        // TABLE BODY
+        // --------------------------------------------------
+
+        tbody.innerHTML =
+            inactivePublishers.length
+
+            ? inactivePublishers
+                .map(x => `
+                    <tr>
+                        ${columns
+                            .map(col => `
+                                <td>
+                                    ${col.render(x)}
+                                </td>
+                            `)
+                            .join("")}
+                    </tr>
+                `)
+                .join("")
+
+            : `
+                <tr>
+                    <td
+                        colspan="${columns.length}"
+                        style="text-align:center;"
+                    >
+                        No inactive publishers
+                    </td>
+                </tr>
+            `;
+
+        console.log(
+            "✅ 6 Month Inactive loaded:",
+            {
+                firstNumber,
+                lastNumber,
+                count: inactivePublishers.length,
+                data: inactivePublishers
+            }
+        );
+
+    }catch(error){
+
+        console.error(
+            "❌ loadSixMonthInactive error:",
+            error
+        );
+    }
+};
+
+
+
+window.loadSixMonthMovedIn = async function(){
+    try{
+        const period = await window.getSixMonthReportingPeriod();
+
+        const serviceYearEl =
+            document.getElementById("analysis-service-year");
+
+        if(serviceYearEl){
+            serviceYearEl.textContent = "";
+        }
+
+        const title =
+            document.getElementById("list-title");
+
+        const header =
+            document.getElementById("analysis-table-header");
+
+        const tbody =
+            document.getElementById("publishers-table-body");
+
+        if(!title || !header || !tbody){
+            console.error(
+                "❌ 6 Month Moved In table elements not found"
+            );
+            return;
+        }
+
+        header.innerHTML = "";
+
+        const db = await openIndexedDB();
+
+        const tx = db.transaction(
+            ["RECORDS", "PUBLISHERS"],
+            "readonly"
+        );
+
+        const records = await new Promise((resolve, reject) => {
+            const r =
+                tx.objectStore("RECORDS").getAll();
+
+            r.onsuccess = () =>
+                resolve(r.result || []);
+
+            r.onerror = () =>
+                reject(r.error);
+        });
+
+        const publishers = await new Promise((resolve, reject) => {
+            const r =
+                tx.objectStore("PUBLISHERS").getAll();
+
+            r.onsuccess = () =>
+                resolve(r.result || []);
+
+            r.onerror = () =>
+                reject(r.error);
+        });
+
+        db.close();
+
+        const firstNumber =
+            Number(period.firstNumber);
+
+        const lastNumber =
+            Number(period.lastNumber);
+
+        // --------------------------------------------------
+        // GROUP MOVED IN / REACTIVATED / REINSTATED
+        // --------------------------------------------------
+
+        const movedInByPublisher = new Map();
+
+        records
+            .filter(r => {
+
+                const number =
+                    Number(r.NUMBER);
+
+                const remark =
+                    String(
+                        r.REMARKS ??
+                        r.Remarks ??
+                        ""
+                    )
+                    .trim()
+                    .toUpperCase();
+
+                const isMovedIn =
+                    remark === "MOVED IN" ||
+                    remark === "RP/MOVED IN" ||
+                    remark === "REINSTATED";
+
+                return number >= firstNumber &&
+                       number <= lastNumber &&
+                       isMovedIn;
+            })
+            .forEach(r => {
+
+                const pubId =
+                    String(
+                        r.IdPubs ??
+                        r.IDPub ??
+                        r.idpubs ??
+                        ""
+                    )
+                    .trim();
+
+                if(!pubId) return;
+
+                if(!movedInByPublisher.has(pubId)){
+                    movedInByPublisher.set(
+                        pubId,
+                        new Set()
+                    );
+                }
+
+                movedInByPublisher
+                    .get(pubId)
+                    .add(
+                        JSON.stringify({
+                            number: Number(r.NUMBER),
+                            status: String(
+                                r.REMARKS ??
+                                r.Remarks ??
+                                ""
+                            ).trim()
+                        })
+                    );
+            });
+
+        // --------------------------------------------------
+        // BUILD RESULT
+        // --------------------------------------------------
+
+        const movedInPublishers =
+            Array.from(
+                movedInByPublisher.entries()
+            )
+            .map(([pubId, entries]) => {
+
+                const publisher =
+                    publishers.find(p =>
+                        String(p.IDPub) === pubId
+                    );
+
+                const sortedEntries =
+                    [...entries]
+                    .map(entry =>
+                        JSON.parse(entry)
+                    )
+                    .sort((a, b) =>
+                        a.number - b.number
+                    );
+
+                const months =
+                    sortedEntries.map(entry => {
+
+                        const month =
+                            period.sixMonths.find(m =>
+                                Number(m.NUMBER) ===
+                                Number(entry.number)
+                            );
+
+                        return month?.MONTH_ ||
+                               `NUMBER ${entry.number}`;
+                    });
+
+                const statuses =
+                    [...new Set(
+                        sortedEntries.map(entry =>
+                            entry.status
+                        )
+                    )];
+
+                return {
+                    IDPub: pubId,
+
+                    Name: publisher
+                        ? `${publisher.LName || ""}, ${publisher.FNAME || ""}`
+                        : "UNKNOWN",
+
+                    Months:
+                        months.join(", "),
+
+                    Status:
+                        statuses.join(", ")
+                };
+            })
+            .filter(x =>
+                x.Name !== "UNKNOWN"
+            );
+
+        // --------------------------------------------------
+        // COUNT
+        // --------------------------------------------------
+
+        const movedInCount =
+            document.getElementById("Moved-In-count");
+
+        if(movedInCount){
+            movedInCount.textContent =
+                movedInPublishers.length;
+        }
+
+        // --------------------------------------------------
+        // TITLE
+        // --------------------------------------------------
+
+        title.textContent =
+            `6 MONTH MOVED IN (${movedInPublishers.length})`;
+
+        // --------------------------------------------------
+        // TABLE COLUMNS
+        // --------------------------------------------------
+
+        const columns = [
+            {
+                label: "Name",
+
+                render: x =>
+                    `<strong>${x.Name}</strong>`
+            },
+
+            {
+                label: "Status",
+
+                render: x =>
+                    `<strong>${x.Status}</strong>`
+            },
+
+            {
+                label: "Month Moved In",
+
+                render: x =>
+                    x.Months
+            }
+        ];
+
+        header.innerHTML =
+            columns
+                .map(col =>
+                    `<th>${col.label}</th>`
+                )
+                .join("");
+
+        // --------------------------------------------------
+        // TABLE BODY
+        // --------------------------------------------------
+
+        tbody.innerHTML =
+            movedInPublishers.length
+
+            ? movedInPublishers
+                .map(x => `
+                    <tr>
+                        ${columns
+                            .map(col => `
+                                <td>
+                                    ${col.render(x)}
+                                </td>
+                            `)
+                            .join("")}
+                    </tr>
+                `)
+                .join("")
+
+            : `
+                <tr>
+                    <td
+                        colspan="${columns.length}"
+                        style="text-align:center;"
+                    >
+                        No moved in publishers
+                    </td>
+                </tr>
+            `;
+
+        console.log(
+            "✅ 6 Month Moved In loaded:",
+            {
+                firstNumber,
+                lastNumber,
+                count: movedInPublishers.length,
+                data: movedInPublishers
+            }
+        );
+
+    }catch(error){
+
+        console.error(
+            "❌ loadSixMonthMovedIn error:",
+            error
+        );
+    }
+};
+
+
+window.loadSixMonthMovedOut = async function(){
+    try{
+        const period = await window.getSixMonthReportingPeriod();
+
+        const serviceYearEl =
+            document.getElementById("analysis-service-year");
+
+        if(serviceYearEl){
+            serviceYearEl.textContent = "";
+        }
+
+        const title =
+            document.getElementById("list-title");
+
+        const header =
+            document.getElementById("analysis-table-header");
+
+        const tbody =
+            document.getElementById("publishers-table-body");
+
+        if(!title || !header || !tbody){
+            console.error(
+                "❌ 6 Month Moved Out table elements not found"
+            );
+            return;
+        }
+
+        header.innerHTML = "";
+
+        const db = await openIndexedDB();
+
+        const tx = db.transaction(
+            ["RECORDS", "PUBLISHERS"],
+            "readonly"
+        );
+
+        const records = await new Promise((resolve, reject) => {
+            const r =
+                tx.objectStore("RECORDS").getAll();
+
+            r.onsuccess = () =>
+                resolve(r.result || []);
+
+            r.onerror = () =>
+                reject(r.error);
+        });
+
+        const publishers = await new Promise((resolve, reject) => {
+            const r =
+                tx.objectStore("PUBLISHERS").getAll();
+
+            r.onsuccess = () =>
+                resolve(r.result || []);
+
+            r.onerror = () =>
+                reject(r.error);
+        });
+
+        db.close();
+
+        const firstNumber =
+            Number(period.firstNumber);
+
+        const lastNumber =
+            Number(period.lastNumber);
+
+        // --------------------------------------------------
+        // GROUP MOVED OUT / REMOVED / DISQUALIFIED
+        // --------------------------------------------------
+
+        const movedOutByPublisher = new Map();
+
+        records
+            .filter(r => {
+
+                const number =
+                    Number(r.NUMBER);
+
+                const remark =
+                    String(
+                        r.REMARKS ??
+                        r.Remarks ??
+                        ""
+                    )
+                    .trim()
+                    .toUpperCase();
+
+                const isMovedOut =
+                    remark === "MOVED OUT" ||
+                    remark === "REMOVED" ||
+                    remark === "DISQUALIFIED";
+
+                return number >= firstNumber &&
+                       number <= lastNumber &&
+                       isMovedOut;
+            })
+            .forEach(r => {
+
+                const pubId =
+                    String(
+                        r.IdPubs ??
+                        r.IDPub ??
+                        r.idpubs ??
+                        ""
+                    )
+                    .trim();
+
+                if(!pubId) return;
+
+                if(!movedOutByPublisher.has(pubId)){
+                    movedOutByPublisher.set(
+                        pubId,
+                        new Set()
+                    );
+                }
+
+                movedOutByPublisher
+                    .get(pubId)
+                    .add(
+                        JSON.stringify({
+                            number: Number(r.NUMBER),
+                            status: String(
+                                r.REMARKS ??
+                                r.Remarks ??
+                                ""
+                            ).trim()
+                        })
+                    );
+            });
+
+        // --------------------------------------------------
+        // BUILD RESULT
+        // --------------------------------------------------
+
+        const movedOutPublishers =
+            Array.from(
+                movedOutByPublisher.entries()
+            )
+            .map(([pubId, entries]) => {
+
+                const publisher =
+                    publishers.find(p =>
+                        String(p.IDPub) === pubId
+                    );
+
+                const sortedEntries =
+                    [...entries]
+                    .map(entry =>
+                        JSON.parse(entry)
+                    )
+                    .sort((a, b) =>
+                        a.number - b.number
+                    );
+
+                const months =
+                    sortedEntries.map(entry => {
+
+                        const month =
+                            period.sixMonths.find(m =>
+                                Number(m.NUMBER) ===
+                                Number(entry.number)
+                            );
+
+                        return month?.MONTH_ ||
+                               `NUMBER ${entry.number}`;
+                    });
+
+                const statuses =
+                    [...new Set(
+                        sortedEntries.map(entry =>
+                            entry.status
+                        )
+                    )];
+
+                return {
+                    IDPub: pubId,
+
+                    Name: publisher
+                        ? `${publisher.LName || ""}, ${publisher.FNAME || ""}`
+                        : "UNKNOWN",
+
+                    Months:
+                        months.join(", "),
+
+                    Status:
+                        statuses.join(", ")
+                };
+            })
+            .filter(x =>
+                x.Name !== "UNKNOWN"
+            );
+
+        // --------------------------------------------------
+        // COUNT
+        // --------------------------------------------------
+
+        const movedOutCount =
+            document.getElementById("Moved-Out-count");
+
+        if(movedOutCount){
+            movedOutCount.textContent =
+                movedOutPublishers.length;
+        }
+
+        // --------------------------------------------------
+        // TITLE
+        // --------------------------------------------------
+
+        title.textContent =
+            `6 MONTH MOVED OUT (${movedOutPublishers.length})`;
+
+        // --------------------------------------------------
+        // TABLE COLUMNS
+        // --------------------------------------------------
+
+        const columns = [
+            {
+                label: "Name",
+
+                render: x =>
+                    `<strong>${x.Name}</strong>`
+            },
+
+            {
+                label: "Status",
+
+                render: x =>
+                    `<strong>${x.Status}</strong>`
+            },
+
+            {
+                label: "Months Moved Out",
+
+                render: x =>
+                    x.Months
+            }
+        ];
+
+        header.innerHTML =
+            columns
+                .map(col =>
+                    `<th>${col.label}</th>`
+                )
+                .join("");
+
+        // --------------------------------------------------
+        // TABLE BODY
+        // --------------------------------------------------
+
+        tbody.innerHTML =
+            movedOutPublishers.length
+
+            ? movedOutPublishers
+                .map(x => `
+                    <tr>
+                        ${columns
+                            .map(col => `
+                                <td>
+                                    ${col.render(x)}
+                                </td>
+                            `)
+                            .join("")}
+                    </tr>
+                `)
+                .join("")
+
+            : `
+                <tr>
+                    <td
+                        colspan="${columns.length}"
+                        style="text-align:center;"
+                    >
+                        No moved out publishers
+                    </td>
+                </tr>
+            `;
+
+        console.log(
+            "✅ 6 Month Moved Out loaded:",
+            {
+                firstNumber,
+                lastNumber,
+                count: movedOutPublishers.length,
+                data: movedOutPublishers
+            }
+        );
+
+    }catch(error){
+
+        console.error(
+            "❌ loadSixMonthMovedOut error:",
+            error
+        );
+    }
+};
+
+
+window.loadSixMonthReactivated = async function(){
+    try{
+        const period = await window.getSixMonthReportingPeriod();
+
+        const serviceYearEl =
+            document.getElementById("analysis-service-year");
+
+        if(serviceYearEl){
+            serviceYearEl.textContent = "";
+        }
+
+        const title =
+            document.getElementById("list-title");
+
+        const header =
+            document.getElementById("analysis-table-header");
+
+        const tbody =
+            document.getElementById("publishers-table-body");
+
+        if(!title || !header || !tbody){
+            console.error(
+                "❌ 6 Month Moved In table elements not found"
+            );
+            return;
+        }
+
+        header.innerHTML = "";
+
+        const db = await openIndexedDB();
+
+        const tx = db.transaction(
+            ["RECORDS", "PUBLISHERS"],
+            "readonly"
+        );
+
+        const records = await new Promise((resolve, reject) => {
+            const r =
+                tx.objectStore("RECORDS").getAll();
+
+            r.onsuccess = () =>
+                resolve(r.result || []);
+
+            r.onerror = () =>
+                reject(r.error);
+        });
+
+        const publishers = await new Promise((resolve, reject) => {
+            const r =
+                tx.objectStore("PUBLISHERS").getAll();
+
+            r.onsuccess = () =>
+                resolve(r.result || []);
+
+            r.onerror = () =>
+                reject(r.error);
+        });
+
+        db.close();
+
+        const firstNumber =
+            Number(period.firstNumber);
+
+        const lastNumber =
+            Number(period.lastNumber);
+
+        // --------------------------------------------------
+        // GROUP MOVED IN / REACTIVATED / REINSTATED
+        // --------------------------------------------------
+
+        const movedInByPublisher = new Map();
+
+        records
+            .filter(r => {
+
+                const number =
+                    Number(r.NUMBER);
+
+                const remark =
+                    String(
+                        r.REMARKS ??
+                        r.Remarks ??
+                        ""
+                    )
+                    .trim()
+                    .toUpperCase();
+
+                const isMovedIn =
+                    remark === "REACTIVATED" ;
+
+
+                return number >= firstNumber &&
+                       number <= lastNumber &&
+                       isMovedIn;
+            })
+            .forEach(r => {
+
+                const pubId =
+                    String(
+                        r.IdPubs ??
+                        r.IDPub ??
+                        r.idpubs ??
+                        ""
+                    )
+                    .trim();
+
+                if(!pubId) return;
+
+                if(!movedInByPublisher.has(pubId)){
+                    movedInByPublisher.set(
+                        pubId,
+                        new Set()
+                    );
+                }
+
+                movedInByPublisher
+                    .get(pubId)
+                    .add(
+                        JSON.stringify({
+                            number: Number(r.NUMBER),
+                            status: String(
+                                r.REMARKS ??
+                                r.Remarks ??
+                                ""
+                            ).trim()
+                        })
+                    );
+            });
+
+        // --------------------------------------------------
+        // BUILD RESULT
+        // --------------------------------------------------
+
+        const movedInPublishers =
+            Array.from(
+                movedInByPublisher.entries()
+            )
+            .map(([pubId, entries]) => {
+
+                const publisher =
+                    publishers.find(p =>
+                        String(p.IDPub) === pubId
+                    );
+
+                const sortedEntries =
+                    [...entries]
+                    .map(entry =>
+                        JSON.parse(entry)
+                    )
+                    .sort((a, b) =>
+                        a.number - b.number
+                    );
+
+                const months =
+                    sortedEntries.map(entry => {
+
+                        const month =
+                            period.sixMonths.find(m =>
+                                Number(m.NUMBER) ===
+                                Number(entry.number)
+                            );
+
+                        return month?.MONTH_ ||
+                               `NUMBER ${entry.number}`;
+                    });
+
+                const statuses =
+                    [...new Set(
+                        sortedEntries.map(entry =>
+                            entry.status
+                        )
+                    )];
+
+                return {
+                    IDPub: pubId,
+
+                    Name: publisher
+                        ? `${publisher.LName || ""}, ${publisher.FNAME || ""}`
+                        : "UNKNOWN",
+
+                    Months:
+                        months.join(", "),
+
+                    Status:
+                        statuses.join(", ")
+                };
+            })
+            .filter(x =>
+                x.Name !== "UNKNOWN"
+            );
+
+        // --------------------------------------------------
+        // COUNT
+        // --------------------------------------------------
+
+        const movedInCount =
+            document.getElementById("Reactivated-count");
+
+        if(movedInCount){
+            movedInCount.textContent =
+                movedInPublishers.length;
+        }
+
+        // --------------------------------------------------
+        // TITLE
+        // --------------------------------------------------
+
+        title.textContent =
+            `6 MONTH REACTIVATED (${movedInPublishers.length})`;
+
+        // --------------------------------------------------
+        // TABLE COLUMNS
+        // --------------------------------------------------
+
+        const columns = [
+            {
+                label: "Name",
+
+                render: x =>
+                    `<strong>${x.Name}</strong>`
+            },
+
+            {
+                label: "Status",
+
+                render: x =>
+                    `<strong>${x.Status}</strong>`
+            },
+
+            {
+                label: "Month Reactivated",
+
+                render: x =>
+                    x.Months
+            }
+        ];
+
+        header.innerHTML =
+            columns
+                .map(col =>
+                    `<th>${col.label}</th>`
+                )
+                .join("");
+
+        // --------------------------------------------------
+        // TABLE BODY
+        // --------------------------------------------------
+
+        tbody.innerHTML =
+            movedInPublishers.length
+
+            ? movedInPublishers
+                .map(x => `
+                    <tr>
+                        ${columns
+                            .map(col => `
+                                <td>
+                                    ${col.render(x)}
+                                </td>
+                            `)
+                            .join("")}
+                    </tr>
+                `)
+                .join("")
+
+            : `
+                <tr>
+                    <td
+                        colspan="${columns.length}"
+                        style="text-align:center;"
+                    >
+                        No moved in publishers
+                    </td>
+                </tr>
+            `;
+
+        console.log(
+            "✅ 6 Month Moved In loaded:",
+            {
+                firstNumber,
+                lastNumber,
+                count: movedInPublishers.length,
+                data: movedInPublishers
+            }
+        );
+
+    }catch(error){
+
+        console.error(
+            "❌ loadSixMonthMovedIn error:",
+            error
+        );
+    }
+};
 
 
 </script>
