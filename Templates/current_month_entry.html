@@ -1775,13 +1775,13 @@ function getServiceMonthNumber(serviceYear, monthIndex) {
 // Optimized and compatible replacement for your loadS21RecordsForPublisher function
 function loadS21RecordsForPublisher(selectedRecordNumber) {
     if (!currentSelectedPublisher || !currentSelectedPublisher.IDPub) return;
-   
-    
+
+
     const activePublisherId = currentSelectedPublisher.IDPub;
 
     const activeMonthIndex = Number(typeof window.getMonthIndex === 'function' ? window.getMonthIndex() : 0);
-    const targetHighlightNumber = selectedRecordNumber !== undefined 
-        ? Number(selectedRecordNumber) 
+    const targetHighlightNumber = selectedRecordNumber !== undefined
+        ? Number(selectedRecordNumber)
         : (window.SelNumber !== undefined ? Number(window.SelNumber) : activeMonthIndex);
 
     s21Months.forEach((m) => {
@@ -1802,19 +1802,17 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
         if (hrsEl) hrsEl.value = "";
         if (remTextEl) remTextEl.value = "";
         if (remSelEl) remSelEl.value = "";
-
-        
     });
 
-    
-     const request = indexedDB.open("CongregationDB");
-    
+
+    const request = indexedDB.open("CongregationDB");
+
     request.onsuccess = (event) => {
         const db = event.target.result;
         const transaction = db.transaction(["RECORDS"], "readonly");
         const store = transaction.objectStore("RECORDS");
         const getAllRequest = store.getAll();
-        
+
         getAllRequest.onsuccess = (e) => {
             const allRecords = e.target.result;
 
@@ -1825,7 +1823,7 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
                 }
             });
 
-            const activeCategory=String(document.getElementById("categorySelect")?.value||"").trim().toUpperCase();
+            const activeCategory = String(document.getElementById("categorySelect")?.value || "").trim().toUpperCase();
 
             const isHighlightAllowed = [
                 "ALL PUBLISHERS REPORTED",
@@ -1855,9 +1853,26 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
                     if (remSelEl) remSelEl.value = rec.REMARKS || rec.remarks || rec.Remark || "";
                 }
 
+                // -------------------------------------------------------------
+                // LOCK FUTURE MONTHS (after the currently active reporting month)
+                // Aux Pioneer checkbox stays enabled regardless.
+                // -------------------------------------------------------------
+                const activeMonthIndexNow = Number(window.currentActiveMonthIndex);
+                const isFutureMonth = targetNumber > activeMonthIndexNow;
+
+                [minEl, bsEl, hrsEl, remTextEl, remSelEl].forEach(el => {
+                    if (el) el.disabled = isFutureMonth;
+                });
+
+                if (auxEl) auxEl.disabled = false; // Aux Pioneer always editable
+
                 if (rowEl) {
-                    const rawDateEntered = rec 
-                        ? (rec.Date_entered ?? rec.Date_Entered ?? rec.Date_Number ?? rec.date_entered ?? 0) 
+                    rowEl.classList.toggle('s21-row-future', isFutureMonth);
+                }
+
+                if (rowEl) {
+                    const rawDateEntered = rec
+                        ? (rec.Date_entered ?? rec.Date_Entered ?? rec.Date_Number ?? rec.date_entered ?? 0)
                         : 0;
 
                     const recordDateEntered = Number(rawDateEntered);
@@ -1872,10 +1887,10 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
                     };
 
                     const hasActivity = rec && (
-                        isTrueMarker(rec.MINISTRY) || 
-                        Number(rec.HRS || 0) > 0 || 
-                        Number(rec.BS || 0) > 0 || 
-                        isTrueMarker(rec.AUX) || 
+                        isTrueMarker(rec.MINISTRY) ||
+                        Number(rec.HRS || 0) > 0 ||
+                        Number(rec.BS || 0) > 0 ||
+                        isTrueMarker(rec.AUX) ||
                         String(rec.REMARKS || rec.remarks || rec.Note || "").trim() !== ""
                     );
 
@@ -3907,6 +3922,7 @@ if (!confirmed) return;
                 // Refresh UI.
                 updateMonthDisplay();
                 updateMonthSidebarDisplay();
+                updateYearDisplay();  
 
                 if (typeof syncMonthStatusUI === "function") {
                     syncMonthStatusUI();

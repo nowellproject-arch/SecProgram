@@ -190,6 +190,409 @@ DATE_ENTERED = ACTIVE MNUMBER
     console.table(rows);
 })();
 
+//==============================
+REMOVE ALL INACTIVE IN RECORDS
+
+(async () => {
+    const db = await openIndexedDB();
+
+    const records = await new Promise((resolve, reject) => {
+        const tx = db.transaction("RECORDS", "readonly");
+        const req = tx.objectStore("RECORDS").getAll();
+
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+    });
+
+    const rowsToDelete = records.filter(r => {
+        const remark = String(r.REMARKS ?? "").trim().toUpperCase();
+
+        return remark === "INACTIVE" ||
+               remark === "REACTIVATED";
+    });
+
+    console.log("==============================================");
+    console.log("🧹 CLEAN OLD INACTIVE / REACTIVATED");
+    console.log("==============================================");
+
+    console.log("Rows found:", rowsToDelete.length);
+
+    console.table(
+        rowsToDelete.map(r => ({
+            NUMBER: r.NUMBER,
+            IdPubs: r.IdPubs,
+            MINISTRY: r.MINISTRY,
+            HRS: r.HRS,
+            REMARKS: r.REMARKS
+        }))
+    );
+
+    if (rowsToDelete.length === 0) {
+        console.log("✅ Nothing to delete.");
+        db.close();
+        return;
+    }
+
+    const confirmed = confirm(
+        `Delete ${rowsToDelete.length} old INACTIVE / REACTIVATED rows?`
+    );
+
+    if (!confirmed) {
+        console.log("❌ Cancelled. Nothing deleted.");
+        db.close();
+        return;
+    }
+
+    await new Promise((resolve, reject) => {
+        const tx = db.transaction("RECORDS", "readwrite");
+        const store = tx.objectStore("RECORDS");
+
+        rowsToDelete.forEach(r => {
+            store.delete([
+                Number(r.NUMBER),
+                String(r.IdPubs)
+            ]);
+        });
+
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+    });
+
+    db.close();
+
+    console.log("==============================================");
+    console.log("✅ CLEANUP COMPLETE");
+    console.log("==============================================");
+    console.log(
+        `Deleted ${rowsToDelete.length} INACTIVE / REACTIVATED rows.`
+    );
+
+})();
+
+
+// add Inactive and reactivated in RECORDS
+
+(async () => {
+    const db = await openIndexedDB();
+
+    // =========================================================
+    // LOAD ALL RECORDS
+    // =========================================================
+    const records = await new Promise((resolve, reject) => {
+        const tx = db.transaction("RECORDS", "readonly");
+        const req = tx.objectStore("RECORDS").getAll();
+
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+    });
+
+    // =========================================================
+    // REPORT = MINISTRY 1 OR ?
+    // HRS DOES NOT MATTER
+    // =========================================================
+    function isMinistryReport(r) {
+        const ministry = String(r.MINISTRY ?? "")
+            .trim()
+            .toUpperCase();
+
+        return ministry === "1" || ministry === "?";
+    }
+
+    // =========================================================
+    // GROUP RECORDS BY PUBLISHER
+    // =========================================================
+    const byPublisher = new Map();
+
+    for (const r of records) {
+
+        const id = String(r.IdPubs ?? "").trim();
+
+        // Ignore blank publisher IDs
+        if (!id) {
+            continue;
+        }
+
+        if (!byPublisher.has(id)) {
+            byPublisher.set(id, []);
+        }
+
+        byPublisher.get(id).push(r);
+    }
+
+    // =========================================================
+    // HIGHEST NUMBER THAT ACTUALLY EXISTS
+    //
+    // We never create an INACTIVE row beyond the current
+    // database range.
+    // =========================================================
+    const maxNumber = records.reduce(
+        (max, r) => Math.max(max, Number(r.NUMBER) || 0),
+        0
+    );
+
+    const inactiveToAdd = [];
+    const reactivatedToUpdate = [];
+
+    // =========================================================
+    // PROCESS EACH PUBLISHER
+    // =========================================================
+    for (const [id, pubRecords] of byPublisher) {
+
+        // -------------------------------------------------------
+        // ONLY REAL MINISTRY REPORTS
+        // -------------------------------------------------------
+        const reports = pubRecords
+            .filter(isMinistryReport)
+            .sort(
+                (a, b) =>
+                    Number(a.NUMBER) - Number(b.NUMBER)
+            );
+
+        if (reports.length === 0) {
+            continue;
+        }
+
+        // -------------------------------------------------------
+        // CHECK EACH PAIR OF CONSECUTIVE REAL REPORTS
+        // -------------------------------------------------------
+        for (let i = 0; i < reports.length - 1; i++) {
+
+            const previousReport = reports[i];
+            const nextReport = reports[i + 1];
+
+            const previousNumber =
+                Number(previousReport.NUMBER);
+
+            const nextNumber =
+                Number(nextReport.NUMBER);
+
+            // Number of complete months with no report
+            const missingMonths =
+                nextNumber - previousNumber - 1;
+
+            // Need at least 6 missing months
+            if (missingMonths < 6) {
+                continue;
+            }
+
+            // ---------------------------------------------------
+            // 6TH MISSING MONTH = INACTIVE
+            // ---------------------------------------------------
+            const inactiveNumber =
+                previousNumber + 6;
+
+            // Never create beyond current data range
+            if (inactiveNumber > maxNumber) {
+                continue;
+            }
+
+            // ---------------------------------------------------
+            // CHECK WHETHER A RECORDS ROW ALREADY EXISTS
+            // AT THIS EXACT MONTH/PUBLISHER
+            // ---------------------------------------------------
+            const existingRow = pubRecords.find(r =>
+                Number(r.NUMBER) === inactiveNumber
+            );
+
+            if (!existingRow) {
+
+                inactiveToAdd.push({
+                    NUMBER: inactiveNumber,
+                    IdPubs: id,
+                    REMARKS: "INACTIVE"
+                });
+            }
+
+            // ---------------------------------------------------
+            // THE FIRST REAL REPORT AFTER INACTIVE
+            // BECOMES REACTIVATED
+            //
+            // reports[] contains ONLY MINISTRY 1 or ?
+            // ---------------------------------------------------
+            if (nextNumber > inactiveNumber) {
+
+                reactivatedToUpdate.push({
+                    ...nextReport
+                });
+            }
+        }
+    }
+
+    // =========================================================
+    // REMOVE DUPLICATE INACTIVE CANDIDATES
+    // =========================================================
+    const uniqueInactive = [];
+    const inactiveKeys = new Set();
+
+    for (const r of inactiveToAdd) {
+
+        const key =
+            `${Number(r.NUMBER)}|${String(r.IdPubs)}`;
+
+        if (inactiveKeys.has(key)) {
+            continue;
+        }
+
+        inactiveKeys.add(key);
+        uniqueInactive.push(r);
+    }
+
+    // =========================================================
+    // REMOVE DUPLICATE REACTIVATED CANDIDATES
+    // =========================================================
+    const uniqueReactivated = [];
+    const reactivatedKeys = new Set();
+
+    for (const r of reactivatedToUpdate) {
+
+        const key =
+            `${Number(r.NUMBER)}|${String(r.IdPubs)}`;
+
+        if (reactivatedKeys.has(key)) {
+            continue;
+        }
+
+        reactivatedKeys.add(key);
+        uniqueReactivated.push(r);
+    }
+
+    // =========================================================
+    // PREVIEW
+    // =========================================================
+    console.log("==============================================");
+    console.log("🔍 INACTIVE / REACTIVATED REBUILD PREVIEW");
+    console.log("==============================================");
+
+    console.log(
+        "Highest existing NUMBER:",
+        maxNumber
+    );
+
+    console.log(
+        "INACTIVE rows to add:",
+        uniqueInactive.length
+    );
+
+    console.table(uniqueInactive);
+
+    console.log(
+        "REACTIVATED reports to update:",
+        uniqueReactivated.length
+    );
+
+    console.table(
+        uniqueReactivated.map(r => ({
+            NUMBER: Number(r.NUMBER),
+            IdPubs: String(r.IdPubs),
+            MINISTRY: r.MINISTRY,
+            HRS: r.HRS,
+            OLD_REMARKS: r.REMARKS ?? "",
+            NEW_REMARKS: "REACTIVATED"
+        }))
+    );
+
+    // =========================================================
+    // NOTHING TO DO
+    // =========================================================
+    if (
+        uniqueInactive.length === 0 &&
+        uniqueReactivated.length === 0
+    ) {
+        console.log("✅ Nothing to change.");
+        db.close();
+        return;
+    }
+
+    // =========================================================
+    // CONFIRM
+    // =========================================================
+    const confirmed = confirm(
+        `Add ${uniqueInactive.length} INACTIVE rows\n` +
+        `and mark ${uniqueReactivated.length} reports as REACTIVATED?\n\n` +
+        `Continue?`
+    );
+
+    if (!confirmed) {
+
+        console.log(
+            "❌ Cancelled. Nothing was changed."
+        );
+
+        db.close();
+        return;
+    }
+
+    // =========================================================
+    // WRITE TO INDEXEDDB
+    // =========================================================
+    await new Promise((resolve, reject) => {
+
+        const tx =
+            db.transaction("RECORDS", "readwrite");
+
+        const store =
+            tx.objectStore("RECORDS");
+
+        // -------------------------------------------------------
+        // ADD INACTIVE ROWS
+        // -------------------------------------------------------
+        for (const r of uniqueInactive) {
+
+            store.put({
+                NUMBER: Number(r.NUMBER),
+                IdPubs: String(r.IdPubs),
+                REMARKS: "INACTIVE"
+            });
+        }
+
+        // -------------------------------------------------------
+        // MARK REAL REPORTS AS REACTIVATED
+        // -------------------------------------------------------
+        for (const r of uniqueReactivated) {
+
+            // Only MINISTRY 1 or ? can be reactivated
+            if (!isMinistryReport(r)) {
+                continue;
+            }
+
+            r.REMARKS = "REACTIVATED";
+
+            store.put(r);
+        }
+
+        tx.oncomplete = () => {
+            resolve();
+        };
+
+        tx.onerror = () => {
+            reject(tx.error);
+        };
+
+        tx.onabort = () => {
+            reject(tx.error);
+        };
+    });
+
+    db.close();
+
+    // =========================================================
+    // COMPLETE
+    // =========================================================
+    console.log("==============================================");
+    console.log("✅ REBUILD COMPLETE");
+    console.log("==============================================");
+
+    console.log(
+        `Added ${uniqueInactive.length} INACTIVE rows.`
+    );
+
+    console.log(
+        `Marked ${uniqueReactivated.length} reports as REACTIVATED.`
+    );
+
+})();
+
 
 
 //  setup AI
@@ -200,5 +603,5 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Analysis 6mos added"
+git commit -m "Disable s21 Future month"
 git push origin main

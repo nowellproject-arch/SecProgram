@@ -1542,7 +1542,6 @@ let selectedYear = new Date().getFullYear();
 // 2. LOAD RECORDS FOR S-21 TABLE
 // ==========================================
 // Optimized and compatible replacement for your loadS21RecordsForPublisher function
-
 function loadS21RecordsForPublisher() {
     if (!currentSelectedPublisher || !currentSelectedPublisher.IDPub) return;
     cleanS21Records();
@@ -1550,10 +1549,6 @@ function loadS21RecordsForPublisher() {
     const activePublisherId = currentSelectedPublisher.IDPub;
 
     s21Months.forEach((m) => {
-
-
-
-
 
         const minEl = document.getElementById(`${m.id}-ministry`);
         const bsEl = document.getElementById(`${m.id}-studies`);
@@ -1582,10 +1577,10 @@ function loadS21RecordsForPublisher() {
         const db = event.target.result;
         const transaction = db.transaction(["RECORDS"], "readonly");
         const store = transaction.objectStore("RECORDS");
-        
+
         // BULK FETCH: Grab all records in one fast trip instead of using a cursor loop
         const getAllRequest = store.getAll();
-        
+
         getAllRequest.onsuccess = (e) => {
             const allRecords = e.target.result;
 
@@ -1608,16 +1603,34 @@ function loadS21RecordsForPublisher() {
                 const hrsEl = document.getElementById(`${m.id}-hours`);
                 const remTextEl = document.getElementById(`${m.id}-remark`);
                 const remSelEl = document.getElementById(`${m.id}-select`);
+                const rowEl = document.getElementById(m.id) || (minEl ? minEl.closest('tr') : null);
 
                 if (rec) {
                     if (minEl) minEl.checked = Boolean(rec.MINISTRY);
                     if (bsEl) bsEl.value = rec.BS !== undefined ? rec.BS : "";
                     if (auxEl) auxEl.checked = Boolean(rec.AUX);
                     if (hrsEl) hrsEl.value = rec.HRS !== undefined ? rec.HRS : "";
-                    
+
                     // SAFE CASING FALLBACKS FOR REMARKS
                     if (remTextEl) remTextEl.value = rec.Note || rec.note || rec.REMARK || "";
                     if (remSelEl) remSelEl.value = rec.REMARKS || rec.remarks || rec.Remark || "";
+                }
+
+                // -------------------------------------------------------------
+                // LOCK FUTURE MONTHS (after the currently active reporting month)
+                // Aux Pioneer checkbox stays enabled regardless.
+                // -------------------------------------------------------------
+                const activeMonthIndexNow = Number(window.currentActiveMonthIndex);
+                const isFutureMonth = targetNumber > activeMonthIndexNow;
+
+                [minEl, bsEl, hrsEl, remTextEl, remSelEl].forEach(el => {
+                    if (el) el.disabled = isFutureMonth;
+                });
+
+                if (auxEl) auxEl.disabled = false; // Aux Pioneer always editable
+
+                if (rowEl) {
+                    rowEl.classList.toggle('s21-row-future', isFutureMonth);
                 }
 
                 // Attach listeners using the correct 'index' variable
