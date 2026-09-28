@@ -1256,62 +1256,90 @@ window.loadActiveBaptizedPublishers=async function(){
     }
 };
 
+window.loadElders = async function () {
+    try {
+        const db = await openIndexedDB();
 
-window.loadElders=async function(){
-    try{
-        const db=await openIndexedDB();
-        const publishers=await new Promise((resolve,reject)=>{
-            const r=db.transaction("PUBLISHERS","readonly").objectStore("PUBLISHERS").getAll();
-            r.onsuccess=()=>resolve(r.result||[]);
-            r.onerror=()=>reject(r.error);
+        const publishers = await new Promise((resolve, reject) => {
+            const r = db
+                .transaction("PUBLISHERS", "readonly")
+                .objectStore("PUBLISHERS")
+                .getAll();
+
+            r.onsuccess = () => resolve(r.result || []);
+            r.onerror = () => reject(r.error);
         });
+
         db.close();
 
-        const result=publishers
-            .filter(p=>String(p.Elder??"").trim().toUpperCase()==="TRUE")
-            .filter(p=>{
-                const status=String(p.Status??"").trim().toUpperCase();
-                return status==="ACTIVE"||status==="";
+        const result = publishers
+
+            // Elder = TRUE or 1
+            .filter(p => {
+                const elder = String(p.Elder ?? "").trim().toUpperCase();
+                return elder === "TRUE" || elder === "1";
             })
-            .filter(p=>String(p.LName??"").trim()||String(p.FNAME??"").trim())
-            .sort((a,b)=>{
-                const la=String(a.LName??"").trim().toUpperCase();
-                const lb=String(b.LName??"").trim().toUpperCase();
-                const fa=String(a.FNAME??"").trim().toUpperCase();
-                const fb=String(b.FNAME??"").trim().toUpperCase();
-                return la.localeCompare(lb)||fa.localeCompare(fb);
+
+            // Active or blank status
+            .filter(p => {
+                const status = String(p.Status ?? "").trim().toUpperCase();
+                return status === "ACTIVE" || status === "";
+            })
+
+            // Must have a name
+            .filter(p =>
+                String(p.LName ?? "").trim() ||
+                String(p.FNAME ?? "").trim()
+            )
+
+            // Sort by last name, then first name
+            .sort((a, b) => {
+                const la = String(a.LName ?? "").trim().toUpperCase();
+                const lb = String(b.LName ?? "").trim().toUpperCase();
+                const fa = String(a.FNAME ?? "").trim().toUpperCase();
+                const fb = String(b.FNAME ?? "").trim().toUpperCase();
+
+                return la.localeCompare(lb) || fa.localeCompare(fb);
             });
 
-        const title=document.getElementById("list-title");
-        const badge=document.getElementById("Elders-count");
+        const title = document.getElementById("list-title");
+        const badge = document.getElementById("Elders-count");
 
-        if(!title){
+        if (!title) {
             console.error("❌ Analysis result elements not found");
             return [];
         }
 
-        if(badge)badge.textContent=result.length;
+        if (badge) {
+            badge.textContent = result.length;
+        }
 
-        title.textContent=`ELDERS (${result.length})`;
+        title.textContent = `ELDERS (${result.length})`;
 
-        const rows=result.map(p=>{
-            const name=`${p.LName||""}, ${p.FNAME||""}`
-                .replace(/^,\s*/,"").trim();
+        const rows = result.map(p => {
+            const name = `${p.LName || ""}, ${p.FNAME || ""}`
+                .replace(/^,\s*/, "")
+                .trim();
 
-            return {name};
+            return { name };
         });
 
-        setAnalysisTable([
-            {
-                label:"Name",
-                render:row=>`<strong>${row.name}</strong>`
-            }
-        ],rows);
+        setAnalysisTable(
+            [
+                {
+                    label: "Name",
+                    render: row => `<strong>${row.name}</strong>`
+                }
+            ],
+            rows
+        );
 
         console.log(`✅ Elders loaded: ${result.length}`);
+
         return result;
-    }catch(err){
-        console.error("❌ loadElders error:",err);
+
+    } catch (err) {
+        console.error("❌ loadElders error:", err);
         return [];
     }
 };
