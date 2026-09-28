@@ -91,8 +91,11 @@ async def import_crb_file(
             content = await file.read()
 
             try:
-                text = content.decode("cp1252")
-                payload_data = json.loads(text)
+                try:
+                    text = content.decode("utf-8-sig")   # utf-8-sig also strips a BOM if present
+                except UnicodeDecodeError:
+                    text = content.decode("cp1252")      # fallback for legacy-encoded files
+                payload_data = json.loads(text, strict=False)
 
             except UnicodeDecodeError as e:
                 raise HTTPException(
@@ -134,49 +137,48 @@ async def import_crb_file(
                 "RECORDS": []
             }
 
-        # =====================================================
-        # 3. NORMALIZE RECORDS NUMERIC FIELDS
-        #
-        # Regardless of whether CRB contains:
-        #
-        #     "NUMBER": "204"
-        # or
-        #     "NUMBER": 204
-        #
-        # PostgreSQL payload will receive:
-        #
-        #     "NUMBER": 204
-        #
-        # Same for Date_entered.
-        # =====================================================
-        records = payload_data.get("RECORDS", [])
+            # =====================================================
+            # 3b. NORMALIZE MonthlyRecords NUMERIC FIELDS
+            #
+            # Same reasoning as RECORDS above — ensure NUMBER is
+            # always stored as an int, regardless of whether the
+            # CRB file has it as "204" or 204.
+            # =====================================================
+                    # =====================================================
+            # 3. NORMALIZE NUMERIC FIELDS (runs for uploaded CRB files)
+            # =====================================================
+            records = payload_data.get("RECORDS", [])
 
-        if isinstance(records, list):
+            if isinstance(records, list):
+                for index, row in enumerate(records):
+                    if not isinstance(row, dict):
+                        continue
 
-            for index, row in enumerate(records):
+                    for field in ("NUMBER", "Date_entered"):
+                        if field in row and row[field] is not None and row[field] != "":
+                            try:
+                                row[field] = int(row[field])
+                            except (ValueError, TypeError):
+                                raise HTTPException(
+                                    status_code=400,
+                                    detail=f"Invalid {field} in RECORDS row {index}: {row[field]!r}"
+                                )
 
-                if not isinstance(row, dict):
-                    continue
+                monthly_records = payload_data.get("MonthlyRecords", [])
 
-                # ---------------------------------------------
-                # NUMBER
-                # ---------------------------------------------
-                if (
-                    "NUMBER" in row and
-                    row["NUMBER"] is not None and
-                    row["NUMBER"] != ""
-                ):
-                    try:
-                        row["NUMBER"] = int(row["NUMBER"])
-                    except (ValueError, TypeError):
-                        raise HTTPException(
-                            status_code=400,
-                            detail=(
-                                f"Invalid NUMBER in RECORDS row {index}: "
-                                f"{row['NUMBER']!r}"
-                            )
-                        )
+                if isinstance(monthly_records, list):
+                    for index, row in enumerate(monthly_records):
+                        if not isinstance(row, dict):
+                            continue
 
+                        if "NUMBER" in row and row["NUMBER"] is not None and row["NUMBER"] != "":
+                            try:
+                                row["NUMBER"] = int(row["NUMBER"])
+                            except (ValueError, TypeError):
+                                raise HTTPException(
+                                    status_code=400,
+                                    detail=f"Invalid NUMBER in MonthlyRecords row {index}: {row['NUMBER']!r}"
+                                )
                 # ---------------------------------------------
                 # Date_entered
                 # ---------------------------------------------

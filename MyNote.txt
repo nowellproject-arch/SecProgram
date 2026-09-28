@@ -603,5 +603,5 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Disable s21 Future month"
+git commit -m "Adjust for other crb error"
 git push origin main

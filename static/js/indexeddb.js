@@ -683,14 +683,28 @@ async function handleRestoreFromCloud() {
         // ----------------------------------------------------
         // TRANSFORM: Ensure HRS == 0 or "0" is converted to ""
         // ----------------------------------------------------
-      if (result.payload && result.payload.RECORDS && Array.isArray(result.payload.RECORDS)) {
-                result.payload.RECORDS.forEach(row => {
-                    // Loose check (== 0) catches 0, "0", "0 ", "0.0", and null
-                    if (row.HRS == 0 || String(row.HRS).trim() === "0") {
-                        row.HRS = "";
-                    }
-                });
-            }
+     // ----------------------------------------------------
+        // TRANSFORM: Normalize NUMBER (and Date_entered) to numeric
+        // Handles cloud backups where these fields were saved as strings
+        // ----------------------------------------------------
+        if (result.payload && result.payload.RECORDS && Array.isArray(result.payload.RECORDS)) {
+            result.payload.RECORDS.forEach(row => {
+                if (row.NUMBER !== undefined && row.NUMBER !== null && row.NUMBER !== "") {
+                    row.NUMBER = Number(row.NUMBER);
+                }
+                if (row.Date_entered !== undefined && row.Date_entered !== null && row.Date_entered !== "") {
+                    row.Date_entered = Number(row.Date_entered);
+                }
+            });
+        }
+
+        if (result.payload && result.payload.MonthlyRecords && Array.isArray(result.payload.MonthlyRecords)) {
+            result.payload.MonthlyRecords.forEach(row => {
+                if (row.NUMBER !== undefined && row.NUMBER !== null && row.NUMBER !== "") {
+                    row.NUMBER = Number(row.NUMBER);
+                }
+            });
+        }
 
         // 3. SAVE RESTORED DATA INTO INDEXEDDB
         if (syncStatus) {
@@ -919,11 +933,16 @@ async function handleImportBackup(event) {
 
             // 2. READ CRB FILE
             const buffer = await file.arrayBuffer();
-            const text = new TextDecoder("windows-1252").decode(buffer);
+            let text;
+                try {
+                    text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+                } catch {
+                    text = new TextDecoder("windows-1252").decode(buffer);
+                }
             let backupData;
 
             try {
-                backupData = JSON.parse(text);
+                backupData = JSON.parse(text.replace(/[\u0000-\u001F]+/g, " "));
             } catch (error) {
                 throw new Error("The selected CRB file is not valid.");
             }
@@ -945,14 +964,25 @@ async function handleImportBackup(event) {
             // ----------------------------------------------------
             // TRANSFORM: Ensure HRS == 0 or "0" is converted to ""
             // ----------------------------------------------------
-            if (backupData.RECORDS && Array.isArray(backupData.RECORDS)) {
+           if (backupData.RECORDS && Array.isArray(backupData.RECORDS)) {
                 backupData.RECORDS.forEach(row => {
-                    if (row.HRS == 0 || String(row.HRS).trim() === "0") {
-                        row.HRS = "";
+                    if (row.NUMBER !== undefined && row.NUMBER !== null && row.NUMBER !== "") {
+                        row.NUMBER = Number(row.NUMBER);
+                    }
+                    if (row.Date_entered !== undefined && row.Date_entered !== null && row.Date_entered !== "") {
+                        row.Date_entered = Number(row.Date_entered);
                     }
                 });
             }
-                        // 5. CONFIRM IMPORT
+
+            if (backupData.MonthlyRecords && Array.isArray(backupData.MonthlyRecords)) {
+                backupData.MonthlyRecords.forEach(row => {
+                    if (row.NUMBER !== undefined && row.NUMBER !== null && row.NUMBER !== "") {
+                        row.NUMBER = Number(row.NUMBER);
+                    }
+                });
+            }
+                                    // 5. CONFIRM IMPORT
              const summary = storeNames.map(storeName => `${storeName}: ${backupData[storeName].length} records`);
             const confirmed = await showCustomConfirm(
                 "📥 IMPORT BACKUP?\n\nThis will replace the current data saved on this device.\n\nDo you want to continue?"

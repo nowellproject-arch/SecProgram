@@ -1784,6 +1784,14 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
         ? Number(selectedRecordNumber)
         : (window.SelNumber !== undefined ? Number(window.SelNumber) : activeMonthIndex);
 
+    // -------------------------------------------------------------
+    // Determine once: is this publisher an RP (Regular Pioneer)?
+    // If so, Aux Pioneer never applies to them — lock it regardless of month.
+    // -------------------------------------------------------------
+    const isTrueMarkerPub = v =>
+        ["1", "TRUE", "YES", "Y", "?", "-1"].includes(String(v ?? "").trim().toUpperCase());
+    const publisherIsRP = isTrueMarkerPub(currentSelectedPublisher.RP);
+
     s21Months.forEach((m) => {
         const minEl = document.getElementById(`${m.id}-ministry`);
         const bsEl = document.getElementById(`${m.id}-studies`);
@@ -1855,7 +1863,7 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
 
                 // -------------------------------------------------------------
                 // LOCK FUTURE MONTHS (after the currently active reporting month)
-                // Aux Pioneer checkbox stays enabled regardless.
+                // Aux Pioneer checkbox stays enabled unless the publisher is RP.
                 // -------------------------------------------------------------
                 const activeMonthIndexNow = Number(window.currentActiveMonthIndex);
                 const isFutureMonth = targetNumber > activeMonthIndexNow;
@@ -1864,7 +1872,7 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
                     if (el) el.disabled = isFutureMonth;
                 });
 
-                if (auxEl) auxEl.disabled = false; // Aux Pioneer always editable
+                if (auxEl) auxEl.disabled = publisherIsRP || false; // RP publishers never get Aux; otherwise always editable
 
                 if (rowEl) {
                     rowEl.classList.toggle('s21-row-future', isFutureMonth);
@@ -3694,11 +3702,12 @@ function setButtonUIState(btn, isClosed) {
 }
 
 // Call on page refresh
+
         document.addEventListener("DOMContentLoaded", async () => {
             const IDPubSel = await globalSelectedPubID();
+            checkAndAutoCloseOverdueMonths(); // 👈 this line is the only edit to what you already have
             syncMonthStatusUI();
         });
-
 
 // 2. Close report function integrated with UI sync
 async function closeCurrentMonthReport() {
@@ -4137,5 +4146,238 @@ document.getElementById("pubStatus")?.addEventListener("blur", function () {
 });
 
 
+
+
+// ==========================================
+// AUTO-CLOSE OVERDUE MONTHLY REPORT (on load)
+// Submission deadline = 20th of the current month, for LAST month's report.
+// If the user never closed it manually, auto-close it now.
+// ==========================================
+
+function getCalendarInfoFromNumber(num) {
+    const target = Number(num);
+    const diff = target - 194; // Anchor: NUMBER 194 = September 2025
+    const yearShift = Math.floor(diff / 12);
+    let monthOffset = diff % 12;
+    if (monthOffset < 0) monthOffset += 12;
+
+    let calMonth, calYear;
+    if (monthOffset >= 4) {
+        calMonth = monthOffset - 4;
+        calYear = 2026 + yearShift;
+    } else {
+        calMonth = monthOffset + 8;
+        calYear = 2025 + yearShift;
+    }
+
+    const serviceYear = 2026 + yearShift;
+
+    return {
+        calMonth,
+        calYear,
+        serviceYear,
+        monthName: calendarMonthNames[calMonth]
+    };
+}
+
+function autoCloseMonthRecord(targetNumber, onDone) {
+    const request = indexedDB.open("CongregationDB", 10);
+
+    request.onsuccess = (event) => {
+        const db = event.target.result;
+
+        if (!db.objectStoreNames.contains("MonthlyRecords") || !db.objectStoreNames.contains("PUBLISHERS")) {
+            console.warn("⚠️ Auto-close aborted: required stores missing.");
+            db.close();
+            if (onDone) onDone();
+            return;
+        }
+
+        const pubTx = db.transaction(["PUBLISHERS"], "readonly");
+        const pubReq = pubTx.objectStore("PUBLISHERS").getAll();
+
+        pubReq.onsuccess = () => {
+            const publishers = pubReq.result || [];
+            const activeCount = publishers.reduce((count, pub) => {
+                const status = (pub.Status || "").trim().toLowerCase();
+                return (status === "" || status === "active") ? count + 1 : count;
+            }, 0);
+
+            const tx = db.transaction(["MonthlyRecords"], "readwrite");
+            const store = tx.objectStore("MonthlyRecords");
+
+            let found = false;
+            const cursorReq = store.openCursor();
+
+            cursorReq.onsuccess = (e) => {
+                const cursor = e.target.result;
+
+                if (cursor) {
+                    if (Number(cursor.value.NUMBER) === Number(targetNumber)) {
+                        found = true;
+                        const existing = cursor.value;
+
+                        existing.ActivePublishers = activeCount;
+                        existing.Closed = 1;
+
+                        cursor.update(existing);
+                        console.log(`🔒 [Auto-Close] Updated existing MonthlyRecords row → NUMBER ${targetNumber}`, existing);
+                        return;
+                    }
+                    cursor.continue();
+                    return;
+                }
+
+                // No matching row found at all — create one, matching the legacy shape exactly
+                if (!found) {
+                    const info = getCalendarInfoFromNumber(targetNumber);
+                    const nowStr = new Date().toLocaleString('en-US', {
+                        day: 'numeric', month: 'short', year: 'numeric',
+                        hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
+                    }).replace(',', '');
+
+                    const newRecord = {
+                        ID: "",
+                        NUMBER: Number(targetNumber),
+                        MONTH_: info.monthName,
+                        Year: String(info.calYear),
+                        ServiceYear: String(info.serviceYear),
+                        Mos: "",
+                        group: "",
+                        Text: "",
+                        AttendcMidweekTotal: "0",
+                        AttendcPublickTotal: "0",
+                        ACTIVE: "True",
+                        ActivePublishers: String(activeCount),
+                        updated: nowStr,
+                        NoMtgs1: "0",
+                        NoMtgs2: "0",
+                        ExtraNumber: "0",
+                        ExtraText: "",
+                        passcode: localStorage.getItem("user_passcode") || "",
+                        Closed: 1
+                    };
+
+                    store.add(newRecord);
+                    console.log(`🆕 [Auto-Close] Created new CLOSED MonthlyRecords row (matched legacy shape) → NUMBER ${targetNumber}`, newRecord);
+                }
+            };
+
+            cursorReq.onerror = (err) => {
+                console.error("❌ [Auto-Close] Cursor error:", err.target.error);
+            };
+
+            tx.oncomplete = () => {
+                db.close();
+                console.log(`✅ [Auto-Close] Transaction complete for NUMBER ${targetNumber}`);
+                if (onDone) onDone();
+            };
+
+            tx.onerror = (err) => {
+                console.error("❌ [Auto-Close] Transaction failed:", err.target.error);
+                db.close();
+                if (onDone) onDone();
+            };
+        };
+
+        pubReq.onerror = (err) => {
+            console.error("❌ [Auto-Close] Failed to read PUBLISHERS:", err.target.error);
+            db.close();
+            if (onDone) onDone();
+        };
+    };
+
+    request.onerror = (event) => {
+        console.error("❌ [Auto-Close] Failed to open DB:", event.target.error);
+        if (onDone) onDone();
+    };
+}
+
+function getMaxClosedMonthNumber(callback) {
+    const request = indexedDB.open("CongregationDB", 10);
+
+    request.onsuccess = (event) => {
+        const db = event.target.result;
+
+        if (!db.objectStoreNames.contains("MonthlyRecords")) {
+            db.close();
+            callback(null);
+            return;
+        }
+
+        const tx = db.transaction(["MonthlyRecords"], "readonly");
+        const store = tx.objectStore("MonthlyRecords");
+        const cursorReq = store.openCursor();
+
+        let maxClosed = null;
+
+        cursorReq.onsuccess = (e) => {
+            const cursor = e.target.result;
+
+            if (cursor) {
+                const num = Number(cursor.value.NUMBER);
+                const isClosed = Number(cursor.value.Closed) === 1;
+
+                if (isClosed && (maxClosed === null || num > maxClosed)) {
+                    maxClosed = num;
+                }
+
+                cursor.continue();
+                return;
+            }
+
+            db.close();
+            callback(maxClosed);
+        };
+
+        cursorReq.onerror = (err) => {
+            console.error("❌ [Auto-Close] Failed scanning for max closed month:", err.target.error);
+            db.close();
+            callback(null);
+        };
+    };
+
+    request.onerror = (event) => {
+        console.error("❌ [Auto-Close] Failed to open DB:", event.target.error);
+        callback(null);
+    };
+}
+
+function checkAndAutoCloseOverdueMonths() {
+    const today = new Date();
+    if (today.getDate() < 21) {
+        console.log("📅 [Auto-Close] Before the 21st — nothing overdue yet.");
+        return;
+    }
+
+    const overdueUpTo = Number(window.currentActiveMonthIndex) - 1;
+
+    getMaxClosedMonthNumber((maxClosed) => {
+        // Determine where to start closing from:
+        // - If a closed record exists, start right after it.
+        // - If none exists at all, only close the single immediately-overdue month
+        //   (don't walk back through unknown history on a fresh/unclosed dataset).
+        const startFrom = (maxClosed !== null) ? (maxClosed + 1) : overdueUpTo;
+
+        if (startFrom > overdueUpTo) {
+            console.log(`✅ [Auto-Close] Nothing overdue — max closed is NUMBER ${maxClosed}, active is ${overdueUpTo + 1}.`);
+            return;
+        }
+
+        console.log(`⏰ [Auto-Close] Closing NUMBER ${startFrom} through ${overdueUpTo}...`);
+        closeRange(startFrom, overdueUpTo);
+    });
+}
+
+function closeRange(current, upTo) {
+    if (current > upTo) {
+        console.log("✅ [Auto-Close] Done closing overdue range.");
+        return;
+    }
+
+    autoCloseMonthRecord(current, () => {
+        closeRange(current + 1, upTo);
+    });
+}
 
 </script>
