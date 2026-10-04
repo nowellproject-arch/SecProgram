@@ -140,7 +140,7 @@ function showCustomAlert(message) {
 }
 
 const DB_NAME = "CongregationDB";
-const DB_VERSION = 10; 
+const DB_VERSION = 11; 
 
 
 const DB_STORES = {
@@ -279,7 +279,7 @@ function openCongregationDB() {
 // ========================================
 function openIndexedDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open("CongregationDB", 10);
+        const request = indexedDB.open("CongregationDB", 11);
 
         request.onupgradeneeded=function(event){
             const db=event.target.result;

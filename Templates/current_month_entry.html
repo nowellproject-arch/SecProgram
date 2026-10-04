@@ -838,7 +838,7 @@ function syncGlobalsFromMonthNumber(targetNumber) {
 
     // 4. Load Data from IndexedDB
     function loadPublishersFromIndexedDB() {
-    const request = indexedDB.open("CongregationDB", 10);
+    const request = indexedDB.open("CongregationDB", 11);
 
     request.onerror = (event) => {
         console.error(
@@ -2327,7 +2327,7 @@ function updateCurrentMonthDebugStorage() {
 
     const request = indexedDB.open(
         "CongregationDB",
-        10
+        11
     );
 
     request.onsuccess = (event) => {
@@ -2643,7 +2643,7 @@ function onMonthOrYearChanged() {
 // 2. INDEXEDDB DATABASE OPERATIONS
 // ==========================================
 function openCongregationDB(callback) {
-    const request = indexedDB.open("CongregationDB", 10);
+    const request = indexedDB.open("CongregationDB", 11);
 
     request.onupgradeneeded = event => {
         const db = event.target.result;
@@ -3316,7 +3316,7 @@ window.checkAux = function() {
 
 
 function RecordLog(targetDateEntered = 198) {
-    const req = indexedDB.open("CongregationDB", 10);
+    const req = indexedDB.open("CongregationDB", 11);
 
     req.onsuccess = (e) => {
         const db = e.target.result;
@@ -3569,7 +3569,7 @@ async function syncMonthStatusUI() {
 
     console.group(`🔄 [syncMonthStatusUI] Checking status for NUMBER: ${activeMonthIndex}`);
 
-    const request=indexedDB.open("CongregationDB",10);
+    const request=indexedDB.open("CongregationDB",11);
 
     request.onerror=(event)=>{
         console.error("❌ Database open error in syncMonthStatusUI:",event.target.error);
@@ -4181,7 +4181,7 @@ function getCalendarInfoFromNumber(num) {
 }
 
 function autoCloseMonthRecord(targetNumber, onDone) {
-    const request = indexedDB.open("CongregationDB", 10);
+    const request = indexedDB.open("CongregationDB", 11);
 
     request.onsuccess = (event) => {
         const db = event.target.result;
@@ -4294,7 +4294,7 @@ function autoCloseMonthRecord(targetNumber, onDone) {
 }
 
 function getMaxClosedMonthNumber(callback) {
-    const request = indexedDB.open("CongregationDB", 10);
+    const request = indexedDB.open("CongregationDB", 11);
 
     request.onsuccess = (event) => {
         const db = event.target.result;

@@ -603,7 +603,7 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Adjust All Elder filters"
+git commit -m "CongregationDB 11 "
 git push origin main
 
 
