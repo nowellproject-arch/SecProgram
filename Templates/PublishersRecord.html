@@ -1662,6 +1662,142 @@ function loadS21RecordsForPublisher() {
 // 3. SAVE / UPSERT S-21 MONTHLY RECORD
 // ==========================================
 // Automatically inserts a new record or updates an existing one
+async function saveS21MonthRecord(monthIndex, snapshot) {
+
+    const targetPublisherId = snapshot?.publisherId;
+
+    if (!targetPublisherId) {
+        console.warn("⚠️ S21 SAVE: No publisher ID");
+        return;
+    }
+
+    const m = s21Months[monthIndex];
+    if (!m) {
+        console.warn("⚠️ S21 SAVE: Invalid month index", monthIndex);
+        return;
+    }
+
+    const targetNumber = getServiceMonthNumber(selectedYear, monthIndex);
+
+    const ministryVal = snapshot.ministry ? 1 : 0;
+    const bsVal = snapshot.studies ? Number(snapshot.studies) : "";
+    const auxVal = snapshot.aux ? 1 : 0;
+    const hrsVal = snapshot.hours ? Number(snapshot.hours) : "";
+    const noteVal = snapshot.note?.trim() || "";
+    const remarksVal = snapshot.remarks || "";
+
+    const hasData =
+        ministryVal ||
+        bsVal ||
+        auxVal ||
+        hrsVal ||
+        noteVal ||
+        remarksVal;
+
+    const activeMonthIndex = Number(
+        window.currentActiveMonthIndex ??
+        (typeof window.getMonthIndex === "function" ? window.getMonthIndex() : monthIndex)
+    );
+
+    const dateEntered = getServiceMonthNumber(selectedYear, activeMonthIndex);
+
+    console.log("💾 S21 SAVE:", {
+        publisher: targetPublisherId,
+        monthIndex,
+        targetNumber,
+        ministry: ministryVal,
+        studies: bsVal,
+        aux: auxVal,
+        hours: hrsVal,
+        NOTE: noteVal,
+        REMARKS: remarksVal,
+        activeMonthIndex,
+        Date_entered: dateEntered
+    });
+
+    const db = await openIndexedDB();
+
+    try {
+        const transaction = db.transaction(["RECORDS"], "readwrite");
+        const store = transaction.objectStore("RECORDS");
+
+        const key = [targetNumber, String(targetPublisherId)];
+
+        const existing = await new Promise((resolve, reject) => {
+            const request = store.get(key);
+            request.onsuccess = () => resolve(request.result || null);
+            request.onerror = () => reject(request.error);
+        });
+
+        console.log("🔎 Existing S21 record:", existing);
+
+        if (!hasData) {
+            if (existing) {
+                await new Promise((resolve, reject) => {
+                    const request = store.delete(key);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+                console.log(`🗑️ Deleted empty record: ${targetPublisherId}-${targetNumber}`);
+            }
+            return;
+        }
+
+        if (existing) {
+            existing.MINISTRY = ministryVal;
+            existing.BS = bsVal;
+            existing.AUX = auxVal;
+            existing.HRS = hrsVal;
+            existing.Note = noteVal;
+            existing.REMARKS = remarksVal;
+            existing.Date_entered = dateEntered;
+
+            await new Promise((resolve, reject) => {
+                const request = store.put(existing);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+
+            console.log(`✏️ Updated S21 record: ${targetPublisherId}-${targetNumber}`, {
+                Note: existing.Note,
+                REMARKS: existing.REMARKS
+            });
+
+        } else {
+            const payload = {
+                IdPubs: String(targetPublisherId),
+                NUMBER: targetNumber,
+                MINISTRY: ministryVal,
+                BS: bsVal,
+                AUX: auxVal,
+                HRS: hrsVal,
+                Note: noteVal,
+                REMARKS: remarksVal,
+                Date_entered: dateEntered
+            };
+
+            await new Promise((resolve, reject) => {
+                const request = store.add(payload);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+
+            console.log(`➕ Added S21 record: ${targetPublisherId}-${targetNumber}`, {
+                Note: noteVal,
+                REMARKS: remarksVal
+            });
+        }
+
+    } catch (error) {
+        console.error("❌ S21 IndexedDB save failed:", error);
+    } finally {
+        db.close();
+    }
+}
+
+// -------------------------------------------------------------
+// AUTO-CHECK & AUTO-REMARK LISTENER HELPER
+// -------------------------------------------------------------
 async function saveS21MonthRecord(monthIndex, eventTarget) {
 
     const targetPublisherId =
