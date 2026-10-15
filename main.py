@@ -25,7 +25,7 @@ import traceback
 
 # Import custom routers (using importer_router consistently)
 from csv_importer import router as importer_router
-from Sync import sync_router
+
 
 from fastapi.responses import JSONResponse
 from datetime import datetime
@@ -34,6 +34,7 @@ from fastapi.responses import FileResponse
 # PDF HTML
 
 from fastapi.responses import FileResponse, JSONResponse
+from crb_tables import create_tables, save_payload, load_payload
 
 
 
@@ -291,7 +292,14 @@ app.add_middleware(
 
 # Register Routers
 app.include_router(importer_router, prefix="/api")
-app.include_router(sync_router, prefix="/api")
+
+@app.on_event("startup")
+def make_tables():
+    conn = get_db_connection()
+    try:
+        create_tables(conn)
+    finally:
+        conn.close()
 
 # --- 4. MOUNT STATIC DIRECTORIES & TEMPLATES ---
 BASE_DIR = Path(__file__).resolve().parent
@@ -403,16 +411,13 @@ async def login(data: LoginRequest):
     try:
         conn = get_db_connection()
 
-        # Query MasterList joined with UserBackups
-        query = """
-            SELECT "username","passcode","payload"
-            FROM "MasterList"
-            WHERE "username"=:username AND "passcode"=:passcode;
-        """
-                        
         result = conn.run(
-            query, 
-            username=data.username.strip(), 
+            """
+            SELECT cong_user, passcode
+            FROM conginfo
+            WHERE cong_user = :username AND passcode = :passcode;
+            """,
+            username=data.username.strip(),
             passcode=data.passcode.strip()
         )
 
@@ -422,15 +427,14 @@ async def login(data: LoginRequest):
                 detail="Invalid username or passcode."
             )
 
-        db_user, db_passcode, payload_raw = result[0]
-        payload = json.loads(payload_raw) if isinstance(payload_raw, str) else (payload_raw or {})
+        db_user, db_passcode = result[0]
 
         return {
             "status": "success",
             "message": "Login successful",
             "username": db_user,
             "passcode": db_passcode,
-            "data": payload
+            "data": load_payload(conn, db_passcode)
         }
 
     except HTTPException:
@@ -449,22 +453,15 @@ async def api_reports(passcode: str):
     try:
         conn = get_db_connection()
 
-        query = """
-            SELECT "username","congregation","payload","updated_at"
-            FROM "MasterList"
-            WHERE "passcode"=:passcode;
-        """
-        result = conn.run(query, passcode=passcode.strip())
+        result = conn.run(
+            "SELECT cong_user, congregation, updated_at FROM conginfo WHERE passcode = :passcode;",
+            passcode=passcode.strip()
+        )
 
         if not result:
             raise HTTPException(status_code=404, detail="Account or passcode not found.")
 
-        username, congregation, payload_raw, updated_at = result[0]
-
-        if not payload_raw:
-            raise HTTPException(status_code=404, detail="No backup snapshot found for this passcode.")
-
-        payload = json.loads(payload_raw) if isinstance(payload_raw, str) else payload_raw
+        username, congregation, updated_at = result[0]
 
         return {
             "status": "success",
@@ -473,7 +470,7 @@ async def api_reports(passcode: str):
                 "congregation": congregation,
                 "last_backup": updated_at
             },
-            "data": payload
+            "data": load_payload(conn, passcode.strip())
         }
 
     except HTTPException:
@@ -484,7 +481,6 @@ async def api_reports(passcode: str):
     finally:
         if conn:
             conn.close()
-
 
 
 # -------------------------------------------------------------------
@@ -985,119 +981,86 @@ async def save_indexeddb_backup(data: BackupRequest):
     clean_passcode = data.passcode.strip()
 
     if not clean_passcode:
-        raise HTTPException(
-            status_code=400,
-            detail="Passcode parameter is required."
-        )
- 
-    conn = None
+        raise HTTPException(status_code=400, detail="Passcode parameter is required.")
 
+    conn = None
     try:
         conn = get_db_connection()
 
-        current_time = datetime.now(
-            timezone.utc
-        ).astimezone(
+        existing = conn.run(
+            "SELECT cong_user FROM conginfo WHERE passcode = :p", p=clean_passcode
+        )
+        if not existing:
+            raise HTTPException(status_code=404, detail="Account not found for this passcode.")
+
+        # keep the login user name from changing by accident
+        payload = dict(data.payload)
+        cong = payload.get("CongInfo")
+        if not isinstance(cong, list) or not cong or not isinstance(cong[0], dict):
+            payload["CongInfo"] = [{}]
+        payload["CongInfo"][0]["user"] = existing[0][0]
+
+        conn.run("START TRANSACTION")
+        try:
+            save_payload(conn, clean_passcode, payload)
+            conn.run("COMMIT")
+        except ValueError as e:
+            conn.run("ROLLBACK")
+            raise HTTPException(status_code=400, detail=f"Invalid data: {e}")
+        except Exception:
+            conn.run("ROLLBACK")
+            raise
+
+        formatted_time = datetime.now(timezone.utc).astimezone(
             ZoneInfo("Asia/Manila")
-        )
+        ).strftime("%Y-%m-%d %I:%M:%S%p").replace(" 0", " ").lower()
 
-        formatted_time = current_time.strftime(
-            "%Y-%m-%d %I:%M:%S%p"
-        ).replace(
-            " 0", " "
-        ).lower()
-
-        update_query = """
-            UPDATE "MasterList"
-            SET "payload"=CAST(:payload AS JSONB),
-                "updated_at"=:updated_at
-            WHERE "passcode"=:passcode;
-        """
-
-        conn.run(
-            update_query,
-            passcode=clean_passcode,
-            payload=json.dumps(data.payload,default=str),
-            updated_at=datetime.now(timezone.utc)
-        )
-                        
-            
-    
-
-        print(
-            f"☁️ New backup saved for "
-            f"passcode: {clean_passcode}"
-        )
+        print(f"☁️ New backup saved for passcode: {clean_passcode}")
 
         return {
             "status": "success",
-            "message": (
-                "Existing backup replaced successfully."
-            ),
+            "message": "Existing backup replaced successfully.",
             "updated_at": formatted_time
-        }
-
-    except Exception as e:
-        traceback.print_exc()
-
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database backup error: {str(e)}"
-        )
-
-    finally:
-        if conn and hasattr(conn, "close"):
-            conn.close()
-
-
-@app.get("/api/backup-restore/{passcode}")
-async def get_backup_payload(passcode: str):
-    conn = None
-
-    try:
-        clean_passcode = passcode.strip()
-
-        if not clean_passcode:
-            raise HTTPException(
-                status_code=400,
-                detail="Passcode is required."
-            )
-
-        conn = get_db_connection()
-
-        query = """
-            SELECT "payload","updated_at"
-            FROM "MasterList"
-            WHERE "passcode"=:passcode;
-        """
-
-        rows = conn.run(
-            query,
-            passcode=clean_passcode
-        )
-
-        if not rows:
-            raise HTTPException(
-                status_code=404,
-                detail="No cloud backup found for this passcode."
-            )
-
-        return {
-            "payload": rows[0][0],
-            "updated_at": rows[0][1]
         }
 
     except HTTPException:
         raise
-
     except Exception as e:
         traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Database backup error: {str(e)}")
+    finally:
+        if conn and hasattr(conn, "close"):
+            conn.close()
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Restore error: {str(e)}"
+@app.get("/api/backup-restore/{passcode}")
+async def get_backup_payload(passcode: str):
+    conn = None
+    try:
+        clean_passcode = passcode.strip()
+
+        if not clean_passcode:
+            raise HTTPException(status_code=400, detail="Passcode is required.")
+
+        conn = get_db_connection()
+
+        rows = conn.run(
+            "SELECT updated_at FROM conginfo WHERE passcode = :passcode;",
+            passcode=clean_passcode
         )
 
+        if not rows:
+            raise HTTPException(status_code=404, detail="No cloud backup found for this passcode.")
+
+        return {
+            "payload": load_payload(conn, clean_passcode),
+            "updated_at": rows[0][0]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Restore error: {str(e)}")
     finally:
         if conn and hasattr(conn, "close"):
             conn.close()
@@ -1424,28 +1387,28 @@ async def get_s21_data(data_payload: dict):
 
 @app.get("/api/check-passcode")
 async def check_passcode(passcode: str):
-    clean_passcode=passcode.strip()
+    clean_passcode = passcode.strip()
 
     if not clean_passcode:
-        return {"available":False,"message":"Enter a passcode."}
+        return {"available": False, "message": "Enter a passcode."}
 
-    conn=None
+    conn = None
     try:
-        conn=get_db_connection()
-        result=conn.run(
-            'SELECT "passcode" FROM "MasterList" WHERE "passcode"=:passcode;',
+        conn = get_db_connection()
+        result = conn.run(
+            "SELECT passcode FROM conginfo WHERE passcode = :passcode;",
             passcode=clean_passcode
         )
 
         if result:
             return {
-                "available":False,
-                "message":"This code already exists. Please use Login."
+                "available": False,
+                "message": "This code already exists. Please use Login."
             }
 
         return {
-            "available":True,
-            "message":"Passcode is available."
+            "available": True,
+            "message": "Passcode is available."
         }
 
     except Exception as e:
@@ -1456,7 +1419,7 @@ async def check_passcode(passcode: str):
         )
     finally:
         if conn:
-            conn.close()   
+            conn.close()
 
 
 if __name__ == "__main__":

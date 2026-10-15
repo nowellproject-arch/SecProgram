@@ -1,49 +1,34 @@
-import csv
-import io
-import os
 import json
+import os
 import traceback
-from datetime import datetime, timezone
-from typing import List, Dict, Any
 from urllib.parse import urlparse, unquote
-
-import traceback
-from datetime import datetime, timezone
-
-
-
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Form, File, UploadFile, HTTPException
 import pg8000.native
 
+from crb_tables import create_tables, save_payload
+
 load_dotenv()
 router = APIRouter()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-CREATE_SCHEMA_SQL = """
-CREATE TABLE IF NOT EXISTS "MasterList" (
-    "passcode" TEXT NOT NULL PRIMARY KEY,
-    "username" TEXT NOT NULL,
-    "congregation" TEXT NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL,
-    "payload" JSONB,
-    "updated_at" TIMESTAMPTZ
-);
-"""
+REQUIRED_STORES = ["CongInfo", "GROUPS", "PUBLISHERS", "MonthlyRecords", "RECORDS"]
+
 
 def get_db_connection():
     if not DATABASE_URL:
         raise HTTPException(status_code=500, detail="DATABASE_URL configuration missing.")
-    parsed_url = urlparse(DATABASE_URL)
+    u = urlparse(DATABASE_URL)
     return pg8000.native.Connection(
-        user=unquote(parsed_url.username or ""),
-        password=unquote(parsed_url.password or ""),
-        host=parsed_url.hostname or "",
-        port=parsed_url.port or 5432,
-        database=parsed_url.path.lstrip("/"),
-        ssl_context=True
+        user=unquote(u.username or ""),
+        password=unquote(u.password or ""),
+        host=u.hostname or "",
+        port=u.port or 5432,
+        database=u.path.lstrip("/"),
+        ssl_context=True          # local PostgreSQL without SSL? change to None (copy only)
     )
+
 
 @router.post("/import-crb")
 async def import_crb_file(
@@ -53,184 +38,64 @@ async def import_crb_file(
     file: UploadFile | None = File(None)
 ):
     conn = None
-    current_time = datetime.now(timezone.utc)
     clean_passcode = passcode.strip()
     clean_username = username.strip()
     clean_congregation = congregation.strip()
 
     try:
         conn = get_db_connection()
-        conn.run(CREATE_SCHEMA_SQL)
+        create_tables(conn)
 
-        # =====================================================
-        # 1. CHECK IF PASSCODE ALREADY EXISTS
-        # =====================================================
-        existing_user = conn.run(
-            'SELECT "passcode" FROM "MasterList" WHERE "passcode"=:passcode;',
-            passcode=clean_passcode
-        )
+        # 1. passcode must be new
+        if conn.run("SELECT passcode FROM conginfo WHERE passcode = :p", p=clean_passcode):
+            raise HTTPException(status_code=409,
+                                detail="This code already exists. Please use Login.")
 
-        if existing_user:
-            raise HTTPException(
-                status_code=409,
-                detail="This code already exists. Please use Login."
-            )
-
-        # =====================================================
-        # 2. PREPARE CRB PAYLOAD
-        # =====================================================
-        required_stores = [
-            "CongInfo",
-            "GROUPS",
-            "PUBLISHERS",
-            "MonthlyRecords",
-            "RECORDS"
-        ]
-
+        # 2. read the CRB file (or make a blank database)
         if file is not None:
             content = await file.read()
-
             try:
                 try:
-                    text = content.decode("utf-8-sig")   # utf-8-sig also strips a BOM if present
+                    text = content.decode("utf-8-sig")
                 except UnicodeDecodeError:
-                    text = content.decode("cp1252")      # fallback for legacy-encoded files
+                    text = content.decode("cp1252")
                 payload_data = json.loads(text, strict=False)
-
-            except UnicodeDecodeError as e:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"CRB encoding error: {str(e)}"
-                )
-
             except json.JSONDecodeError as e:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"CRB JSON error at line {e.lineno}, column {e.colno}: {e.msg}"
-                )
+                    detail=f"CRB JSON error at line {e.lineno}, column {e.colno}: {e.msg}")
 
-            # Make sure it is actually an object
             if not isinstance(payload_data, dict):
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid CRB file format."
-                )
-
-            # Make sure all required stores exist
-            for store in required_stores:
+                raise HTTPException(status_code=400, detail="Invalid CRB file format.")
+            for store in REQUIRED_STORES:
                 if store not in payload_data:
                     payload_data[store] = []
-
         else:
-            # =================================================
-            # NO CRB SUPPLIED — CREATE BLANK DATABASE PAYLOAD
-            # =================================================
-            payload_data = {
-                "CongInfo": [{
-                    "passcode": clean_passcode,
-                    "user": clean_username,
-                    "Congregation": clean_congregation
-                }],
-                "GROUPS": [],
-                "PUBLISHERS": [],
-                "MonthlyRecords": [],
-                "RECORDS": []
-            }
+            payload_data = {s: [] for s in REQUIRED_STORES}
 
-            # =====================================================
-            # 3b. NORMALIZE MonthlyRecords NUMERIC FIELDS
-            #
-            # Same reasoning as RECORDS above — ensure NUMBER is
-            # always stored as an int, regardless of whether the
-            # CRB file has it as "204" or 204.
-            # =====================================================
-                    # =====================================================
-            # 3. NORMALIZE NUMERIC FIELDS (runs for uploaded CRB files)
-            # =====================================================
-            records = payload_data.get("RECORDS", [])
+        # 3. the form is the truth for passcode / user / congregation
+        cong = payload_data.get("CongInfo")
+        if not isinstance(cong, list) or not cong or not isinstance(cong[0], dict):
+            payload_data["CongInfo"] = [{}]
+        payload_data["CongInfo"][0].update({
+            "passcode": clean_passcode,
+            "user": clean_username,
+            "Congregation": clean_congregation,
+        })
 
-            if isinstance(records, list):
-                for index, row in enumerate(records):
-                    if not isinstance(row, dict):
-                        continue
+        # 4. save everything in one transaction (all or nothing)
+        conn.run("START TRANSACTION")
+        try:
+            save_payload(conn, clean_passcode, payload_data)
+            conn.run("COMMIT")
+        except ValueError as e:
+            conn.run("ROLLBACK")
+            raise HTTPException(status_code=400, detail=f"Invalid data: {e}")
+        except Exception:
+            conn.run("ROLLBACK")
+            raise
 
-                    for field in ("NUMBER", "Date_entered"):
-                        if field in row and row[field] is not None and row[field] != "":
-                            try:
-                                row[field] = int(row[field])
-                            except (ValueError, TypeError):
-                                raise HTTPException(
-                                    status_code=400,
-                                    detail=f"Invalid {field} in RECORDS row {index}: {row[field]!r}"
-                                )
-
-                monthly_records = payload_data.get("MonthlyRecords", [])
-
-                if isinstance(monthly_records, list):
-                    for index, row in enumerate(monthly_records):
-                        if not isinstance(row, dict):
-                            continue
-
-                        if "NUMBER" in row and row["NUMBER"] is not None and row["NUMBER"] != "":
-                            try:
-                                row["NUMBER"] = int(row["NUMBER"])
-                            except (ValueError, TypeError):
-                                raise HTTPException(
-                                    status_code=400,
-                                    detail=f"Invalid NUMBER in MonthlyRecords row {index}: {row['NUMBER']!r}"
-                                )
-                # ---------------------------------------------
-                # Date_entered
-                # ---------------------------------------------
-                if (
-                    "Date_entered" in row and
-                    row["Date_entered"] is not None and
-                    row["Date_entered"] != ""
-                ):
-                    try:
-                        row["Date_entered"] = int(row["Date_entered"])
-                    except (ValueError, TypeError):
-                        raise HTTPException(
-                            status_code=400,
-                            detail=(
-                                f"Invalid Date_entered in RECORDS row {index}: "
-                                f"{row['Date_entered']!r}"
-                            )
-                        )
-
-        # =====================================================
-        # 4. REGISTER NEW ACCOUNT IN POSTGRESQL
-        # =====================================================
-        conn.run(
-            """
-            INSERT INTO "MasterList"
-            ("passcode","username","congregation","created_at")
-            VALUES (:passcode,:username,:congregation,:created_at);
-            """,
-            passcode=clean_passcode,
-            username=clean_username,
-            congregation=clean_congregation,
-            created_at=current_time
-        )
-
-        # =====================================================
-        # 5. SAVE CLOUD BACKUP
-        # =====================================================
-        conn.run(
-            """
-            UPDATE "MasterList"
-            SET "payload"=CAST(:payload AS JSONB),
-                "updated_at"=:updated_at
-            WHERE "passcode"=:passcode;
-            """,
-            passcode=clean_passcode,
-            payload=json.dumps(payload_data, default=str),
-            updated_at=current_time
-        )
-
-        # =====================================================
-        # 6. RETURN NORMALIZED DATA
-        # =====================================================
+        # 5. same response as before, the browser needs no change
         return {
             "status": "success",
             "action": "created",
@@ -238,19 +103,11 @@ async def import_crb_file(
             "data": payload_data
         }
 
-    except HTTPException as http_ex:
-        raise http_ex
-
+    except HTTPException:
+        raise
     except Exception as e:
         traceback.print_exc()
-
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database error: {str(e)}"
-        )
-
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         if conn:
             conn.close()
-
-         

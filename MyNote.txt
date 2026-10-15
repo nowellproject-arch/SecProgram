@@ -603,7 +603,7 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Saving Issue on Tablet"
+git commit -m "Separating PostgreSQL table from paylaod"
 git push origin main
 
 
