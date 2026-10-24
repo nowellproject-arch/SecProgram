@@ -603,7 +603,7 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Adjust MOVED IN as starter"
+git commit -m "Adjust MOVED IN as starters"
 git push origin main
 
 
