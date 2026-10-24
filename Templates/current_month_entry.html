@@ -460,7 +460,12 @@
                 <div class="listbox-container" id="publisherListbox">
                     <!-- Populated via script -->
                 </div>
-                <div class="listbox-count" id="listboxCount">Count: 0</div>
+               <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                    <button id="copyMissingReportBtn" onclick="copyMissingReportToClipboard()" style="display: none; font-size: 10px; padding: 3px 6px; cursor: pointer; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 3px; font-weight: bold; white-space: nowrap;">
+                        📋 Copy List
+                    </button>
+                    <div class="listbox-count" id="listboxCount">Count: 0</div>
+                </div>
             </div>
         </div>
 
@@ -2978,7 +2983,7 @@ async function initAppSystem() {
             categorySelectEl ? categorySelectEl.value : "ACTIVE PUBLISHERS"
         );
     }
-
+  updateCopyMissingReportBtnVisibility(); 
   updateSidebarClosedState();
 
 }
@@ -4292,6 +4297,192 @@ function closeRange(current, upTo) {
     autoCloseMonthRecord(current, () => {
         closeRange(current + 1, upTo);
     });
+}
+
+
+function updateCopyMissingReportBtnVisibility() {
+    const btn = document.getElementById("copyMissingReportBtn");
+    const categorySelect = document.getElementById("categorySelect");
+    if (!btn || !categorySelect) return;
+
+    const isByGroup = categorySelect.value === "By Group";
+    btn.style.display = isByGroup ? "inline-block" : "none";
+}
+
+
+function getMissingReportWindow() {
+    const activeNumber = Number(window.currentActiveMonthIndex);
+    const months = [];
+    for (let n = activeNumber - 5; n <= activeNumber; n++) {
+        months.push(n);
+    }
+    return months;
+}
+
+function buildMissingReportText(callback) {
+    const monthNumbers = getMissingReportWindow();
+
+    const request = indexedDB.open("CongregationDB", 10);
+
+    request.onsuccess = (event) => {
+        const db = event.target.result;
+        const tx = db.transaction(["PUBLISHERS", "RECORDS"], "readonly");
+        const pubReq = tx.objectStore("PUBLISHERS").getAll();
+        const recReq = tx.objectStore("RECORDS").getAll();
+
+        let publishers = null;
+        let records = null;
+
+        const process = () => {
+            if (publishers === null || records === null) return;
+            db.close();
+
+            const isReported = (r) => {
+                const ministry = String(r?.MINISTRY ?? "").trim();
+                return ministry === "1" || ministry === "?";
+            };
+
+            const isAux = (r) => {
+                const val = r?.AUX;
+                if (val === null || val === undefined) return false;
+                if (typeof val === "boolean") return val;
+                if (typeof val === "number") return val !== 0;
+                return ["?", "1", "Y", "YES", "TRUE", "-1"].includes(String(val).trim().toUpperCase());
+            };
+
+            const getStartNumber = (id) => {
+                const rows = records
+                    .filter(r => String(r.IdPubs) === String(id))
+                    .filter(r => {
+                        const remark = String(r.REMARKS ?? "").trim().toUpperCase();
+                        return ["NEW UPB", "NEW UBP", "UPB", "UBP"].includes(remark);
+                    })
+                    .sort((a, b) => Number(a.NUMBER) - Number(b.NUMBER));
+                return rows.length ? Number(rows[0].NUMBER) : null;
+            };
+
+            const activePubs = publishers.filter(p => {
+                const status = String(p.Status ?? "").trim().toUpperCase();
+                return status === "ACTIVE" || status === "";
+            });
+
+            const groupedResults = new Map();
+
+            activePubs.forEach(p => {
+                const pubId = String(p.IDPub ?? "").trim();
+                const group = String(p.GROUP || "").trim() || "No Group";
+                const lastName = p.LName || "";
+                const firstName = p.FNAME || "";
+                const displayName = `${lastName}, ${firstName}`.trim().replace(/^,\s*/, "");
+
+                const startNumber = getStartNumber(pubId);
+                const applicableMonths = monthNumbers.filter(n => startNumber == null || n >= startNumber);
+
+                const missingMonths = [];
+
+                applicableMonths.forEach(n => {
+                    const recs = records.filter(r =>
+                        String(r.IdPubs) === String(pubId) && Number(r.NUMBER) === n
+                    );
+
+                    const reported = recs.some(isReported);
+
+                    if (!reported) {
+                        const abbrev = getCalendarInfoFromNumber(n).monthName.slice(0, 3);
+                        const auxThisMonth = recs.some(isAux);
+                        missingMonths.push({ abbrev, isAP: auxThisMonth });
+                    }
+                });
+
+                if (missingMonths.length > 0) {
+                    if (!groupedResults.has(group)) groupedResults.set(group, []);
+                    groupedResults.get(group).push({ displayName, lastName, firstName, missingMonths });
+                }
+            });
+
+            const sortedGroups = [...groupedResults.keys()].sort((a, b) =>
+                a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+            );
+
+            let output = "";
+
+            sortedGroups.forEach(group => {
+                const pubs = groupedResults.get(group);
+                pubs.sort((a, b) => {
+                    const lastComp = a.lastName.localeCompare(b.lastName, undefined, { sensitivity: 'base' });
+                    if (lastComp !== 0) return lastComp;
+                    return a.firstName.localeCompare(b.firstName, undefined, { sensitivity: 'base' });
+                });
+
+                output += `GROUP ${group}\n`;
+
+                let counter = 1;
+                pubs.forEach(pub => {
+                    pub.missingMonths.forEach(({ abbrev, isAP }) => {
+                        output += `${counter}) ${pub.displayName} : ${abbrev}${isAP ? " AP" : ""}\n`;
+                        counter++;
+                    });
+                });
+
+                output += "\n";
+            });
+
+            callback(output.trim());
+        };
+
+        pubReq.onsuccess = () => { publishers = pubReq.result || []; process(); };
+        recReq.onsuccess = () => { records = recReq.result || []; process(); };
+        pubReq.onerror = () => { console.error("❌ Failed to read PUBLISHERS"); callback(null); };
+        recReq.onerror = () => { console.error("❌ Failed to read RECORDS"); callback(null); };
+    };
+
+    request.onerror = () => { console.error("❌ Failed to open DB"); callback(null); };
+}
+
+function copyMissingReportToClipboard() {
+    buildMissingReportText((text) => {
+        if (!text) {
+            showCustomAlert
+                ? showCustomAlert("No missing reports found, or an error occurred.")
+                : alert("No missing reports found, or an error occurred.");
+            return;
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text)
+                .then(() => showCopyPopup())
+                .catch(() => fallbackCopy(text));
+        } else {
+            fallbackCopy(text);
+        }
+    });
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand("copy");
+        showCopyPopup();
+    } catch (err) {
+        console.error("❌ Fallback copy failed:", err);
+        showCustomAlert
+            ? showCustomAlert("Could not copy automatically. Please copy manually.")
+            : alert("Could not copy automatically. Please copy manually.");
+    }
+    document.body.removeChild(textarea);
+}
+
+function showCopyPopup() {
+    if (typeof showCustomAlert === "function") {
+        showCustomAlert("✅ Copied!\n\nReady to paste in Messenger.");
+    } else {
+        alert("✅ Copied! Ready to paste in Messenger.");
+    }
 }
 
 </script>

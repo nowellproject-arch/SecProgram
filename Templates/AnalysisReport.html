@@ -1516,17 +1516,23 @@ window.loadIrregularPublishers=async function(){
             return status==="ACTIVE"||status==="";
         });
 
+
         const getStartNumber=id=>{
             const rows=records
                 .filter(r=>String(r.IdPubs)===String(id))
                 .filter(r=>{
                     const remark=String(r.REMARKS??"").trim().toUpperCase();
-                    return ["NEW UPB","NEW UBP","UPB","UBP"].includes(remark);
+                    return ["NEW UPB","NEW UBP","UPB","UBP","MOVED IN"].includes(remark);
                 })
                 .sort((a,b)=>Number(a.NUMBER)-Number(b.NUMBER));
 
             return rows.length?Number(rows[0].NUMBER):null;
         };
+
+
+
+
+
 
         const isReported=r=>{
             const ministry=String(r?.MINISTRY??"").trim();
