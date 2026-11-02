@@ -1520,9 +1520,10 @@ window.loadIrregularPublishers=async function(){
             const getStartNumber=id=>{
                 const rows=records
                     .filter(r=>String(r.IdPubs)===String(id))
-                    .filter(r=>{
+                   .filter(r=>{
                         const remark=String(r.REMARKS??"").trim().toUpperCase();
-                        return ["NEW UPB", "NEW UBP", "NEW", "RETURNED", "REACTIVATED", "MOVED IN"].includes(remark);
+                        return ["NEW UPB","NEW UBP","NEW","RETURNED","REACTIVATED","REINSTATED"].includes(remark)
+                            || remark.includes("MOVED IN");
                     })
                     .sort((a,b)=>Number(a.NUMBER)-Number(b.NUMBER));
 
@@ -3287,6 +3288,10 @@ window.loadSixMonthReactivated = async function(){
         );
     }
 };
+
+
+
+
 
 
 </script>
