@@ -20,7 +20,7 @@
       color: #333;
     }
 
-    /* TOP HEADER BAR */
+  /* TOP HEADER BAR */
     .top-bar {
       display: flex;
       height: 50px;
@@ -34,26 +34,27 @@
       height: 100%;
       background-color: #d96b00; /* Official orange accent */
       display: flex;
-      align-items: center;
-      gap: 6px;
+      align-items: center;       /* Centers all content vertically */
+      gap: 6px;                  /* Space between title and version */
       padding: 0 15px;
       font-weight: bold;
       font-size: 18px;
       letter-spacing: 0.5px;
     }
 
+    /* Super small version styling */
     .logo-section .version {
       font-size: 10px;
       font-weight: normal;
       opacity: 0.85;
-      line-height: 1;
+      line-height: 1;            /* Prevents text box padding from pushing it out of alignment */
     }
 
     /* TOP NAVIGATION & TABS */
     .top-nav {
       display: flex;
-      height: 100%;
-      align-items: stretch;
+      height: 100%;             /* Fills the full 50px header height */
+      align-items: stretch;     /* Stretches buttons from top to bottom */
     }
 
     .tab-button {
@@ -62,7 +63,7 @@
       border: none;
       color: #ffffff;
       padding: 0 18px;
-      height: 100%;
+      height: 100%;             /* Sagad sa taas at baba */
       display: flex;
       align-items: center;
       font-size: 12px;
@@ -72,11 +73,13 @@
       transition: background-color 0.2s ease-in-out;
     }
 
+    /* Active tab state: full height background fill */
     .tab-button.active {
       background-color: #d96b00;
       color: #ffffff;
     }
 
+    /* Hover effect on inactive tabs */
     .tab-button:hover:not(.active) {
       background-color: #444444;
     }
@@ -177,6 +180,7 @@
       border: 1px solid #ccc;
     }
 
+
     .tab-button {
       position: relative;
       background: transparent;
@@ -211,193 +215,7 @@
       flex: 1;
     }
 
-    /* ==========================================
-       BOTTOM TAB BAR (hidden on desktop/tablet)
-       ========================================== */
-    .bottom-tabbar {
-      display: none;
-    }
-
-    /* ==========================================
-       PHONE PORTRAIT MODE (max-width: 400px)
-       Wider than 400px = completely unchanged
-       ========================================== */
-    @media screen and (max-width: 600px) {
-
-      body {
-        height: 100vh;
-        height: 100dvh; /* accounts for mobile browser address bar */
-      }
-
-      /* Left sidebar hidden (its links move into a tab later) */
-      .sidebar {
-        display: none;
-      }
-
-      /* Top tabs are replaced by the bottom tab bar */
-      .top-nav {
-        display: none;
-      }
-
-      /* Compact top bar so logo + sync + cloud + logout fit in ~390px */
-      .logo-section {
-        width: auto;
-        padding: 0 10px;
-        font-size: 15px;
-        letter-spacing: 0;
-      }
-
-      .logo-section .version {
-        display: none;
-      }
-
-      #sync-status {
-        font-size: 11px !important;
-      }
-
-      #btn-cloud-sync svg {
-        width: 30px;
-        height: 30px;
-      }
-
-      .top-bar > div[style*="margin-left:auto"] {
-        gap: 6px !important;
-        margin-right: 4px !important;
-      }
-
-      .top-right {
-        padding-right: 8px;
-        margin-left: 0;
-      }
-
-      .top-right button {
-        font-size: 10px;
-      }
-
-      /* No padding so the iframe width matches the screen width */
-      .content-area {
-        padding: 0;
-      }
-
-      /* Bottom tab bar */
-      .bottom-tabbar {
-        display: flex;
-        flex: 0 0 auto;
-        height: 52px;
-        overflow: hidden;
-        background-color: #333333;
-        border-top: 1px solid #1f1f1f;
-        transition: height 0.2s ease-in-out;
-      }
-
-      /* Scrolling down: collapse the bar so the content gets the space */
-      .bottom-tabbar.hidden-bar {
-        height: 0;
-        border-top-width: 0;
-      }
-
-      .bottom-tab {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 2px;
-        background: transparent;
-        border: none;
-        border-top: 3px solid transparent;
-        color: #cccccc;
-        font-size: 10px;
-        font-weight: bold;
-        text-align: center;
-        line-height: 1.15;
-        cursor: pointer;
-      }
-
-      .bottom-tab.active {
-        color: #ffffff;
-        background-color: #444444;
-        border-top-color: #f59e0b;
-      }
-    }
-
-.bottom-tab-bar {
-    display: none;
-}
-
-@media screen and (max-width: 600px) {
-    .sidebar {
-        display: none;
-    }
-
-    .top-nav {
-        display: none;
-    }
-
-      .content-area {
-        padding: 0 0 56px 0;   /* no side gap: your sub page has its own padding; 56px clears the fixed bar */
-    }
-
-    .bottom-tab-bar {
-        display: flex;
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 56px;
-        background-color: #333333;
-        z-index: 2000;
-        transform: translateY(0);
-        transition: transform 0.25s ease-in-out;
-    }
-
-    .bottom-tab-bar.tabbar-hidden {
-        transform: translateY(100%);
-    }
-
-    .bottom-tab-bar .tab-button {
-        flex: 1;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 2px;
-        height: 100%;
-        font-size: 9px;
-        padding: 4px 2px;
-        text-transform: none;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .bottom-tab-bar .tab-button .bottom-tab-icon {
-        font-size: 17px;
-        line-height: 1;
-    }
-
-    .bottom-tab-bar .tab-button.active::before {
-        top: 0;
-        height: 100%;
-        border-radius: 0;
-    }
-
-        .top-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 2100;
-        transition: transform 0.25s ease-in-out;
-    }
-
-    .top-bar.topbar-hidden {
-        transform: translateY(-100%);
-    }
-
-    .content-area {
-        padding-top: 62px; /* clears the fixed 50px top bar, plus a little breathing room */
-    }
-}
+    
 
 
   </style>
@@ -406,285 +224,300 @@
 <body>
 
   <!-- TOP HEADER -->
-  <div class="top-bar" id="topHeaderBar">
+<div class="top-bar">
 
     <div class="logo-section">
-      SecProgram <span class="version" id="appVersion">Version --</span>
+        SecProgram <span class="version" id="appVersion">Version --</span>
     </div>
 
   <nav class="top-nav">
-    <button class="tab-button active" data-tab="tab-1"
-      onclick="handleTabClick(event, 'tab-1')">
+    <button class="tab-button active"
+      onclick="switchTab(event, 'tab-1')">
       Current Month Entry
     </button>
 
-    <button class="tab-button" data-tab="tab-2"
-      onclick="handleTabClick(event, 'tab-2')">
+    <button class="tab-button"
+      onclick="switchTab(event, 'tab-2')">
       Publisher Record
     </button>
 
-    <button class="tab-button" data-tab="tab-3"
-      onclick="handleTabClick(event, 'tab-3')">
+    <button class="tab-button"
+      onclick="switchTab(event, 'tab-3')">
       Congregation Analysis Report
     </button>
 
-    <button class="tab-button" data-tab="tab-4"
-      onclick="handleTabClick(event, 'tab-4')">
+    <button class="tab-button"
+      onclick="switchTab(event, 'tab-4')">
       ADMINISTRATION
     </button>
   </nav>
 
-    <!-- SYNC STATUS & CLOUD DROPDOWN -->
-    <div style="
+      <!-- SYNC STATUS & CLOUD DROPDOWN -->
+<div style="
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-left:auto;
+  margin-right:20px;
+  position:relative;
+">
+
+  <span id="sync-status" style="
+    font-size:12px;
+    font-weight:bold;
+    color:#28a745;
+  ">
+    ● Saved
+  </span>
+
+  <!-- CLOUD BUTTON -->
+  <button
+    id="btn-cloud-sync"
+    onclick="toggleCloudMenu(event)"
+    title="Cloud Options"
+    style="
+      background:none;
+      border:none;
+      cursor:pointer;
+      padding:4px;
       display:flex;
       align-items:center;
-      gap:12px;
-      margin-left:auto;
-      margin-right:20px;
-      position:relative;
-    ">
+      justify-content:center;
+      outline:none;
+    "
+  >
+    <svg
+      width="38"
+      height="38"
+      viewBox="0 0 86 52"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
 
-      <span id="sync-status" style="
-        font-size:12px;
-        font-weight:bold;
-        color:#28a745;
-      ">
-        ● Saved
-      </span>
-
-      <!-- CLOUD BUTTON -->
-      <button
-        id="btn-cloud-sync"
-        onclick="toggleCloudMenu(event)"
-        title="Cloud Options"
-        style="
-          background:none;
-          border:none;
-          cursor:pointer;
-          padding:4px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          outline:none;
+      <!-- Cloud -->
+      <path
+        d="
+          M25 40
+          C17 40 12 35 12 28
+          C12 21 17 16 24 16
+          C27 10 32 7 39 7
+          C47 7 53 12 55 18
+          C63 18 69 23 69 30
+          C69 36 64 40 57 40
+          H25
         "
-      >
-        <svg
-          width="38"
-          height="38"
-          viewBox="0 0 86 52"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <!-- Cloud -->
-          <path
-            d="
-              M25 40
-              C17 40 12 35 12 28
-              C12 21 17 16 24 16
-              C27 10 32 7 39 7
-              C47 7 53 12 55 18
-              C63 18 69 23 69 30
-              C69 36 64 40 57 40
-              H25
-            "
-            stroke="#90EE90"
-            stroke-width="5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
+        stroke="#90EE90"
+        stroke-width="5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
 
-          <!-- Upload Arrow -->
-          <path
-            d="
-              M42 47
-              V14
-              M42 14
-              L32 24
-              M42 14
-              L52 24
-            "
-            stroke="#90EE90"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </button>
-
-      <!-- CLOUD DROPDOWN -->
-      <div id="cloud-dropdown"
-        style="
-          display:none;
-          position:absolute;
-          top:100%;
-          right:0;
-          margin-top:6px;
-          background:#fff;
-          border:1px solid #ddd;
-          border-radius:10px;
-          box-shadow:0 4px 14px rgba(0,0,0,.12);
-          min-width:180px;
-          z-index:1000;
-          overflow:hidden;
+      <!-- Upload Arrow -->
+      <!-- Upload Arrow -->
+      <path
+        d="
+          M42 47
+          V14
+          M42 14
+          L32 24
+          M42 14
+          L52 24
         "
-      >
+        stroke="#90EE90"
+        stroke-width="3"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
 
-        <!-- BACKUP -->
-        <div
-          onclick="toggleBackupSubmenu(event)"
-          style="
-            padding:11px 14px;
-            font-size:14px;
-            color:#333;
-            cursor:pointer;
-            user-select:none;
-          "
-          onmouseover="this.style.background='#f7f7f7'"
-          onmouseout="this.style.background='transparent'"
-        >
-          <span id="backup-arrow"
-            style="
-              display:inline-block;
-              width:16px;
-              font-size:13px;
-            "
-          >▸</span>
-          <span>Backup</span>
-        </div>
+    </svg>
+  </button>
 
-        <!-- BACKUP OPTIONS -->
-        <div id="backup-submenu"
-          style="
-            display:none;
-            background:#fafafa;
-            border-top:1px solid #eee;
-            border-bottom:1px solid #eee;
-          "
-        >
-          <div
-            onclick="handleBackupAction(event)"
-            style="
-              padding:10px 14px 10px 28px;
-              font-size:13px;
-              color:#444;
-              cursor:pointer;
-            "
-            onmouseover="this.style.background='#f0f0f0'"
-            onmouseout="this.style.background='transparent'"
-          >
-            Cloud
-          </div>
 
-          <div
-            onclick="handleExportBackup(event)"
-            style="
-              padding:10px 14px 10px 28px;
-              font-size:13px;
-              color:#444;
-              cursor:pointer;
-            "
-            onmouseover="this.style.background='#f0f0f0'"
-            onmouseout="this.style.background='transparent'"
-          >
-            Export Backup
-          </div>
-        </div>
+  <!-- CLOUD DROPDOWN -->
+  <!-- CLOUD DROPDOWN -->
+<div id="cloud-dropdown"
+  style="
+    display:none;
+    position:absolute;
+    top:100%;
+    right:0;
+    margin-top:6px;
+    background:#fff;
+    border:1px solid #ddd;
+    border-radius:10px;
+    box-shadow:0 4px 14px rgba(0,0,0,.12);
+    min-width:180px;
+    z-index:1000;
+    overflow:hidden;
+  "
+>
 
-        <!-- RESTORE -->
-        <div
-          onclick="toggleRestoreSubmenu(event)"
-          style="
-            padding:11px 14px;
-            font-size:14px;
-            color:#333;
-            cursor:pointer;
-            user-select:none;
-          "
-          onmouseover="this.style.background='#f7f7f7'"
-          onmouseout="this.style.background='transparent'"
-        >
-          <span id="restore-arrow"
-            style="
-              display:inline-block;
-              width:16px;
-              font-size:13px;
-            "
-          >▸</span>
-          <span>Restore</span>
-        </div>
-
-        <!-- RESTORE OPTIONS -->
-        <div id="restore-submenu"
-          style="
-            display:none;
-            background:#fafafa;
-            border-top:1px solid #eee;
-          "
-        >
-          <div
-            onclick="handleRestoreFromCloud(event)"
-            style="
-              padding:10px 14px 10px 28px;
-              font-size:13px;
-              color:#444;
-              cursor:pointer;
-            "
-            onmouseover="this.style.background='#f0f0f0'"
-            onmouseout="this.style.background='transparent'"
-          >
-            From Cloud
-          </div>
-
-          <div
-            onclick="handleImportBackup(event)"
-            style="
-              padding:10px 14px 10px 28px;
-              font-size:13px;
-              color:#444;
-              cursor:pointer;
-            "
-            onmouseover="this.style.background='#f0f0f0'"
-            onmouseout="this.style.background='transparent'"
-          >
-            Import Backup
-          </div>
-        </div>
-      </div>
+  <!-- BACKUP -->
+    <div
+      onclick="toggleBackupSubmenu(event)"
+      style="
+        padding:11px 14px;
+        font-size:14px;
+        color:#333;
+        cursor:pointer;
+        user-select:none;
+      "
+      onmouseover="this.style.background='#f7f7f7'"
+      onmouseout="this.style.background='transparent'"
+    >
+      <span id="backup-arrow"
+        style="
+          display:inline-block;
+          width:16px;
+          font-size:13px;
+        "
+      >▸</span>
+      <span>Backup</span>
     </div>
 
-    <!-- LOG OUT -->
-    <div class="top-right">
-      <button
-        id="logoutBtn"
-        onclick="logout()"
-        class="btn-logout"
-      >
-        Log Out
-      </button>
+  <!-- BACKUP OPTIONS -->
+  <div id="backup-submenu"
+    style="
+      display:none;
+      background:#fafafa;
+      border-top:1px solid #eee;
+      border-bottom:1px solid #eee;
+    "
+  >
+
+    <div
+      onclick="handleBackupAction(event)"
+      style="
+        padding:10px 14px 10px 28px;
+        font-size:13px;
+        color:#444;
+        cursor:pointer;
+      "
+      onmouseover="this.style.background='#f0f0f0'"
+      onmouseout="this.style.background='transparent'"
+    >
+      Cloud
+    </div>
+
+    <div
+      onclick="handleExportBackup(event)"
+      style="
+        padding:10px 14px 10px 28px;
+        font-size:13px;
+        color:#444;
+        cursor:pointer;
+      "
+      onmouseover="this.style.background='#f0f0f0'"
+      onmouseout="this.style.background='transparent'"
+    >
+      Export Backup
     </div>
 
   </div>
 
+
+  <!-- RESTORE -->
+  <!-- RESTORE -->
+    <div
+      onclick="toggleRestoreSubmenu(event)"
+      style="
+        padding:11px 14px;
+        font-size:14px;
+        color:#333;
+        cursor:pointer;
+        user-select:none;
+      "
+      onmouseover="this.style.background='#f7f7f7'"
+      onmouseout="this.style.background='transparent'"
+    >
+      <span id="restore-arrow"
+        style="
+          display:inline-block;
+          width:16px;
+          font-size:13px;
+        "
+      >▸</span>
+      <span>Restore</span>
+    </div>
+
+  <!-- RESTORE OPTIONS -->
+  <div id="restore-submenu"
+    style="
+      display:none;
+      background:#fafafa;
+      border-top:1px solid #eee;
+    "
+  >
+
+    <div
+      onclick="handleRestoreFromCloud(event)"
+      style="
+        padding:10px 14px 10px 28px;
+        font-size:13px;
+        color:#444;
+        cursor:pointer;
+      "
+      onmouseover="this.style.background='#f0f0f0'"
+      onmouseout="this.style.background='transparent'"
+    >
+      From Cloud
+    </div>
+
+    <div
+      onclick="handleImportBackup(event)"
+      style="
+        padding:10px 14px 10px 28px;
+        font-size:13px;
+        color:#444;
+        cursor:pointer;
+      "
+      onmouseover="this.style.background='#f0f0f0'"
+      onmouseout="this.style.background='transparent'"
+    >
+      Import Backup
+    </div>
+  </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- LOG OUT -->
+<div class="top-right">
+  <button
+    id="logoutBtn"
+    onclick="logout()"
+    class="btn-logout"
+  >
+    Log Out
+  </button>
+</div>
+
+</div>
+
   <!-- MAIN WRAPPER -->
   <div class="main-container">
 
-    <!-- LEFT SIDEBAR (hidden in phone portrait mode) -->
+    <!-- LEFT SIDEBAR -->
     <div class="sidebar">
       <ul class="sidebar-menu">
         <li class="sidebar-item"><a href="#">&#8862; Home</a></li>
         <li class="sidebar-item header">FIELD SERVICE</li>
         <li class="sidebar-item sidebar-sub-item"><a href="#">Group Assignments</a></li>
         <li class="sidebar-item sidebar-sub-item">
-          <a href="/s21Card" target="_blank">S-21 Cards</a>
+            <a href="/s21Card" target="_blank">S-21 Cards</a>
         </li>
         <li class="sidebar-item header">REPORTS</li>
 
         <li class="sidebar-item sidebar-sub-item">
-          <a href="/COReport" target="_blank">For CO Report</a>
+            <a href="/COReport" target="_blank">For CO Report</a>
         </li>
 
+          
         <li class="sidebar-item sidebar-sub-item">
-          <a href="/s88" target="_blank">Attendance S-88</a>
+            <a href="/s88" target="_blank">Attendance S-88</a>
         </li>
 
         <li class="sidebar-item header">DATA MANAGEMENT</li>
@@ -696,14 +529,16 @@
 
     <!-- MAIN CONTENT AREA -->
     <div class="content-area">
-
+      
+      
       <!-- DYNAMIC TAB PANELS -->
-      <div id="tab-1" class="tab-panel active">
+    <div id="tab-1" class="tab-panel active">
         <!-- 12-row full layout embedded seamlessly via iframe -->
         <iframe src="/Templates/current_month_entry.html" style="width: 100%; height: 100%; border: none;"></iframe>
       </div>
       <div id="tab-2" class="tab-panel">
-        <iframe src="/Templates/PublishersRecord.html" style="width: 100%; height: 100%; border: none;"></iframe>
+     <iframe src="/Templates/PublishersRecord.html" style="width: 100%; height: 100%; border: none;"></iframe>
+   
       </div>
       <div id="tab-3" class="tab-panel"></div>
       <div id="tab-4" class="tab-panel"></div>
@@ -713,78 +548,14 @@
   </div>
 
 
- 
+
+
   <!-- MAIN SCRIPT FILE -->
+
 
 
   
   <script>
-
-
-    // ==========================================
-    // PHONE MODE: bottom tab bar + scroll hide/show
-    // Only active at max-width: 400px (same as CSS).
-    // ==========================================
-    (function () {
-      const phoneMQ = window.matchMedia('(max-width: 400px)');
-      const bar = document.getElementById('bottomTabbar');
-      if (!bar) return;
-
-      const bottomTabs = Array.from(bar.querySelectorAll('.bottom-tab'));
-
-      function setBarHidden(hidden) {
-        bar.classList.toggle('hidden-bar', hidden);
-      }
-
-      // Highlight the bottom tab that matches the visible .tab-panel
-      function syncBottomTabs() {
-        const panels = Array.from(document.querySelectorAll('.tab-panel'));
-        const activeIndex = panels.findIndex(p => p.classList.contains('active'));
-        bottomTabs.forEach((btn, i) => btn.classList.toggle('active', i === activeIndex));
-      }
-
-      // Bottom tab tap -> reuse your existing switchTab() by clicking the
-      // matching top-nav button, so tab logic stays in one place.
-      bottomTabs.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const topBtns = document.querySelectorAll('.top-nav .tab-button');
-          const target = topBtns[Number(btn.dataset.tab)];
-          if (target) target.click();
-          setTimeout(syncBottomTabs, 0);
-          setBarHidden(false); // always show the bar after switching tabs
-        });
-      });
-
-      // Keep the bottom bar in sync if the tab is changed any other way
-      const panelObserver = new MutationObserver(syncBottomTabs);
-      document.querySelectorAll('.tab-panel').forEach(p =>
-        panelObserver.observe(p, { attributes: true, attributeFilter: ['class'] })
-      );
-
-      // Scroll messages from the iframes (hideTabBar / showTabBar)
-      window.addEventListener('message', (event) => {
-        if (!phoneMQ.matches) return;
-
-        const type = event.data && event.data.type;
-        if (type !== 'hideTabBar' && type !== 'showTabBar') return;
-
-        // Accept only messages from the iframe that is currently visible
-        const activeIframe = document.querySelector('.tab-panel.active iframe');
-        if (!activeIframe || event.source !== activeIframe.contentWindow) return;
-
-        setBarHidden(type === 'hideTabBar');
-      });
-
-      // Leaving phone mode (e.g. rotating to landscape): make sure the bar is reset
-      const onMQChange = () => { setBarHidden(false); syncBottomTabs(); };
-      if (phoneMQ.addEventListener) phoneMQ.addEventListener('change', onMQChange);
-      else phoneMQ.addListener(onMQChange);
-
-      syncBottomTabs();
-    })();
-
-
-
 
 const TAB_CONFIG={
     'tab-1':{
@@ -1427,77 +1198,9 @@ async function loadSubForm(tabId,filename,callback){
 
 loadAppVersion();
 
+
+
   </script>
-
-  <!-- BOTTOM TAB BAR (phone mode only) -->
-  <nav class="bottom-tab-bar" id="bottomTabBar">
-    <button class="tab-button active" data-tab="tab-1" onclick="handleTabClick(event, 'tab-1')">
-      <span class="bottom-tab-icon">📋</span>
-      <span>Entry</span>
-    </button>
-    <button class="tab-button" data-tab="tab-2" onclick="handleTabClick(event, 'tab-2')">
-      <span class="bottom-tab-icon">👤</span>
-      <span>Publisher</span>
-    </button>
-    <button class="tab-button" data-tab="tab-3" onclick="handleTabClick(event, 'tab-3')">
-      <span class="bottom-tab-icon">📊</span>
-      <span>Analysis</span>
-    </button>
-    <button class="tab-button" data-tab="tab-4" onclick="handleTabClick(event, 'tab-4')">
-      <span class="bottom-tab-icon">⚙️</span>
-      <span>Admin</span>
-    </button>
-  </nav>
-
-  <script>
-    // ==========================================
-    // PHONE MODE: unified tab switching (keeps
-    // top-nav and bottom-tab-bar active states in sync,
-    // regardless of which one was clicked)
-    // ==========================================
-    function handleTabClick(event, tabId) {
-        if (typeof switchTab === 'function') {
-            switchTab(event, tabId);
-        } else {
-            // Fallback in case switchTab isn't available in this scope
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            const panel = document.getElementById(tabId);
-            if (panel) panel.classList.add('active');
-        }
-        syncTabBarButtons(tabId);
-    }
-
-    function syncTabBarButtons(tabId) {
-        document.querySelectorAll('[data-tab]').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabId);
-        });
-    }
-
-    // ==========================================
-    // PHONE MODE: receive scroll-direction messages
-    // from the active tab's iframe, hide/show bottom bar
-    // ==========================================
-       let barsLockUntil = 0;
-
-    window.addEventListener('message', (event) => {
-        if (event.origin !== window.location.origin) return;
-
-        const data = event.data;
-        if (!data || typeof data.type !== 'string') return;
-        if (data.type !== 'hideTabBar' && data.type !== 'showTabBar') return;
-
-        // ignore the scroll jitter caused by the bars moving
-        if (Date.now() < barsLockUntil) return;
-        barsLockUntil = Date.now() + 350;
-
-        const hide = data.type === 'hideTabBar';
-        document.getElementById('bottomTabBar')?.classList.toggle('tabbar-hidden', hide);
-        document.getElementById('topHeaderBar')?.classList.toggle('topbar-hidden', hide);
-        document.body.classList.toggle('bars-hidden', hide);
-    });
-    
-  </script>
-
 
 </body>
 </html>

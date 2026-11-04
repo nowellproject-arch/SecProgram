@@ -95,20 +95,19 @@
     }
 
     /* MID: Widened Publisher Record Card (Emphasis on Remarks) */
-    .scard21- {
-        flex: 6 1 0;            /* grow, shrink, start from 0 so it fits whatever space is left */
-        min-width: 0;           /* allows shrinking below its content width */
-        box-sizing: border-box; /* border and padding count inside the width */
+    .s21-card {
+        flex: 6;
         background: #fff;
+        border: 2px solid #222;
         padding: 12px 16px;
         border-radius: 4px;
-         border: 2px solid #0b0b0c;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
     .s21-header {
+        border-bottom: 2px solid #333;
         padding-bottom: 8px;
-        margin-bottom: 70px;
+        margin-bottom: 10px;
     }
 
     .row-group {
@@ -171,15 +170,6 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
-
-    .s21-card {
-        flex: 6;
-        background: #fff;
-        padding: 12px 16px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        border: 2px solid #0b0b0c;
-        border-radius: 8px;
-         }
 
     .s21-table {
     width: 100% !important;
@@ -429,192 +419,24 @@
 }
 
 
-/* ===== BASE (all widths) ===== */
-.year-nav-header { display: flex; justify-content: space-between; align-items: center;
-    padding: 4px 8px; color: #5b3d88; font-size: 14px; max-width: 280px; margin: 0 auto 8px auto; }
-.nav-arrow-year { cursor: pointer; font-weight: bold; user-select: none; font-size: 16px; }
-.yr-num::after { content: " - "; white-space: pre; }   /* desktop keeps "2027 - Current Service Year" */
-.drawer-btn, #phoneRail, #paneOverlay { display: none; }
-.mobile-listbox-toggle, .mobile-summary-toggle,
-#phonePaneHandle, #s21PhoneList, .phone-keypad { display: none; }
-
-/* ===== PHONE ===== */
-@media screen and (max-width: 600px) {
-    body { background: #f1f5f9; margin: 0; }
-    .s21-app-container { padding: 10px; box-sizing: border-box; }
-
-    /* year bar: edge to edge, scrolls with the page */
-    .year-nav-header {
-        position: static; max-width: none; margin: -10px -10px 12px; padding: 12px;
-        background: #6b5b95; color: #fff; box-shadow: 0 2px 8px rgba(76,61,112,.35);
-    }
-    .year-nav-header strong { display: flex; align-items: center; gap: 8px; }
-     .yr-num::after { content: none; }
-    .yr-pill { margin: 0; font-size: 12px; font-weight: 500; background: rgba(255,255,255,.2);
-               padding: 2px 10px; border-radius: 999px; }
-    .nav-arrow-year { padding: 6px 12px; font-size: 18px; }
-
-    /* one column */
-    .s21-wrapper { display: flex; flex-direction: column; align-items: stretch; gap: 12px;
-                   padding: 0 !important; margin: 0 !important; max-width: none; }
-    .s21-card, .s21-sidebar { width: 100%; max-width: none !important; min-width: 0;
-        flex: 0 0 auto !important; align-self: stretch !important; margin: 0 !important; box-sizing: border-box; }
-    .mobile-listbox-toggle, .mobile-summary-toggle { display: none !important; }
-
-    /* publisher card = rail | content, and the pane slides over it */
-    .s21-card {
-        position: relative; overflow: hidden;
-        display: grid; grid-template-columns: 24px 1fr; column-gap: 8px; align-items: start;
-        background: #fff; border: 1px solid #e2e8f0 !important; border-radius: 16px;
-        padding: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,.06);
-    }
-    .s21-card > :not(#phoneRail):not(.s21-listbox-pane):not(#paneOverlay) { grid-column: 2; min-width: 0; }
-
-    #phoneRail {
-        display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 10px;
-        grid-column: 1; grid-row: 1 / span 3; align-self: stretch;
-        width: 24px; border: none; border-radius: 8px; background: #f3f1f7; color: #6b5b95; cursor: pointer;
-    }
-    #phoneRail .rail-arrow { font-size: 14px; font-weight: bold; }
-    #phoneRail .rail-text { writing-mode: vertical-rl; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
-
-    /* pane: same height as the card, down to the Total row */
-    .s21-listbox-pane {
-        position: absolute !important; top: 0 !important; bottom: 0 !important; left: 0 !important; right: auto !important;
-        width: 88% !important; max-width: none !important; height: auto !important; margin: 0 !important;
-        z-index: 30; display: flex !important; flex-direction: column;
-        background: #fff; padding: 0 !important; border: none !important;
-        border-right: 1px solid #e2e8f0 !important; border-radius: 0 !important;
-        box-shadow: 4px 0 24px rgba(15,23,42,.25);
-        transform: translateX(0); transition: transform .3s ease;
-    }
-    .s21-listbox-pane.phone-collapsed { transform: translateX(-100%); }
-
-    #paneOverlay { display: block; position: absolute; inset: 0; z-index: 20;
-        background: rgba(15,23,42,.3); opacity: 0; pointer-events: none; transition: opacity .3s; }
-    .s21-listbox-pane:not(.phone-collapsed) + #paneOverlay { opacity: 1; pointer-events: auto; }
-
-    /* the old edge tab becomes the pane's close button */
-    #phonePaneHandle {
-        display: flex; position: absolute; left: auto; right: 8px; top: 8px;
-        width: 30px; height: 30px; padding: 0; align-items: center; justify-content: center;
-        background: #f3f1f7; color: #6b5b95; border: none; border-radius: 50%;
-        font-size: 16px; font-weight: bold; box-shadow: none;
-    }
-    .listbox-scroll-container { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px; box-sizing: border-box; gap: 10px; }
-    .listbox-header-title { font-size: 13px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
-        color: #1e293b; border-bottom: none; padding: 0 36px 0 0; }
-    .s21-listbox-pane .form-control { height: 36px !important; font-size: 13px !important; padding: 0 10px;
-        background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; }
-    .listbox-container { flex: 1 1 auto; height: auto; min-height: 120px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; }
-    .listbox-item { padding: 11px 12px; font-size: 13px; font-weight: 500; border-bottom: 1px solid #f1f5f9; }
-    .listbox-item.active { background-color: #6b5b95 !important; color: #fff !important; font-weight: 600; }
-
-    /* name card */
-    .s21-header { background: #f8fafc; border: 1px solid #e2e8f0 !important; border-radius: 14px;
-                  padding: 10px 12px; margin-bottom: 12px; }
-    .name-row { flex-direction: column; align-items: stretch; gap: 4px; }
-    .name-row label { font-size: 11px; color: #64748b; }
-    #pubNameDisplay { width: 100%; max-width: none !important; height: 36px; font-size: 14px; font-weight: 600;
-        padding: 0 10px; border: 1px solid #cbd5e1 !important; border-radius: 12px; background: #fff !important; }
-    .status-control { display: none !important; }
-
-    /* month grid */
-    .table-scroll-container { display: none !important; }
-    #s21PhoneList { display: block; width: 100%; max-width: none; padding: 0; background: #fff;
-        border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
-    .phone-sy { display: none; }
-    .p21-table { width: 100%; border-collapse: collapse; table-layout: fixed; background: #fff; }
-    .p21-table th { background: #6b5b95; color: #fff; font-weight: 600; font-size: 11px;
-        border: 1px solid #7d6ea6; padding: 8px 2px; text-align: center; }
-    .p21-table th:nth-child(1) { width: 16%; text-align: left; padding-left: 8px; font-size: 13px; }
-    .p21-table th:nth-child(2) { width: 14%; }
-    .p21-table th:nth-child(3) { width: 13%; }
-    .p21-table th:nth-child(4) { width: 12%; }
-    .p21-table th:nth-child(5) { width: 14%; }
-    .p21-table th:nth-child(6) { width: 31%; text-align: left; padding-left: 6px; }
-    
-    .p21-table td { border: 1px solid #e2e8f0; height: 44px; padding: 0; text-align: center; font-size: 16px; overflow: hidden; }
-    .p21-table td.p21-m { text-align: left; padding-left: 8px; font-size: 12px; font-weight: 700; }
-    .p21-table tbody tr:nth-child(even) td { background: #f8fafc; }
-    .p21-table td.p21-tap { color: #6b5b95; font-weight: 700; cursor: pointer; }
-    .p21-table td.p21-tap:active { background: #f3f1f7 !important; }
-    .p21-table td.p21-off { background: #f3f3f3; }
-    .p21-table tr.locked td { color: #cbd5e1; background: #f8fafc; }
-    .p21-table td.p21-note { text-align: left; }
-
-    .p21-rem { font-size: 9px; color: #777; padding: 0 3px; line-height: 1; }
-    .p21-note input { width: 100%; height: 26px; border: none; background: transparent; font-size: 14px;
-        padding: 0 3px; box-sizing: border-box; outline: none; }
-    .phone-total { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 10px 12px;
-        text-align: right; font-weight: bold; font-size: 13px; color: #334155; }
-
-    /* summary cards, always visible */
-    .s21-sidebar { display: flex !important; flex-direction: column; gap: 12px; }
-
-
-    .Month-sidebar-nav { display: flex !important; align-items: center; justify-content: center; gap: 12px !important;
-        background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-    #monthDisplayText { font-size: 15px; color: #1e293b; }
-    #monthStatusBtn { padding: 5px 14px !important; font-size: 13px !important; }
-    .side-box { background: #fff !important; border: 1px solid #e2e8f0 !important; border-radius: 16px !important;
-        padding: 14px !important; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-    .side-title { font-size: 12px !important; text-transform: uppercase; letter-spacing: .05em; color: #1e293b; margin-bottom: 4px; }
-    .side-desc { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
-    .side-label { font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 3px; }
-    .s21-sidebar .form-control { height: 36px !important; background: #f8fafc !important; border: 1px solid #e2e8f0 !important;
-        border-radius: 12px !important; font-size: 15px; font-weight: 700; color: #1e293b; }
-    .s21-sidebar .form-control::placeholder { font-weight: 400; font-size: 13px; color: #94a3b8; }
-    .grid-sub-inputs, .grid-sub-inputs-3 { gap: 8px; }
-
-        .p21-table td input.p21-in {
-        width: 100%; height: 40px; padding: 0; box-sizing: border-box;
-        border: 1px solid transparent !important;
-        background: transparent !important;
-        box-shadow: none !important; outline: none !important;
-        -webkit-appearance: none; appearance: none;
-        text-align: center; font-size: 16px; font-weight: 700; color: #6b5b95;
-    }
-
-
-
-        .p21-table td input.p21-in {
-        width: 100%; height: 42px; padding: 0; box-sizing: border-box;
-        border: 1px solid transparent !important; background: transparent !important;
-        box-shadow: none !important; outline: none !important;
-        -webkit-appearance: none; appearance: none;
-        text-align: center; font-size: 16px; font-weight: 700; color: #6b5b95;
-    }
-    .p21-table td input.p21-in:focus { background: #fff3cd !important; }
-    .p21-table td input.p21-in:disabled { color: #cbd5e1; }
-
-
- .s21-sidebar { margin-top: 50px !important; } 
-
-}
-
-
 
 
 </style>
 
 <div class="s21-app-container">
-    <div class="year-nav-header">
-        <span id="prevYearBtn" class="nav-arrow-year">&lt;</span>
+    <!-- Global Year Navigation Header spanning the top of the entire workspace -->
+    <!-- Narrower Minimal Year Navigation hidded -->
+    <div class="year-nav-header" style="display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; color: #5b3d88; font-size: 14px; max-width: 280px; margin: 0 auto 8px auto;">
+        <span id="prevYearBtn" class="nav-arrow-year" style="cursor: pointer; font-weight: bold; user-select: none; font-size: 16px;">&lt;</span>
         <strong id="yearDisplayText">Loading...</strong>
-        <span id="nextYearBtn" class="nav-arrow-year">&gt;</span>
+        <span id="nextYearBtn" class="nav-arrow-year" style="cursor: pointer; font-weight: bold; user-select: none; font-size: 16px;">&gt;</span>
     </div>
 
-    <div class="s21-wrapper">
     <!-- Main Workspace Wrapper -->
     <div class="s21-wrapper">
-        <div class="s21-listbox-pane"> 
-            <div id="paneOverlay" onclick="setPhonePane(true)"></div>   
         <!-- LEFT LANE: Publisher Listbox, Dropdown Category & Search -->
-        <div class="mobile-listbox-toggle" id="mobileListboxToggle" onclick="toggleMobileListbox()">
-                <span id="mobileListboxToggleText">Select Publisher ▾</span>
-            </div>
-            <div class="listbox-scroll-container" id="listboxScrollContainer">
+        <div class="s21-listbox-pane">
+            <div class="listbox-scroll-container">
                 <div class="listbox-header-title">Publishers List</div>
                 <div>
                     <label class="side-label">Category:</label>
@@ -634,9 +456,7 @@
                 <div>
                     <label class="side-label">Search:</label>
                     <input type="text" id="publisherSearch" placeholder="Type to search..." class="form-control" style="height: 24px;">
-                </div> 
-
-
+                </div>
                 <div class="listbox-container" id="publisherListbox">
                     <!-- Populated via script -->
                 </div>
@@ -647,37 +467,51 @@
                     <div class="listbox-count" id="listboxCount">Count: 0</div>
                 </div>
             </div>
-             <button type="button" id="phonePaneHandle" onclick="togglePhonePane()">&lt;</button>
-
         </div>
 
         <!-- MID: Snug S-21 Record Card -->
         <div class="s21-card">
-            <button type="button" id="phoneRail" onclick="togglePhonePane()" aria-label="Open publishers list">
-                <span class="rail-arrow">&gt;</span>
-                <span class="rail-text">Publishers</span>
-            </button>
             <div class="s21-header">
-                <!-- Name: display-only on this tab -->
+                <!-- The Hidden Separate Edit Fields (Revealed on click) -->
                 <div class="row-group name-row">
                     <label><strong>Name:</strong></label>
-                    <input type="text" id="pubNameDisplay" readonly class="form-control"
-                        style="border:1px solid #aaa !important; background:#f5f5f5 !important; max-width:260px; cursor:default;">
+                    
+                    <!-- The Single Display Box -->
+                    <input type="text" id="pubNameDisplay" readonly class="form-control" placeholder="Click to edit name" style="border: 1px solid #aaa !important; background: #fff !important; max-width: 210px; cursor: pointer;" title="Click to edit name parts">
+
+                    <!-- The Hidden Separate Edit Fields (Revealed on click) -->
+                    <div id="nameEditContainer" style="display: none; gap: 5px; align-items: center;">
+                        <input type="text" id="editLName" placeholder="Last Name" class="form-control" style="width: 150px;" title="Last Name">
+                        <input type="text" id="editFName" placeholder="First Name" class="form-control" style="width: 150px;" title="First Name">
+                        <input type="text" id="editMName" placeholder="Middle" class="form-control" style="width: 150px;" title="Middle Name">
+                    </div>
+                </div>
+       
+                <div class="row-group grid-4">
+                    <div>
+                        <label>Date of birth:</label>
+                        <input type="date" id="pubDob" class="form-control" style="border: 1px solid #aaa !important; background: #fff !important;">
+                    </div>
+                    <div>
+                        <label>Date of baptism:</label>
+                        <input type="date" id="pubBaptism" class="form-control" style="border: 1px solid #aaa !important; background: #fff !important;">
+                    </div>
+                    <div>
+                        <label>Group:</label>
+                        <input type="text" id="pubGroup" value="" class="form-control text-center" style="border: 1px solid #aaa !important; background: #fff !important;">
+                    </div>
+                    <div class="gender-box">
+                        <label><input type="checkbox" id="isMale"> M</label>
+                        <label><input type="checkbox" id="isFemale" checked> F</label>
+                    </div>
                 </div>
 
-                <!-- Editable here: Group, RP, Status -->
-                <div class="row-group" style="gap:16px; flex-wrap:wrap;">
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <label>Group:</label>
-                        <input type="text" id="pubGroup" class="form-control text-center"
-                            style="width:60px; border:1px solid #aaa !important; background:#fff !important;">
-                    </div>
-
-                    <label><input type="checkbox" id="isRP"> RP</label>
-
-                    <div class="status-control">
+                <div class="row-group status-spiritual-row">
+                    <div>
+                     <div class="status-control">
                         <label>Status:</label>
                         <span id="pubStatusDisplay" class="pub-status-label active" onclick="togglePubStatusDropdown()">Active</span>
+
                         <select id="pubStatus" class="pub-status-dropdown" onchange="changePubStatus(this.value)">
                             <option value="">Active</option>
                             <option value="Inactive">Inactive</option>
@@ -685,23 +519,15 @@
                             <option value="Removed">Removed</option>
                             <option value="Disqualified">Disqualified</option>
                         </select>
-                    </div>
-                </div>
 
-                <!-- Hidden: edited on the PublisherRecord tab. Kept in the DOM so existing JS doesn't break. -->
-                <div style="display:none;">
-                    <div id="nameEditContainer">
-                        <input type="text" id="editLName">
-                        <input type="text" id="editFName">
-                        <input type="text" id="editMName">
                     </div>
-                    <input type="date" id="pubDob">
-                    <input type="date" id="pubBaptism">
-                    <input type="checkbox" id="isMale">
-                    <input type="checkbox" id="isFemale">
-                    <input type="checkbox" id="isElder">
-                    <input type="checkbox" id="isMS">
-                    <input type="checkbox" id="isSP">
+                    </div>
+                    <div class="privileges-inline">
+                        <label><input type="checkbox" id="isElder"> Elder</label>
+                        <label><input type="checkbox" id="isMS"> MS</label>
+                        <label><input type="checkbox" id="isRP"> RP</label>
+                        <label><input type="checkbox" id="isSP"> SP</label>
+                    </div>
                 </div>
             </div>
 
@@ -731,15 +557,8 @@
             </div>
         </div>
 
-        <div id="s21PhoneList"></div>
-
         <!-- MONTHLY REPORT -->
-        <div class="mobile-summary-toggle" id="mobileSummaryToggle" onclick="toggleMobileSummary()">
-            <span>📊 Monthly Summary</span>
-            <span id="mobileSummaryToggleIcon">▾</span>
-        </div>
-        <div class="s21-sidebar" id="s21Sidebar">
-
+        <div class="s21-sidebar">
             <div class="Month-sidebar-nav" style="display: flex; align-items: center; gap: 10px; justify-content: center;">
                 <!-- Single Status Button -->
                 <button id="monthStatusBtn" onclick="closeCurrentMonthReport()" class="status-btn active" style="cursor: pointer; padding: 2px 8px; border-radius: 12px; border: 1px solid #4caf50; background-color: #e8f5e9; color: #2e7d32; font-size: 12px; font-weight: bold;">
@@ -750,13 +569,11 @@
                 <strong id="monthDisplayText">--</strong>
             </div>
 
-          <div class="side-box">
-            <div class="side-title">All Active Publishers</div>
-            <div class="side-desc">Count all persons in congregation reporting in last 6 months.</div>
-            <div style="display: flex; justify-content: center;">
-                <input type="number" id="activePublishersInput" class="form-control text-center" style="background: #fff; height: 22px; width: 75px !important; max-width: 75px !important;" readonly>
+            <div class="side-box">
+                <div class="side-title">All Active Publishers</div>
+                <div class="side-desc">Count all persons in congregation reporting in last 6 months.</div>
+                <input type="number" id="activePublishersInput" class="form-control text-center" style="background: #fff; height: 22px;" readonly>
             </div>
-        </div>
 
             <div class="side-box" id="attendanceSideBox" style="cursor: pointer; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9;">
                 <!-- Header / Title -->
@@ -767,9 +584,7 @@
 
                 <!-- Collapsed View (Shows only the computed average) -->
                 <div id="collapsedAttendanceView" class="mt-1">
-                    <div style="display: flex; justify-content: center;">
-                        <input type="text" id="avgWeekendDisplay" class="form-control text-center" style="background: #fff; height: 22px; width: 75px !important; max-width: 75px !important;" readonly placeholder="0.0">
-                    </div>
+                    <input type="text" id="avgWeekendDisplay" class="form-control text-center" style="background: #fff; height: 22px;" readonly placeholder="0.0">
                 </div>
 
                 <!-- Expanded View (2 rows / 2 columns layout, hidden by default) -->
@@ -818,10 +633,6 @@
         </div>
     </div>
 </div>
-
-
-
-
 
 <script src="/static/js/indexeddb.js"></script>
 <script>
@@ -1414,7 +1225,6 @@ function renderListbox(filter = "", category = "ACTIVE PUBLISHERS") {
             }
 
             selectPublisher(p, div);
-            if (isPhoneMode()) setPhonePane(true); 
         };
 
         listbox.appendChild(div);
@@ -1524,73 +1334,122 @@ function populateForm(p) {
 }
 
 // 8. Direct Edit / Auto-Save to IndexedDB
-        function savePublisherChanges() {
-                    const pub = currentSelectedPublisher;
-                    if (!pub || !pub.IDPub) {
-                        console.warn("⚠️ Cannot save: No publisher selected.");
-                        return;
-                    }
+function savePublisherChanges() {
+    if (!currentSelectedPublisher || !currentSelectedPublisher.IDPub) {
+        console.warn("⚠️ Cannot save: No publisher selected.");
+        return;
+    }
+    
+    // NOTE: Removed the faulty name-splitting lines here! 
+    // The expandable name editor already handles LName, FNAME, and MName correctly.
 
-                    // Only the fields this tab is allowed to change
-                    const changes = {
-                        GROUP: document.getElementById('pubGroup')?.value || "",
-                        RP: document.getElementById('isRP')?.checked ? "1" : "0",
-                        Status: document.getElementById('pubStatus')?.value || ""
+    // Gather other form values into currentSelectedPublisher
+    currentSelectedPublisher.Birthdate = document.getElementById('pubDob').value;
+    currentSelectedPublisher.Baptism = document.getElementById('pubBaptism').value;
+    
+    const groupVal = document.getElementById('pubGroup')?.value || "";
+    currentSelectedPublisher.GROUP = groupVal; 
+    
+    const maleEl = document.getElementById('isMale');
+    const femaleEl = document.getElementById('isFemale');
+    currentSelectedPublisher.Male = maleEl && maleEl.checked ? '1' : '0';
+    currentSelectedPublisher.Female = femaleEl && femaleEl.checked ? '1' : '0';
+    
+    const statusEl = document.getElementById('pubStatus');
+    currentSelectedPublisher.Status = statusEl ? statusEl.value : ""; 
+    
+    // Save active checkbox properties mapped correctly to HTML IDs
+    currentSelectedPublisher.Elder = document.getElementById('isElder')?.checked ? "1" : "0";
+    currentSelectedPublisher.MS = document.getElementById('isMS')?.checked ? "1" : "0";
+    currentSelectedPublisher.RP = document.getElementById('isRP')?.checked ? "1" : "0";
+    currentSelectedPublisher.SF = document.getElementById('isSP')?.checked ? "1" : "0"; 
+    
+    const request = indexedDB.open("CongregationDB");
+    request.onsuccess = (event) => {
+        const db = event.target.result;
+        const transaction = db.transaction(["PUBLISHERS"], "readwrite");
+        const store = transaction.objectStore("PUBLISHERS");
+        
+        const cursorRequest = store.openCursor();
+        let foundAndUpdated = false;
+        
+        cursorRequest.onsuccess = (e) => {
+            const cursor = e.target.result;
+            if (cursor) {
+                if (String(cursor.value.IDPub) === String(currentSelectedPublisher.IDPub)) {
+                    currentSelectedPublisher.id = cursor.value.id;
+                    
+                    const updateRequest = cursor.update(currentSelectedPublisher);
+                    updateRequest.onsuccess = () => {
+                        console.log(`✅ Successfully updated publisher (IDPub: ${currentSelectedPublisher.IDPub}) at internal key: ${cursor.value.id}`);
+                        foundAndUpdated = true;
                     };
-
-                    const request = indexedDB.open("CongregationDB", 11);
-
-                    request.onerror = (e) => console.error("❌ Failed to open DB:", e.target.error);
-
-                    request.onsuccess = (event) => {
-                        const db = event.target.result;
-                        const tx = db.transaction(["PUBLISHERS"], "readwrite");
-                        const store = tx.objectStore("PUBLISHERS");
-                        let updated = null;
-
-                        const cursorReq = store.openCursor();
-                        cursorReq.onsuccess = (e) => {
-                            const cursor = e.target.result;
-                            if (!cursor) {
-                                if (!updated) console.warn("⚠️ Publisher not found in DB:", pub.IDPub);
-                                return;
-                            }
-                            if (String(cursor.value.IDPub) === String(pub.IDPub)) {
-                                // Start from the FRESH DB record, apply only our 3 fields
-                                updated = Object.assign({}, cursor.value, changes);
-                                cursor.update(updated);
-                                return;
-                            }
-                            cursor.continue();
-                        };
-
-                        tx.oncomplete = () => {
-                            db.close();
-                            if (!updated) return;
-
-                            // Sync the in-memory copy with what is now in the DB
-                            Object.assign(pub, updated);
-
-                            const searchVal = document.getElementById('publisherSearch')?.value || "";
-                            const catVal = document.getElementById('categorySelect')?.value || "ACTIVE PUBLISHERS";
-                            // renderListbox already restores the selected publisher itself
-                            renderListbox(searchVal, catVal);
-                            console.log("✅ Saved Group/RP/Status for", pub.IDPub);
-                        };
-
-                        tx.onerror = (e) => {
-                            console.error("❌ Transaction failed:", e.target.error);
-                            db.close();
-                        };
+                    updateRequest.onerror = (err) => {
+                        console.error("❌ Error updating record via cursor:", err.target.error);
                     };
+                    return;
                 }
+                cursor.continue();
+            } else {
+                if (!foundAndUpdated) {
+                    console.warn("⚠️ IDPub match not found via cursor, performing standard put...");
+                    store.put(currentSelectedPublisher);
+                }
+            }
+        };
+        
+        cursorRequest.onerror = (e) => {
+            console.error("❌ Cursor error:", e.target.error);
+        };
+        
+        transaction.oncomplete = () => {
+            console.log("🔒 Transaction completed successfully.");
+            
+            // 1. Capture active ID before listbox re-renders
+            const activeId = currentSelectedPublisher ? currentSelectedPublisher.IDPub : null;       
+            const searchVal = document.getElementById('publisherSearch')?.value || "";
+            const catVal = document.getElementById('categorySelect')?.value || "ALL";
+            renderListbox(searchVal, catVal);
+            
+            // 2. Attempt to restore selection with detailed logs
+            if (activeId) {
+                setTimeout(() => {
+                    const items = document.querySelectorAll('.listbox-item, [data-id]');
+                    console.log(`🔍 Searching through ${items.length} rendered list items to restore selection for IDPub: ${activeId}`);
+                    
+                    let found = false;
+                    items.forEach(item => {
+                        const itemId = item.dataset.id || item.getAttribute('data-id');
+                        if (String(itemId) === String(activeId)) {
+                            console.log("✅ Found matching item in listbox DOM. Simulating click to restore selection.");
+                            item.click();
+                            found = true;
+                        }
+                    });
+                    
+                    if (!found) {
+                        console.warn(`⚠️ Could not find listbox item with IDPub ${activeId} after re-rendering.`);
+                    }
+                }, 50);
+            }
+        };
+        
+        transaction.onerror = (e) => {
+            console.error("❌ Transaction failed:", e.target.error);
+        };
+    };
+    }
 
     // 9. Event Listeners Setup on DOM Load
     // 9. Event Listeners Setup on DOM Load
     document.addEventListener('DOMContentLoaded', () => {
             // Form auto-save bindings 
             // NOTE: Removed name inputs here so they don't trigger premature re-renders on blur!
-            const formInputIds = ['pubGroup', 'pubStatus', 'isRP'];
+            const formInputIds = [
+                'pubDob', 'pubBaptism', 'pubGroup', 'pubStatus', 
+                'isMale', 'isFemale', 
+                'isElder', 'isMS', 'isRP', 'isSP'
+            ];
 
             formInputIds.forEach(id => {
                 const el = document.getElementById(id);
@@ -1826,8 +1685,8 @@ function updateYearDisplay() {
 
         selectedYear = activeSY;
 
-    yearDisplay.innerHTML =
-            `<span class="yr-num">${selectedYear}</span><span class="yr-pill">Current Service Year</span>`;
+        yearDisplay.textContent =
+            `${selectedYear} - Current Service Year`;
 
         if (prevBtn)
             prevBtn.style.visibility = "visible";
@@ -1837,8 +1696,8 @@ function updateYearDisplay() {
 
     } else {
 
-    yearDisplay.innerHTML =
-            `<span class="yr-num">${selectedYear}</span><span class="yr-pill">Service Year</span>`;
+        yearDisplay.textContent =
+            `${selectedYear} - Service Year`;
 
         if (prevBtn)
             prevBtn.style.visibility = "hidden";
@@ -2070,7 +1929,6 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
 
         transaction.oncomplete = () => {
             calculateTotalHours();
-            renderPhoneMonthList();     // ← new
         };
     };
 }
@@ -2519,7 +2377,6 @@ function removeRecordsFromIndexedDB(garbageRecords) {
             // 🔒 Lock saves immediately so stray change events don't cross-contaminate
             isSwitchingPublisher = true;
 
-
             // ⚡ 1. Fast active class swap
             const prevActive = document.querySelector('.listbox-item.active');
             if (prevActive) prevActive.classList.remove('active');
@@ -2537,7 +2394,6 @@ function removeRecordsFromIndexedDB(garbageRecords) {
             // ⚡ 4. Defer S-21 records loading & metrics calculation slightly
             setTimeout(() => {
                 loadS21RecordsForPublisher();
-                refreshSelectedPublisherFromDB();   // ← new
                 isSwitchingPublisher = false;
             },0);
         }
@@ -2569,29 +2425,26 @@ function loadPublisherNameIntoUI(p) {
     console.log("🔄 UI loaded name for publisher:", p.IDPub);
 }
 
-function refreshSelectedPublisherFromDB() {
-    const pub = currentSelectedPublisher;
-    if (!pub || !pub.IDPub) return;
+// 2. Open edit fields when clicking the display box
+if (displayBox) {
+    displayBox.addEventListener('click', (e) => {
+        if (!currentSelectedPublisher) return;
+        
+        console.log("🖱️ Display box clicked. Expanding name editor.");
+        isEditingName = true;
 
-    const req = indexedDB.open("CongregationDB", 11);
-    req.onsuccess = (e) => {
-        const db = e.target.result;
-        const getAll = db.transaction(["PUBLISHERS"], "readonly")
-                         .objectStore("PUBLISHERS").getAll();
-        getAll.onsuccess = () => {
-            const fresh = (getAll.result || []).find(
-                r => String(r.IDPub) === String(pub.IDPub)
-            );
-            db.close();
-            // Ignore the result if the user already switched to another publisher
-            if (fresh && currentSelectedPublisher === pub) {
-                Object.assign(pub, fresh);
-                loadPublisherNameIntoUI(pub);
-                populateForm(pub);
-            }
-        };
-        getAll.onerror = () => db.close();
-    };
+        editLName.value = currentSelectedPublisher.LName || '';
+        editFName.value = currentSelectedPublisher.FNAME || '';
+        editMName.value = currentSelectedPublisher.MName || '';
+
+        displayBox.style.display = 'none';
+        editContainer.style.display = 'flex';
+        
+        editLName.focus();
+
+        // Attach global click listener to catch clicks outside the container
+        document.addEventListener('mousedown', handleOutsideClick);
+    });
 }
 
 // 3. Handle clicks outside the edit container
@@ -3130,12 +2983,8 @@ async function initAppSystem() {
             categorySelectEl ? categorySelectEl.value : "ACTIVE PUBLISHERS"
         );
     }
- 
   updateCopyMissingReportBtnVisibility(); 
   updateSidebarClosedState();
-  updateMobileListboxToggleText(); // PHONE MODE: set initial toggle label
-
-
 
 }
 
@@ -4473,7 +4322,7 @@ function getMissingReportWindow() {
 function buildMissingReportText(callback) {
     const monthNumbers = getMissingReportWindow();
 
-    const request = indexedDB.open("CongregationDB", 11);
+    const request = indexedDB.open("CongregationDB", 10);
 
     request.onsuccess = (event) => {
         const db = event.target.result;
@@ -4628,402 +4477,6 @@ function fallbackCopy(text) {
     document.body.removeChild(textarea);
 }
 
-
-// ==========================================
-// PHONE MODE: Collapsible listbox dropdown
-// ==========================================
-function toggleMobileListbox() {
-    const container = document.getElementById('listboxScrollContainer');
-    if (!container) return;
-    container.classList.toggle('mobile-collapsed');
-    updateMobileListboxToggleText();
-}
-
-function updateMobileListboxToggleText() {
-    const textEl = document.getElementById('mobileListboxToggleText');
-    const container = document.getElementById('listboxScrollContainer');
-    if (!textEl || !container) return;
-
-    const isCollapsed = container.classList.contains('mobile-collapsed');
-
-    if (currentSelectedPublisher) {
-        const name = `${currentSelectedPublisher.LName || ''}, ${currentSelectedPublisher.FNAME || ''}`
-            .trim().replace(/^,\s*/, '');
-        textEl.textContent = `${name} ${isCollapsed ? '▾' : '▴'}`;
-    } else {
-        textEl.textContent = `Select Publisher ${isCollapsed ? '▾' : '▴'}`;
-    }
-}
-
-// ==========================================
-// PHONE MODE: Collapsible monthly summary
-// ==========================================
-function toggleMobileSummary() {
-    const sidebar = document.getElementById('s21Sidebar');
-    const icon = document.getElementById('mobileSummaryToggleIcon');
-    if (!sidebar) return;
-
-    sidebar.classList.toggle('mobile-expanded');
-    if (icon) icon.textContent = sidebar.classList.contains('mobile-expanded') ? '▴' : '▾';
-}
-
-// ==========================================
-// PHONE MODE: Notify parent (index.html) to hide/show
-// the bottom tab bar based on scroll direction.
-// Harmless on desktop — index.html decides whether to act on it.
-// ==========================================
-(function () {
-    let lastScrollY = window.scrollY || 0;
-    let ticking = false;
-
-    function handleScroll() {
-        const currentScrollY = window.scrollY || 0;
-        const delta = currentScrollY - lastScrollY;
-
-        if (Math.abs(delta) > 5) {
-            if (delta > 0 && currentScrollY > 10) {
-                window.parent.postMessage({ type: 'hideTabBar' }, '*');
-            } else if (delta < 0) {
-                window.parent.postMessage({ type: 'showTabBar' }, '*');
-            }
-            lastScrollY = currentScrollY;
-        }
-
-        ticking = false;
-    }
-
-    window.addEventListener('scroll', () => {
-        if (!ticking) {
-            window.requestAnimationFrame(handleScroll);
-            ticking = true;
-        }
-    }, { passive: true });
-})();
-
-// ==========================================
-// PHONE MODE: month list + edit popup
-// ==========================================
-let editingMonthIndex = -1;
-let editingRemarksTouched = false;
-
-// ==========================================
-// PHONE GRID: tap to toggle, keypad for numbers
-// ==========================================
-let phoneState = [];
-let phoneCells = [];
-let phonePubId = null;
-let phoneSaveQueue = Promise.resolve();
-let phoneNeedsListRefresh = false;
-let phoneTotalEl = null;
-
-
-const phoneIsTrue = v => ["1", "TRUE", "YES", "Y", "?", "-1"].includes(String(v ?? "").trim().toUpperCase());
-
-
-function renderPhoneMonthList(recMap) {
-    const box = document.getElementById('s21PhoneList');
-    if (!box) return;
-
-    const year = (typeof selectedYear !== 'undefined' && selectedYear) ? selectedYear : activeServiceYear;
-    const activeNum = Number(window.currentActiveMonthIndex);
-    const pubIsRP = !!currentSelectedPublisher && phoneIsTrue(currentSelectedPublisher.RP);
-    const pos = n => { const x = Number(n); return x > 0 ? String(x) : ''; };
-
-    phonePubId = currentSelectedPublisher ? String(currentSelectedPublisher.IDPub) : null;
-
-        // read from the desktop table's inputs (already filled from IndexedDB), so both views always match
-    const gi = (m, id) => document.getElementById(`${m.id}-${id}`);
-    phoneState = s21Months.map(m => {
-        const hrsEl = gi(m, 'hours');
-        return {
-            locked: !phonePubId || !hrsEl || hrsEl.disabled,      // future months are disabled by the loader
-            auxLocked: pubIsRP,
-            ministry: !!gi(m, 'ministry')?.checked,
-            studies: pos(gi(m, 'studies')?.value),
-            aux: !!gi(m, 'aux')?.checked,
-            hours: pos(gi(m, 'hours')?.value),
-            note: (gi(m, 'remark')?.value || '').trim(),
-            remarks: (gi(m, 'select')?.value || '').trim()
-        };
-    });
-
-    box.innerHTML = '';
-    phoneCells = [];
-
-    const sy = document.createElement('div');
-    sy.className = 'phone-sy';
-    sy.textContent = `SERVICE YEAR ${year}`;
-    box.appendChild(sy);
-
-    const table = document.createElement('table');
-    table.className = 'p21-table';
-
-    const head = table.createTHead().insertRow();
-    [String(year), 'Shared', 'BS', 'AUX', 'HRS', 'Comments'].forEach(t => {
-        const th = document.createElement('th');
-        th.textContent = t;
-        head.appendChild(th);
-    });
-
-    const body = table.createTBody();
-    s21Months.forEach((m, i) => {
-        const st = phoneState[i];
-        const tr = body.insertRow();
-        if (st.locked) tr.className = 'locked';
-
-        const cMonth = tr.insertCell(); cMonth.className = 'p21-m'; cMonth.textContent = m.name.slice(0, 3);
-        const cMin = tr.insertCell();
-        const cBs = tr.insertCell();
-        const cAux = tr.insertCell();
-        const cHrs = tr.insertCell();
-        const cNote = tr.insertCell(); cNote.className = 'p21-note';
-
-        // number box that opens the phone keyboard
-        const mkNum = (field, decimal) => {
-            const el = document.createElement('input');
-            el.type = 'text';                                  // text + inputMode: no spinner arrows
-            el.inputMode = decimal ? 'decimal' : 'numeric';
-            el.maxLength = decimal ? 5 : 3;
-            el.className = 'p21-in';
-            el.value = st[field];
-            el.disabled = st.locked;
-            el.onfocus = () => el.select();
-            el.onkeydown = e => { if (e.key === 'Enter') el.blur(); };
-            el.oninput = () => {
-                let v = el.value.replace(decimal ? /[^0-9.]/g : /[^0-9]/g, '');
-                if (decimal) { const p = v.split('.'); if (p.length > 2) v = p[0] + '.' + p.slice(1).join(''); }
-                if (v !== el.value) el.value = v;
-                st[field] = v;
-                paintPhoneTotal();                             // total updates while typing
-            };
-            el.onchange = () => { st[field] = el.value.replace(/\.$/, ''); queuePhoneSave(i); };
-            return el;
-        };
-        const inBs = mkNum('studies', false);
-        const inHrs = mkNum('hours', true);
-        cBs.appendChild(inBs);
-        cHrs.appendChild(inHrs);
-
-        const rem = document.createElement('div');
-        rem.className = 'p21-rem';
-        rem.textContent = st.remarks;               // read-only label (RP, New UBP, ...)
-        const inp = document.createElement('input');
-        inp.type = 'text';
-        inp.value = st.note;
-        inp.disabled = st.locked;
-        cNote.appendChild(rem);
-        cNote.appendChild(inp);
-
-                // Shared / AUX: plain cells, the whole cell toggles the ✔ on and off
-        const wire = (cell, field, disabled) => {
-            if (disabled) return;
-            cell.classList.add('p21-tap');
-            cell.onclick = () => { st[field] = !st[field]; queuePhoneSave(i); };
-        };
-        wire(cMin, 'ministry', st.locked);
-        wire(cAux, 'aux', st.locked || st.auxLocked);   // RP publishers never get AUX
-        if (st.auxLocked) cAux.classList.add('p21-off');
-
-        phoneCells[i] = { min: cMin, bs: inBs, aux: cAux, hrs: inHrs, note: inp };
-        if (!st.locked) inp.onchange = () => { st.note = inp.value.trim(); queuePhoneSave(i); };
-        paintPhoneRow(i);
-    });
-
-    box.appendChild(table);
-    phoneTotalEl = document.createElement('div');
-    phoneTotalEl.className = 'phone-total';
-    box.appendChild(phoneTotalEl);
-    paintPhoneTotal();
-}
-
-function paintPhoneRow(i) {
-    const st = phoneState[i], c = phoneCells[i];
-    if (!st || !c) return;
-    c.min.textContent = st.ministry ? '✔' : '';
-    c.aux.textContent = st.aux ? '✔' : '';
-    if (document.activeElement !== c.bs)  c.bs.value = st.studies;    // never overwrite what's being typed
-    if (document.activeElement !== c.hrs) c.hrs.value = st.hours;
-}
-
-function paintPhoneTotal() {
-    if (!phoneTotalEl) return;
-    const total = phoneState.reduce((s, st) => s + (parseFloat(st.hours) || 0), 0);
-    phoneTotalEl.textContent = `Total hours: ${Math.round(total * 100) / 100}`;
-}
-
-function togglePhoneField(i, field) {
-    const st = phoneState[i];
-    if (!st || st.locked) return;
-    if (field === 'aux' && st.auxLocked) return;
-    commitKeypad();
-    st[field] = !st[field];
-    queuePhoneSave(i);
-}
-
-// keep the hidden desktop table in step, so it is correct if the window is resized
-function syncHiddenTableRow(i) {
-    const m = s21Months[i], st = phoneState[i];
-    const g = id => document.getElementById(`${m.id}-${id}`);
-    if (g('ministry')) g('ministry').checked = st.ministry;
-    if (g('studies'))  g('studies').value = st.studies;
-    if (g('aux'))      g('aux').checked = st.aux;
-    if (g('hours'))    g('hours').value = st.hours;
-    if (g('remark'))   g('remark').value = st.note;
-    calculateTotalHours();
-}
-
-function queuePhoneSave(i) {
-    const st = phoneState[i];
-    if (!st || !phonePubId) return;
-
-    // same rule as the desktop table: hours or studies imply ministry
-    if (Number(st.hours) > 0 || Number(st.studies) > 0) st.ministry = true;
-
-    paintPhoneRow(i);
-    paintPhoneTotal();
-    syncHiddenTableRow(i);
-
-    const snapshot = {
-        publisherId: phonePubId,
-        ministry: st.ministry,
-        studies: st.studies,
-        aux: st.aux,
-        hours: st.hours,
-        note: st.note,
-        remarks: st.remarks,          // existing value is kept as is
-        userChangedRemarks: false
-    };
-
-    phoneNeedsListRefresh = true;
-    // saves run one after another so quick taps can't overwrite each other
-    phoneSaveQueue = phoneSaveQueue
-        .then(() => saveS21MonthRecord(i, snapshot))
-        .then(() => { if (typeof calculateMonthlySummaryMetrics === 'function') calculateMonthlySummaryMetrics(); })
-        .catch(err => console.error('❌ Phone save failed:', err));
-}
-
-
-
-function openMonthEditor(i) {
-    const m = s21Months[i];
-    const g = id => document.getElementById(`${m.id}-${id}`);
-    if (!currentSelectedPublisher || !g('hours') || g('hours').disabled) return;
-
-    editingMonthIndex = i;
-    editingRemarksTouched = false;
-
-    document.getElementById('mTitle').textContent = m.name.toUpperCase();
-    document.getElementById('mMin').checked = g('ministry').checked;
-    document.getElementById('mBs').value = g('studies').value;
-    document.getElementById('mAux').checked = g('aux').checked;
-    document.getElementById('mAux').disabled = g('aux').disabled;   // RP publishers can't be AUX
-    document.getElementById('mHrs').value = g('hours').value;
-    document.getElementById('mNote').value = g('remark').value;
-
-    const rem = document.getElementById('mRem');
-    rem.innerHTML = g('select').innerHTML;      // same dropdown options as the table
-    rem.value = g('select').value;
-    rem.onchange = () => { editingRemarksTouched = true; };
-
-    document.getElementById('s21Modal').classList.add('show');
-}
-
-function closeMonthEditor() {
-    document.getElementById('s21Modal').classList.remove('show');
-    editingMonthIndex = -1;
-}
-
-async function saveMonthEditor() {
-    const i = editingMonthIndex;
-    if (i < 0) return;
-    const m = s21Months[i];
-    const minEl = document.getElementById(`${m.id}-ministry`);
-
-    const studies = document.getElementById('mBs').value;
-    const hours = document.getElementById('mHrs').value;
-
-    const snapshot = {
-        publisherId: minEl?.dataset.publisherId || currentSelectedPublisher?.IDPub,
-        // same rule as the desktop table: hours or studies imply ministry
-        ministry: document.getElementById('mMin').checked || Number(hours) > 0 || Number(studies) > 0,
-        studies,
-        aux: document.getElementById('mAux').checked,
-        hours,
-        note: document.getElementById('mNote').value.trim(),
-        remarks: document.getElementById('mRem').value,
-        userChangedRemarks: editingRemarksTouched
-    };
-
-    closeMonthEditor();
-    await saveS21MonthRecord(i, snapshot);
-
-    // Same follow-up as your desktop auto-save
-    loadS21RecordsForPublisher();     // reloads inputs, then re-renders the phone list
-    renderListbox(
-        document.getElementById('publisherSearch')?.value || "",
-        document.getElementById('categorySelect')?.value || "ACTIVE PUBLISHERS"
-    );
-    if (typeof calculateMonthlySummaryMetrics === 'function') calculateMonthlySummaryMetrics();
-}
-
-
-// PHONE ONLY: left pane drawer
-function isPhoneMode() {
-    return window.matchMedia('(max-width: 600px)').matches;
-}
-
-function setPhonePane(collapsed) {
-    const pane = document.querySelector('.s21-listbox-pane');
-    const handle = document.getElementById('phonePaneHandle');
-    if (!pane) return;
-    pane.classList.toggle('phone-collapsed', collapsed);
-    if (handle) handle.textContent = collapsed ? '>' : '<';
-}
-
-function togglePhonePane() {
-    const pane = document.querySelector('.s21-listbox-pane');
-    if (!pane) return;
-    const willOpen = pane.classList.contains('phone-collapsed');
-
-    if (willOpen && phoneNeedsListRefresh) {
-        phoneNeedsListRefresh = false;
-        phoneSaveQueue.then(() => renderListbox(
-            document.getElementById('publisherSearch')?.value || "",
-            document.getElementById('categorySelect')?.value || "ACTIVE PUBLISHERS"
-        ));
-    }
-    setPhonePane(!willOpen);
-}
-
-// PHONE: the pane lives inside the card so it matches the card's height; desktop keeps it as a left column
-function placePhonePane() {
-    const wrapper = document.querySelector('.s21-wrapper');
-    const card = document.querySelector('.s21-card');
-    const pane = document.querySelector('.s21-listbox-pane');
-    const overlay = document.getElementById('paneOverlay');
-    if (!wrapper || !card || !pane) return;
-        // the month grid must live inside the card, so the card (and the pane) reach the Total row
-    const grid = document.getElementById('s21PhoneList');
-    if (grid && grid.parentElement !== card) card.appendChild(grid);
-
-    if (isPhoneMode()) {
-        if (pane.parentElement !== card) {
-            card.appendChild(pane);
-            if (overlay) card.appendChild(overlay);
-        }
-    } else if (pane.parentElement === card) {
-        wrapper.insertBefore(pane, card);
-        if (overlay) wrapper.insertBefore(overlay, card);
-    }
-}
-// keep a reference to the media query: an unreferenced one can silently stop firing
-const s21PhoneMQ = window.matchMedia('(max-width: 600px)');
-s21PhoneMQ.addEventListener('change', placePhonePane);
-window.addEventListener('resize', placePhonePane);
-window.addEventListener('load', placePhonePane);
-if (window.ResizeObserver) new ResizeObserver(placePhonePane).observe(document.documentElement);
-placePhonePane();
-
 function showCopyPopup() {
     if (typeof showCustomAlert === "function") {
         showCustomAlert("✅ Copied!\n\nReady to paste in Messenger.");
@@ -5031,7 +4484,5 @@ function showCopyPopup() {
         alert("✅ Copied! Ready to paste in Messenger.");
     }
 }
-
-
 
 </script>
