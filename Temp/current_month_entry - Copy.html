@@ -1,0 +1,5037 @@
+<style>
+    :root {
+        --row-height: 22px; /* Easily adjust overall table row height here */
+    }
+
+    .s21-wrapper {
+        display: flex;
+        gap: 10px;
+        max-width: 1650px;
+        margin: 15px auto;
+        font-family: Arial, sans-serif;
+        align-items: flex-start;
+    }
+
+    @media screen and (max-width: 1024px) {
+        .s21-listbox-pane {
+            flex: 1 1 auto;
+            width: 100%; /* Spans full width when stacked on small screens */
+        }
+    }
+
+    /* LEFT LANE: Narrowed Publisher Listbox / Navigation */
+    .s21-listbox-pane {
+        flex: 0 0 220px; /* Prevents auto-stretching on zoom */
+        width: 220px;    /* Fixed base width */
+        box-sizing: border-box;
+        background: #fff;
+        border: 2px solid #222;
+        padding: 8px;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* Container enabling horizontal scroll for listbox contents on small screens */
+    .listbox-scroll-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 140px; /* Ensures controls don't shrink past a readable width */
+    }
+
+    .listbox-header-title {
+        font-weight: bold;
+        font-size: 11px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 4px;
+        white-space: nowrap;
+    }
+
+    .listbox-container {
+        border: 1px solid #aaa;
+        background: #fafafa;
+        height: 330px;
+        overflow-y: auto;
+        overflow-x: auto; /* Handles long publisher names horizontally */
+        border-radius: 2px;
+        padding: 2px;
+    }
+
+    .listbox-item {
+        padding: 4px 6px;
+        font-size: 11px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        background-color: transparent !important;
+        user-select: none;
+        white-space: nowrap; /* Prevents names from wrapping awkwardly */
+    }
+
+    /* Customize what happens on hover (e.g., a subtle grey instead of blue, or transparent to remove it entirely) */
+    .listbox-item:hover {
+        background-color: #f1f1f1 !important; /* Change to transparent if you want zero color change */
+        color: inherit !important;
+    }
+
+    /* Style for the active/selected item */
+    .listbox-item.active {
+        background-color: #007bff !important; /* Change this to your preferred selection color or match your theme */
+        color: white !important;
+    }
+
+    .listbox-count {
+        font-size: 12px;
+        font-style: bold;    
+        color: #555;
+        text-align: right;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    /* MID: Widened Publisher Record Card (Emphasis on Remarks) */
+    .scard21- {
+        flex: 6 1 0;            /* grow, shrink, start from 0 so it fits whatever space is left */
+        min-width: 0;           /* allows shrinking below its content width */
+        box-sizing: border-box; /* border and padding count inside the width */
+        background: #fff;
+        padding: 12px 16px;
+        border-radius: 4px;
+         border: 2px solid #0b0b0c;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .s21-header {
+        padding-bottom: 8px;
+        margin-bottom: 70px;
+    }
+
+    .row-group {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 6px;
+        align-items: center;
+        font-size: 12px;
+    }
+
+    .grid-4 {
+        display: grid;
+        grid-template-columns: 1.4fr 1.4fr 0.8fr 1fr;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .status-spiritual-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px dashed #ddd;
+        padding-top: 6px;
+        margin-top: 4px;
+        margin-bottom: 20px;
+        padding-right: 10%; /* Adjust this percentage to move the right item away from the right border */
+    }
+
+
+    .flex-grow { flex-grow: 1; }
+
+    .form-control {
+        padding: 2px 4px;
+        border: 1px solid #aaa;
+        border-radius: 2px;
+        font-size: 12px;
+        width: 100%;
+        box-sizing: border-box;
+        height: 24px;
+    }
+
+    .status-badge {
+        background: #ffebee;
+        color: #c62828;
+        padding: 2px 6px;
+        font-weight: bold;
+        border-radius: 3px;
+        font-size: 11px;
+    }
+
+    .gender-box, .spiritual-box, .privileges-inline {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    /* Container enabling horizontal scroll on mobile/small screens */
+    .table-scroll-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .s21-card {
+        flex: 6;
+        background: #fff;
+        padding: 12px 16px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        border: 2px solid #0b0b0c;
+        border-radius: 8px;
+         }
+
+    .s21-table {
+    width: 100% !important;
+    table-layout: fixed !important; /* Forces strict adherence to width percentages */
+    border-collapse: collapse;
+    }
+
+
+
+    .s21-table th, .s21-table td {
+        border: 1px solid #222;
+        padding: 0px 3px;
+        font-size: 11px;
+        vertical-align: middle;
+        height: var(--row-height);
+    }
+
+   /* Prevents long header text from breaking the small column widths */
+    .s21-table th {
+        background-color: #aeabab;
+        text-align: center;
+        font-weight: bold;
+        line-height: 1.1;
+        padding: 4px;
+    }
+
+
+/* Column Width Allocations (Must sum to 100%) */
+.s21-table th:nth-child(1), .s21-table td:nth-child(1) { width: 35%; } /* Month/Year */
+.s21-table th:nth-child(2), .s21-table td:nth-child(2) { width: 25%;  } /* Shared */
+.s21-table th:nth-child(3), .s21-table td:nth-child(3) { width: 25%;  } /* Bible Studies */
+.s21-table th:nth-child(4), .s21-table td:nth-child(4) { width: 25%; } /* Aux Pioneer */
+.s21-table th:nth-child(5), .s21-table td:nth-child(5) { width: 25%;  } /* Hours */
+.s21-table th:nth-child(6), .s21-table td:nth-child(6) { width: 100%; } /* Remarks (Widened) */
+
+
+    .sub-text {
+        font-size: 11px;
+        font-weight: normal;
+        color: #000000;
+    }
+
+    .s21-table input[type="text"],
+    .s21-table input[type="number"] {
+        border: none !important;
+        background: transparent !important;
+        height: 100% !important;
+        width: 100% !important;
+        padding: 0 2px !important;
+        margin: 0 !important;
+        font-size: 11px !important;
+        box-shadow: none !important;
+        text-align: center;
+    }
+
+    .s21-table select {
+        border: 1px solid #ccc;
+        background: #fff;
+        height: calc(var(--row-height) - 4px);
+        font-size: 10px;
+        padding: 0;
+    }
+    /* Active month row highlight matching your S-21 styling */
+    .s21-table tr.s21-row-active,
+    .s21-table tr.s21-row-active td {
+        background-color: #fff3cd !important; /* Soft yellow accent */
+        font-weight: bold;
+    }
+
+    .s21-table tr.s21-row-active td {
+        border-top: 2px solid #e0a800 !important;
+        border-bottom: 2px solid #e0a800 !important;
+    }
+
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: bold; }
+    
+    .table-check {
+        width: 13px;
+        height: 13px;
+        cursor: pointer;
+        display: block;
+        margin: 0 auto;
+    }
+
+    .remarks-container {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        height: 100%;
+        padding: 0 4px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .remark-text { 
+        flex: 1; 
+        width: auto !important;
+        min-width: 0;
+    }
+
+    .remark-select { 
+        flex: 0 0 75px !important;
+        width: 75px !important;
+        min-width: 75px;
+        
+        /* 1. Remove native browser arrow and controls */
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+        
+        /* 2. Transparent background */
+        background: transparent !important;
+        background-color: transparent !important;
+        
+        /* 3. Text Alignment & Padding */
+        text-align: right !important;
+        text-align-last: right !important;
+        padding-right: 12px !important; /* Spacing from right edge */
+        padding-left: 2px !important;
+        
+        /* 4. Ensure padding stays within 75px width */
+        box-sizing: border-box !important;
+        
+        color: inherit;
+        border: 1px solid #ccc;
+        outline: none;
+    }
+
+    /* Ensure dropdown option items also stay padded when expanded */
+    .remark-select option {
+        text-align: right;
+        direction: rtl; /* Forces right alignment padding on open options list */
+        padding-right: 10px;
+        background-color: #ffffff;
+        color: #333333;
+    }
+
+    .total-row { background-color: #f9f9f9; }
+
+    /* RIGHT SIDE: Extra Narrowed Service Year Summary Sidebar */
+    .s21-sidebar {
+        flex: 0.9;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 200px;
+    }
+
+    .Month-sidebar-nav {
+        text-align: center;
+        font-size: 11px;
+        padding: 4px;
+        background: #f8f9fa;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+
+    .nav-arrow-month { cursor: pointer; color: #007bff; font-weight: bold; padding: 0 4px; }
+
+    .side-box {
+        border: 1px solid #acacac;
+        background: #cac8c8;
+        padding: 4px 6px;
+        border-radius: 3px;
+    }
+
+    .side-title {
+        font-weight: bold;
+        font-size: 10px;
+        color: #222;
+        margin-bottom: 2px;
+    }
+
+    .side-desc {
+        font-size: 8px;
+        color: #555;
+        margin-bottom: 2px;
+        line-height: 1.1;
+    }
+
+    .side-label {
+        font-size: 9px;
+        color: #444;
+        display: block;
+        margin-bottom: 1px;
+    }
+
+    .grid-sub-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+    }
+
+    .grid-sub-inputs-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 3px;
+    }
+
+    .mt-1 { margin-top: 2px; }
+
+
+.status-control{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+.status-control label{
+    margin:0;
+}
+.pub-status-label{
+    font-weight:700;
+    cursor:pointer;
+    user-select:none;
+}
+.pub-status-label:hover{
+    text-decoration:underline;
+}
+.pub-status-label.active{
+    color:#d32f2f;
+}
+.pub-status-label.inactive{
+    color:#e67e22;
+}
+.pub-status-label.moved-out{
+    color:#7f8c8d;
+}
+.pub-status-label.removed{
+    color:#8e44ad;
+}
+.pub-status-label.disqualified{
+    color:#c0392b;
+}
+.pub-status-dropdown{
+    display:none;
+    height:26px;
+    font-size:12px;
+    border:1px solid #aaa !important;
+    background:#fff !important;
+    cursor:pointer;
+}
+.pub-status-dropdown.show{
+    display:block;
+}
+
+
+/* ===== BASE (all widths) ===== */
+.year-nav-header { display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 8px; color: #5b3d88; font-size: 14px; max-width: 280px; margin: 0 auto 8px auto; }
+.nav-arrow-year { cursor: pointer; font-weight: bold; user-select: none; font-size: 16px; }
+.yr-num::after { content: " - "; white-space: pre; }   /* desktop keeps "2027 - Current Service Year" */
+.drawer-btn, #phoneRail, #paneOverlay { display: none; }
+.mobile-listbox-toggle, .mobile-summary-toggle,
+#phonePaneHandle, #s21PhoneList, .phone-keypad { display: none; }
+
+/* ===== PHONE ===== */
+@media screen and (max-width: 600px) {
+    body { background: #f1f5f9; margin: 0; }
+    .s21-app-container { padding: 10px; box-sizing: border-box; }
+
+    /* year bar: edge to edge, scrolls with the page */
+    .year-nav-header {
+        position: static; max-width: none; margin: -10px -10px 12px; padding: 12px;
+        background: #6b5b95; color: #fff; box-shadow: 0 2px 8px rgba(76,61,112,.35);
+    }
+    .year-nav-header strong { display: flex; align-items: center; gap: 8px; }
+     .yr-num::after { content: none; }
+    .yr-pill { margin: 0; font-size: 12px; font-weight: 500; background: rgba(255,255,255,.2);
+               padding: 2px 10px; border-radius: 999px; }
+    .nav-arrow-year { padding: 6px 12px; font-size: 18px; }
+
+    /* one column */
+    .s21-wrapper { display: flex; flex-direction: column; align-items: stretch; gap: 12px;
+                   padding: 0 !important; margin: 0 !important; max-width: none; }
+    .s21-card, .s21-sidebar { width: 100%; max-width: none !important; min-width: 0;
+        flex: 0 0 auto !important; align-self: stretch !important; margin: 0 !important; box-sizing: border-box; }
+    .mobile-listbox-toggle, .mobile-summary-toggle { display: none !important; }
+
+    /* publisher card = rail | content, and the pane slides over it */
+    .s21-card {
+        position: relative; overflow: hidden;
+        display: grid; grid-template-columns: 24px 1fr; column-gap: 8px; align-items: start;
+        background: #fff; border: 1px solid #e2e8f0 !important; border-radius: 16px;
+        padding: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .s21-card > :not(#phoneRail):not(.s21-listbox-pane):not(#paneOverlay) { grid-column: 2; min-width: 0; }
+
+    #phoneRail {
+        display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 10px;
+        grid-column: 1; grid-row: 1 / span 3; align-self: stretch;
+        width: 24px; border: none; border-radius: 8px; background: #f3f1f7; color: #6b5b95; cursor: pointer;
+    }
+    #phoneRail .rail-arrow { font-size: 14px; font-weight: bold; }
+    #phoneRail .rail-text { writing-mode: vertical-rl; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+
+    /* pane: same height as the card, down to the Total row */
+    .s21-listbox-pane {
+        position: absolute !important; top: 0 !important; bottom: 0 !important; left: 0 !important; right: auto !important;
+        width: 88% !important; max-width: none !important; height: auto !important; margin: 0 !important;
+        z-index: 30; display: flex !important; flex-direction: column;
+        background: #fff; padding: 0 !important; border: none !important;
+        border-right: 1px solid #e2e8f0 !important; border-radius: 0 !important;
+        box-shadow: 4px 0 24px rgba(15,23,42,.25);
+        transform: translateX(0); transition: transform .3s ease;
+    }
+    .s21-listbox-pane.phone-collapsed { transform: translateX(-100%); }
+
+    #paneOverlay { display: block; position: absolute; inset: 0; z-index: 20;
+        background: rgba(15,23,42,.3); opacity: 0; pointer-events: none; transition: opacity .3s; }
+    .s21-listbox-pane:not(.phone-collapsed) + #paneOverlay { opacity: 1; pointer-events: auto; }
+
+    /* the old edge tab becomes the pane's close button */
+    #phonePaneHandle {
+        display: flex; position: absolute; left: auto; right: 8px; top: 8px;
+        width: 30px; height: 30px; padding: 0; align-items: center; justify-content: center;
+        background: #f3f1f7; color: #6b5b95; border: none; border-radius: 50%;
+        font-size: 16px; font-weight: bold; box-shadow: none;
+    }
+    .listbox-scroll-container { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px; box-sizing: border-box; gap: 10px; }
+    .listbox-header-title { font-size: 13px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+        color: #1e293b; border-bottom: none; padding: 0 36px 0 0; }
+    .s21-listbox-pane .form-control { height: 36px !important; font-size: 13px !important; padding: 0 10px;
+        background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; }
+    .listbox-container { flex: 1 1 auto; height: auto; min-height: 120px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; }
+    .listbox-item { padding: 11px 12px; font-size: 13px; font-weight: 500; border-bottom: 1px solid #f1f5f9; }
+    .listbox-item.active { background-color: #6b5b95 !important; color: #fff !important; font-weight: 600; }
+
+    /* name card */
+    .s21-header { background: #f8fafc; border: 1px solid #e2e8f0 !important; border-radius: 14px;
+                  padding: 10px 12px; margin-bottom: 12px; }
+    .name-row { flex-direction: column; align-items: stretch; gap: 4px; }
+    .name-row label { font-size: 11px; color: #64748b; }
+    #pubNameDisplay { width: 100%; max-width: none !important; height: 36px; font-size: 14px; font-weight: 600;
+        padding: 0 10px; border: 1px solid #cbd5e1 !important; border-radius: 12px; background: #fff !important; }
+    .status-control { display: none !important; }
+
+    /* month grid */
+    .table-scroll-container { display: none !important; }
+    #s21PhoneList { display: block; width: 100%; max-width: none; padding: 0; background: #fff;
+        border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+    .phone-sy { display: none; }
+    .p21-table { width: 100%; border-collapse: collapse; table-layout: fixed; background: #fff; }
+    .p21-table th { background: #6b5b95; color: #fff; font-weight: 600; font-size: 11px;
+        border: 1px solid #7d6ea6; padding: 8px 2px; text-align: center; }
+    .p21-table th:nth-child(1) { width: 16%; text-align: left; padding-left: 8px; font-size: 13px; }
+    .p21-table th:nth-child(2) { width: 14%; }
+    .p21-table th:nth-child(3) { width: 13%; }
+    .p21-table th:nth-child(4) { width: 12%; }
+    .p21-table th:nth-child(5) { width: 14%; }
+    .p21-table th:nth-child(6) { width: 31%; text-align: left; padding-left: 6px; }
+    
+    .p21-table td { border: 1px solid #e2e8f0; height: 44px; padding: 0; text-align: center; font-size: 16px; overflow: hidden; }
+    .p21-table td.p21-m { text-align: left; padding-left: 8px; font-size: 12px; font-weight: 700; }
+    .p21-table tbody tr:nth-child(even) td { background: #f8fafc; }
+    .p21-table td.p21-tap { color: #6b5b95; font-weight: 700; cursor: pointer; }
+    .p21-table td.p21-tap:active { background: #f3f1f7 !important; }
+    .p21-table td.p21-off { background: #f3f3f3; }
+    .p21-table tr.locked td { color: #cbd5e1; background: #f8fafc; }
+    .p21-table td.p21-note { text-align: left; }
+
+    .p21-rem { font-size: 9px; color: #777; padding: 0 3px; line-height: 1; }
+    .p21-note input { width: 100%; height: 26px; border: none; background: transparent; font-size: 14px;
+        padding: 0 3px; box-sizing: border-box; outline: none; }
+    .phone-total { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 10px 12px;
+        text-align: right; font-weight: bold; font-size: 13px; color: #334155; }
+
+    /* summary cards, always visible */
+    .s21-sidebar { display: flex !important; flex-direction: column; gap: 12px; }
+
+
+    .Month-sidebar-nav { display: flex !important; align-items: center; justify-content: center; gap: 12px !important;
+        background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    #monthDisplayText { font-size: 15px; color: #1e293b; }
+    #monthStatusBtn { padding: 5px 14px !important; font-size: 13px !important; }
+    .side-box { background: #fff !important; border: 1px solid #e2e8f0 !important; border-radius: 16px !important;
+        padding: 14px !important; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .side-title { font-size: 12px !important; text-transform: uppercase; letter-spacing: .05em; color: #1e293b; margin-bottom: 4px; }
+    .side-desc { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
+    .side-label { font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 3px; }
+    .s21-sidebar .form-control { height: 36px !important; background: #f8fafc !important; border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important; font-size: 15px; font-weight: 700; color: #1e293b; }
+    .s21-sidebar .form-control::placeholder { font-weight: 400; font-size: 13px; color: #94a3b8; }
+    .grid-sub-inputs, .grid-sub-inputs-3 { gap: 8px; }
+
+        .p21-table td input.p21-in {
+        width: 100%; height: 40px; padding: 0; box-sizing: border-box;
+        border: 1px solid transparent !important;
+        background: transparent !important;
+        box-shadow: none !important; outline: none !important;
+        -webkit-appearance: none; appearance: none;
+        text-align: center; font-size: 16px; font-weight: 700; color: #6b5b95;
+    }
+
+
+
+        .p21-table td input.p21-in {
+        width: 100%; height: 42px; padding: 0; box-sizing: border-box;
+        border: 1px solid transparent !important; background: transparent !important;
+        box-shadow: none !important; outline: none !important;
+        -webkit-appearance: none; appearance: none;
+        text-align: center; font-size: 16px; font-weight: 700; color: #6b5b95;
+    }
+    .p21-table td input.p21-in:focus { background: #fff3cd !important; }
+    .p21-table td input.p21-in:disabled { color: #cbd5e1; }
+
+
+ .s21-sidebar { margin-top: 50px !important; } 
+
+}
+
+
+
+
+</style>
+
+<div class="s21-app-container">
+    <div class="year-nav-header">
+        <span id="prevYearBtn" class="nav-arrow-year">&lt;</span>
+        <strong id="yearDisplayText">Loading...</strong>
+        <span id="nextYearBtn" class="nav-arrow-year">&gt;</span>
+    </div>
+
+    <div class="s21-wrapper">
+    <!-- Main Workspace Wrapper -->
+    <div class="s21-wrapper">
+        <div class="s21-listbox-pane"> 
+            <div id="paneOverlay" onclick="setPhonePane(true)"></div>   
+        <!-- LEFT LANE: Publisher Listbox, Dropdown Category & Search -->
+        <div class="mobile-listbox-toggle" id="mobileListboxToggle" onclick="toggleMobileListbox()">
+                <span id="mobileListboxToggleText">Select Publisher ▾</span>
+            </div>
+            <div class="listbox-scroll-container" id="listboxScrollContainer">
+                <div class="listbox-header-title">Publishers List</div>
+                <div>
+                    <label class="side-label">Category:</label>
+                    <select id="categorySelect" class="form-control" style="height: 24px; font-size: 11px;">
+                        <option value="ALL">All</option>
+                        <option value="ACTIVE PUBLISHERS">ACTIVE PUBLISHERS</option>
+                        <option value="By Group">BY GROUP</option>
+                        <!-- ADDED HERE: "ALL REPORTED" OPTIONS -->
+                        <option value="ALL PUBLISHERS REPORTED">ALL PUBLISHERS REPORTED</option>
+                        <option value="ALL AUX REPORTED">ALL AUX REPORTED</option>
+                        <option value="ALL RP REPORTED">ALL RP REPORTED</option>
+                           <option value="MONTH AUX APPLIED">CURRENT MONTH AUX</option>
+                        <option value="REGULAR PIONEERS">REGULAR PIONEERS</option>
+                        <option value="INACTIVES">INACTIVES</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="side-label">Search:</label>
+                    <input type="text" id="publisherSearch" placeholder="Type to search..." class="form-control" style="height: 24px;">
+                </div> 
+
+
+                <div class="listbox-container" id="publisherListbox">
+                    <!-- Populated via script -->
+                </div>
+               <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                    <button id="copyMissingReportBtn" onclick="copyMissingReportToClipboard()" style="display: none; font-size: 10px; padding: 3px 6px; cursor: pointer; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 3px; font-weight: bold; white-space: nowrap;">
+                        📋 Copy List
+                    </button>
+                    <div class="listbox-count" id="listboxCount">Count: 0</div>
+                </div>
+            </div>
+             <button type="button" id="phonePaneHandle" onclick="togglePhonePane()">&lt;</button>
+
+        </div>
+
+        <!-- MID: Snug S-21 Record Card -->
+        <div class="s21-card">
+            <button type="button" id="phoneRail" onclick="togglePhonePane()" aria-label="Open publishers list">
+                <span class="rail-arrow">&gt;</span>
+                <span class="rail-text">Publishers</span>
+            </button>
+            <div class="s21-header">
+                <!-- Name: display-only on this tab -->
+                <div class="row-group name-row">
+                    <label><strong>Name:</strong></label>
+                    <input type="text" id="pubNameDisplay" readonly class="form-control"
+                        style="border:1px solid #aaa !important; background:#f5f5f5 !important; max-width:260px; cursor:default;">
+                </div>
+
+                <!-- Editable here: Group, RP, Status -->
+                <div class="row-group" style="gap:16px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <label>Group:</label>
+                        <input type="text" id="pubGroup" class="form-control text-center"
+                            style="width:60px; border:1px solid #aaa !important; background:#fff !important;">
+                    </div>
+
+                    <label><input type="checkbox" id="isRP"> RP</label>
+
+                    <div class="status-control">
+                        <label>Status:</label>
+                        <span id="pubStatusDisplay" class="pub-status-label active" onclick="togglePubStatusDropdown()">Active</span>
+                        <select id="pubStatus" class="pub-status-dropdown" onchange="changePubStatus(this.value)">
+                            <option value="">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Moved Out">Moved Out</option>
+                            <option value="Removed">Removed</option>
+                            <option value="Disqualified">Disqualified</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Hidden: edited on the PublisherRecord tab. Kept in the DOM so existing JS doesn't break. -->
+                <div style="display:none;">
+                    <div id="nameEditContainer">
+                        <input type="text" id="editLName">
+                        <input type="text" id="editFName">
+                        <input type="text" id="editMName">
+                    </div>
+                    <input type="date" id="pubDob">
+                    <input type="date" id="pubBaptism">
+                    <input type="checkbox" id="isMale">
+                    <input type="checkbox" id="isFemale">
+                    <input type="checkbox" id="isElder">
+                    <input type="checkbox" id="isMS">
+                    <input type="checkbox" id="isSP">
+                </div>
+            </div>
+
+            <div class="table-scroll-container">
+                <table class="s21-table">
+                    <thead>
+                        <tr>
+                            <th>Service Year<br><span class="sub-text" id="serviceYearDisplay">2026</span></th>
+                            <th>Shared in Ministry</th>
+                            <th>Bible Studies</th>
+                            <th>Auxiliary Pioneer</th>
+                            <th>Hours <span class="sub-text">(Pioneer)</span></th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="s21TableBody">
+                        <!-- Populated dynamically via script with individual month IDs -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="4" class="text-right" style="padding-right: 8px;"><strong>Total</strong></td>
+                            <td><input type="text" id="totalHours" value="0" readonly class="text-center font-bold"></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div id="s21PhoneList"></div>
+
+        <!-- MONTHLY REPORT -->
+        <div class="mobile-summary-toggle" id="mobileSummaryToggle" onclick="toggleMobileSummary()">
+            <span>📊 Monthly Summary</span>
+            <span id="mobileSummaryToggleIcon">▾</span>
+        </div>
+        <div class="s21-sidebar" id="s21Sidebar">
+
+            <div class="Month-sidebar-nav" style="display: flex; align-items: center; gap: 10px; justify-content: center;">
+                <!-- Single Status Button -->
+                <button id="monthStatusBtn" onclick="closeCurrentMonthReport()" class="status-btn active" style="cursor: pointer; padding: 2px 8px; border-radius: 12px; border: 1px solid #4caf50; background-color: #e8f5e9; color: #2e7d32; font-size: 12px; font-weight: bold;">
+                    Active
+                </button>
+                
+                <!-- Retained Month / Year Display -->
+                <strong id="monthDisplayText">--</strong>
+            </div>
+
+          <div class="side-box">
+            <div class="side-title">All Active Publishers</div>
+            <div class="side-desc">Count all persons in congregation reporting in last 6 months.</div>
+            <div style="display: flex; justify-content: center;">
+                <input type="number" id="activePublishersInput" class="form-control text-center" style="background: #fff; height: 22px; width: 75px !important; max-width: 75px !important;" readonly>
+            </div>
+        </div>
+
+            <div class="side-box" id="attendanceSideBox" style="cursor: pointer; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9;">
+                <!-- Header / Title -->
+                <div class="side-title" style="font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Average Weekend Attendance</span>
+                    <span id="attendanceToggleIcon" style="font-size: 10px;">▼</span>
+                </div>
+
+                <!-- Collapsed View (Shows only the computed average) -->
+                <div id="collapsedAttendanceView" class="mt-1">
+                    <div style="display: flex; justify-content: center;">
+                        <input type="text" id="avgWeekendDisplay" class="form-control text-center" style="background: #fff; height: 22px; width: 75px !important; max-width: 75px !important;" readonly placeholder="0.0">
+                    </div>
+                </div>
+
+                <!-- Expanded View (2 rows / 2 columns layout, hidden by default) -->
+                <div id="expandedAttendanceView" style="display: none; margin-top: 8px;" onclick="event.stopPropagation()">
+                    <!-- Midweek Row -->
+                    <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px; color: #555;">Midweek</div>
+                    <div style="display: flex; gap: 5px; margin-bottom: 6px;">
+                        <input type="number" id="noMtgs1" class="form-control text-center" placeholder="No of Mtgs" style="height: 22px; width: 50%;" title="Midweek Meetings Count">
+                        <input type="number" id="attendcMidweekTotal" class="form-control text-center" placeholder="Total Att." style="height: 22px; width: 50%;" title="Total Midweek Attendance">
+                    </div>
+
+                    <!-- Weekend Row -->
+                    <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px; color: #555;">Weekend</div>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="number" id="noMtgs2" class="form-control text-center" placeholder="No of Mtgs" style="height: 22px; width: 50%;" title="Weekend Meetings Count">
+                        <input type="number" id="attendcPublickTotal" class="form-control text-center" placeholder="Total Att." style="height: 22px; width: 50%;" title="Total Weekend Attendance">
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-box">
+                <div class="side-title">Publishers</div>
+                <div class="grid-sub-inputs mt-1">
+                    <div><label class="side-label">Reports</label><input type="number" id="pub-reports" class="form-control text-center" style="background: #fff; height: 22px;" readonly></div>
+                    <div><label class="side-label">Studies</label><input type="number" id="pub-studies" class="form-control text-center" style="background: #fff; height: 22px;" readonly></div>
+                </div>
+            </div>
+
+            <div class="side-box">
+                <div class="side-title">Auxiliary Pioneers</div>
+                <div class="grid-sub-inputs-3 mt-1">
+                    <div><label class="side-label">Reports</label><input type="number" id="aux-reports" class="form-control text-center" style="background: #fff; height: 22px;" readonly></div>
+                    <div><label class="side-label">Hours</label><input type="number" id="aux-hours" class="form-control text-center" style="background: #fff; height: 22px;" readonly></div>
+                    <div><label class="side-label">Studies</label><input type="number" id="aux-studies" class="form-control text-center" style="background: #fff; height: 22px;" readonly></div>
+                </div>
+            </div>
+
+            <div class="side-box">
+                <div class="side-title">Regular Pioneers</div>
+                <div class="grid-sub-inputs-3 mt-1">
+                    <div><label class="side-label">Reports</label><input type="number" id="rp-reports" class="form-control text-center" style="background: #fff; height: 22px;" readonly></div>
+                    <div><label class="side-label">Hours</label><input type="number" id="rp-hours" class="form-control text-center" style="background: #fff; height: 22px;" readonly></div>
+                    <div><label class="side-label">Studies</label><input type="number" id="rp-studies" class="form-control text-center" style="background: #fff; height: 22px;" readonly></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<script src="/static/js/indexeddb.js"></script>
+<script>
+
+// ==========================================
+// 1. STATE & HELPERS
+// ==========================================
+const today = new Date();
+
+console.log("🧪 TEMP 1 — REAL DATE:", today.toString());
+console.log("🧪 TEMP 2 — Calendar month BEFORE cutoff:", today.getMonth());
+console.log("🧪 TEMP 3 — Calendar year BEFORE cutoff:", today.getFullYear());
+console.log("🧪 TEMP 4 — Day of month:", today.getDate());
+
+window.activeCalendarMonth = today.getMonth();
+window.activeCalendarYear = today.getFullYear();
+
+console.log(
+    "🧪 TEMP 5 — Initial active month/year:",
+    window.activeCalendarMonth,
+    window.activeCalendarYear
+);
+
+if (today.getDate() < 21) {
+    console.log("🧪 TEMP 6 — Date is BEFORE 21st → move to PREVIOUS month");
+
+    window.activeCalendarMonth--;
+
+    if (window.activeCalendarMonth < 0) {
+        window.activeCalendarMonth = 11;
+        window.activeCalendarYear--;
+        console.log("🧪 TEMP 7 — Wrapped to December of previous year");
+    }
+}
+
+console.log(
+    "🧪 TEMP 8 — EFFECTIVE REPORT MONTH:",
+    window.activeCalendarMonth,
+    window.activeCalendarYear
+);
+
+console.log(
+    "🧪 TEMP 9 — Expected active NUMBER will be calculated from this month/year"
+);
+
+function calculateServiceYear(month, year) {
+    return month >= 8
+        ? year + 1
+        : year;
+}
+
+let activeServiceYear = calculateServiceYear(
+      window.activeCalendarMonth,
+     window.activeCalendarYear
+);
+
+
+const calendarMonthNames = [
+    "January", "February", "March", "April",
+    "May", "June", "July", "August",
+    "September", "October", "November", "December"
+];
+
+function setServiceYear(year) {
+    if (year === undefined || year === null) {
+        activeServiceYear = calculateServiceYear(
+              window.activeCalendarMonth,
+             window.activeCalendarYear
+        );
+    } else {
+        activeServiceYear = Number(year);
+    }
+    window.selectedYear = activeServiceYear;
+    const yearEl =
+        document.getElementById('serviceYearDisplay');
+    if (yearEl) {
+        yearEl.textContent = activeServiceYear;
+    }
+}
+
+// 🎯 Initialize on script load to set current Service Year immediately
+setServiceYear();
+
+
+
+
+// 🔄 Reverse sync   window.activeCalendarMonth &  window.activeCalendarYear from target NUMBER mapping
+function syncGlobalsFromMonthNumber(targetNumber) {
+    const num = Number(targetNumber);
+    
+    // Base 194 = September 2025 (Start of SY 2026)
+    const diff = num - 194;
+    const yearShift = Math.floor(diff / 12);
+    let monthOffset = diff % 12;
+    if (monthOffset < 0) monthOffset += 12;
+
+    if (monthOffset >= 4) {
+        // Months: January (0) to August (7)
+          window.activeCalendarMonth = monthOffset - 4;
+         window.activeCalendarYear = 2026 + yearShift;
+    } else {
+        // Months: September (8) to December (11)
+          window.activeCalendarMonth = monthOffset + 8;
+         window.activeCalendarYear = 2025 + yearShift; // 👈 Fixed: Sep 2025 is base year
+    }
+
+    // 🎯 Sync activeServiceYear (Sept 2025 -> SY 2026)
+    activeServiceYear = 2026 + yearShift;
+
+    // Keep global active index aligned
+    window.currentActiveMonthIndex = num;
+}
+
+    // 1. Month Row Generation for Table
+    const s21Months = [
+        { name: "September", id: "sep" },
+        { name: "October", id: "oct" },
+        { name: "November", id: "nov" },
+        { name: "December", id: "dec" },
+        { name: "January", id: "jan" },
+        { name: "February", id: "feb" },
+        { name: "March", id: "mar" },
+        { name: "April", id: "apr" },
+        { name: "May", id: "may" },
+        { name: "June", id: "jun" },
+        { name: "July", id: "jul" },
+        { name: "August", id: "aug" }
+    ];
+
+    const tbody = document.getElementById('s21TableBody');
+    if (tbody) {
+        s21Months.forEach((m, index) => {
+            const row = document.createElement('tr');
+            row.id = `row-${m.id}`;
+            row.innerHTML = `
+                <td><strong style="padding-left: 2px;">${m.name}</strong></td>
+                <td class="text-center"><input type="checkbox" class="table-check ministry-check" id="${m.id}-ministry" data-month="${index}"></td>
+                <td><input type="number" min="0" class="text-center study-input" id="${m.id}-studies" data-month="${index}"></td>
+                <td class="text-center"><input type="checkbox" class="table-check aux-check" id="${m.id}-aux" data-month="${index}"></td>
+                <td><input type="number" min="0" step="0.5" class="text-center hours-input" id="${m.id}-hours" data-month="${index}"></td>
+                <td class="remarks-container">
+                    <input type="text" class="remark-text" id="${m.id}-remark" data-month="${index}">
+                        <select class="remark-select" id="${m.id}-select" data-month="${index}">
+                            <option value=""></option>
+                            <option value="INACTIVE">Inactive</option>
+                            <option value="MOVED OUT">Moved Out</option>
+                            <option value="MOVED IN">Moved In</option>
+                            <option value="NEW UBP">New UBP</option>
+                            <option value="REACTIVATED">Reactivated</option>
+                            <option value="REINSTATED">Reinstated</option>
+                            <option value="DISQUALIFIED">Disqualified</option>
+                            <option value="REMOVED">REMOVED</option>
+                            <option value="RP">RP</option>
+                            <option value="SP">SP</option>
+                        </select>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // 2. Hours Calculation Logic
+    document.addEventListener('input', (e) => {
+        if (e.target.classList.contains('hours-input')) {
+            let total = 0;
+            
+            document.querySelectorAll('.hours-input').forEach(el => {
+                total += parseFloat(el.value) || 0;
+            });
+            
+            // Clean up floating-point precision issues (e.g., 5.300000001 -> 5.3)
+            total = Math.round(total * 100) / 100;
+
+            const totalHoursEl = document.getElementById('totalHours');
+            if (totalHoursEl) {
+                // Check if it's an input/textarea or a text element (span/td/div)
+                if ('value' in totalHoursEl) {
+                    totalHoursEl.value = total;
+                } else {
+                    totalHoursEl.textContent = total;
+                }
+            } else {
+                console.warn("⚠️ Element with ID 'totalHours' not found in the DOM.");
+            }
+        }
+    });
+
+    // Global State
+    let publishersData = []; 
+    let currentSelectedPublisher = null;
+    let currentIndex = -1;
+    let isSwitchingPublisher = false;
+    let selectedPubId = null;
+    window.recordsData = null; // Forces renderListbox to reload fresh records from IndexedDB
+    window.currentActiveMonthIndex = window.getMonthIndex();
+   
+
+    // 3. Helper: Format dates for input[type="date"]
+    function formatDateForInput(dateVal) {
+        if (!dateVal) return "";
+        if (typeof dateVal === 'string' && dateVal.includes('-')) {
+            return dateVal.split('T')[0];
+        }
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return "";
+        return d.toISOString().split('T')[0];
+    }
+
+    // 4. Load Data from IndexedDB
+    function loadPublishersFromIndexedDB() {
+    const request = indexedDB.open("CongregationDB", 11);
+
+    request.onerror = (event) => {
+        console.error(
+            "Failed to open IndexedDB:",
+            event.target.error
+        );
+    };
+
+    request.onsuccess = (event) => {
+        const db = event.target.result;
+
+        const storeNames =
+            Array.from(db.objectStoreNames);
+
+        const targetStore =
+            storeNames.find(
+                name =>
+                    name.toUpperCase() === "PUBLISHERS"
+            );
+
+        if (!targetStore) {
+            console.error(
+                "Could not find a publishers table in IndexedDB."
+            );
+            db.close();
+            return;
+        }
+
+        const transaction =
+            db.transaction(
+                [targetStore],
+                "readonly"
+            );
+
+        const store =
+            transaction.objectStore(targetStore);
+
+        const getAllRequest =
+            store.getAll();
+
+        getAllRequest.onsuccess = () => {
+            publishersData =
+                getAllRequest.result || [];
+
+            console.log(
+                "Publishers successfully loaded:",
+                publishersData.length
+            );
+
+            renderListbox();
+        };
+
+        getAllRequest.onerror = (event) => {
+            console.error(
+                "Error retrieving publishers:",
+                event.target.error
+            );
+        };
+
+        transaction.oncomplete = () => {
+            db.close();
+        };
+    };
+}
+   
+
+// 6. Main Listbox Renderer & Filter (Default category changed to ACTIVE PUBLISHERS)
+function renderListbox(filter = "", category = "ACTIVE PUBLISHERS") {
+    const listbox = document.getElementById('publisherListbox');
+    if (!listbox) return;
+
+    if (!Array.isArray(window.recordsData)) window.recordsData = [];
+
+    if (
+            !window._recordsLoaded &&
+            !window._recordsFetchStarted &&
+            typeof openCongregationDB === 'function'
+        ) {
+            window._recordsFetchStarted = true;
+
+            openCongregationDB((db) => {
+
+                const targetStore = Array.from(db.objectStoreNames).find(name =>
+                    name.toUpperCase() === "RECORDS" ||
+                    name.toUpperCase() === "S21RECORDS"
+                );
+
+                if (!targetStore) {
+                    window._recordsLoaded = true;
+                    window._recordsFetchStarted = false;
+                    return;
+                }
+
+                const tx = db.transaction(targetStore, "readonly");
+                const req = tx.objectStore(targetStore).getAll();
+
+                req.onsuccess = (e) => {
+                    window.recordsData = e.target.result || [];
+                    window._recordsLoaded = true;
+                    window._recordsFetchStarted = false;
+
+                    // Now that fresh RECORDS are loaded,
+                    // render the listbox exactly once.
+                    renderListbox(filter, category);
+                };
+
+                req.onerror = () => {
+                    window._recordsFetchStarted = false;
+                    console.error("❌ Failed to load RECORDS:", req.error);
+                };
+            });
+
+            // IMPORTANT:
+            // Do NOT continue rendering using stale RECORDS.
+            return;
+    }
+
+    listbox.innerHTML = "";
+    currentIndex = -1;
+
+    // REST OF YOUR EXISTING CODE — UNCHANGED
+
+    // Safe retrieval of global data arrays
+    const pubData = (typeof publishersData !== 'undefined' && Array.isArray(publishersData)) ? publishersData : [];
+    const recData = Array.isArray(window.recordsData) ? window.recordsData : [];
+
+    if (pubData.length === 0) {
+        listbox.innerHTML = `<div style="padding: 8px; color: #888; font-style: italic;">No publishers loaded</div>`;
+        return;
+    }
+
+    // Get target MonthIndex
+    const targetMonthIndex = Number(typeof window.getMonthIndex === 'function' ? window.getMonthIndex() : 0);
+
+    // =============================================================
+    // HELPER: Robust Legacy Marker Normalization
+    // =============================================================
+    const isTrueMarker = (val) => {
+        if (val === null || val === undefined) return false;
+        if (typeof val === "boolean") return val;
+        if (typeof val === "number") return val !== 0;
+        const str = String(val).trim().toUpperCase();
+        return ["?", "1", "Y", "YES", "TRUE", "-1"].includes(str);
+    };
+
+    // =============================================================
+    // STEP 1: GET REPORTED PUB IDs FROM GLOBAL SUMMARY CACHE
+    // =============================================================
+    const reportedPubIds = new Set();
+    const reportedAuxIds = new Set();
+    const reportedRpIds = new Set();
+
+    // Safely look up the global summary cache
+    const summary = window.currentMonthSummary || null;
+
+    if (summary) {
+        if (summary.pub && summary.pub.details) {
+            summary.pub.details.forEach(d => {
+                const id = String(d.IdPubs ?? d.IDPub ?? d.idpubs ?? "").trim();
+                if (id) reportedPubIds.add(id);
+            });
+        }
+        if (summary.aux && summary.aux.details) {
+            summary.aux.details.forEach(d => {
+                const id = String(d.IdPubs ?? d.IDPub ?? d.idpubs ?? "").trim();
+                if (id) reportedAuxIds.add(id);
+            });
+        }
+        if (summary.rp && summary.rp.details) {
+            summary.rp.details.forEach(d => {
+                const id = String(d.IdPubs ?? d.IDPub ?? d.idpubs ?? "").trim();
+                if (id) reportedRpIds.add(id);
+            });
+        }
+    } else {
+        // Fallback if summary hasn't run yet
+        const activeMonthRecords = recData.filter(r => {
+            const recordMonthNum = Number(r.NUMBER ?? r.MonthIndex);
+            return recordMonthNum === targetMonthIndex;
+        });
+
+        activeMonthRecords.forEach(r => {
+            const rawPubId = r.IdPubs ?? r.IDPub ?? r.idpubs;
+            if (rawPubId === undefined || rawPubId === null) return;
+
+            const pubIdStr = String(rawPubId).trim();
+            const hours = Number(r.HRS || r.Hours || 0);
+            const studies = Number(r.BS || r.Studies || 0);
+
+            const remarkStr = String(r.REMARKS || r.Remarks || "").trim().toUpperCase();
+            const isRP = remarkStr === "RP" || remarkStr.startsWith("RP ");
+            const isAux = isTrueMarker(r.AUX ?? r.aux ?? r.AuxPioneer ?? r.Aux);
+            const hasMinistryFlag = isTrueMarker(r.MINISTRY || r.Ministry);
+            const isReporting = hasMinistryFlag || hours > 0 || studies > 0 || isAux || isRP;
+
+            if (!isReporting) return;
+
+            if (isRP) reportedRpIds.add(pubIdStr);
+            else if (isAux) reportedAuxIds.add(pubIdStr);
+            else reportedPubIds.add(pubIdStr);
+        });
+    }
+
+    // =============================================================
+    // STEP 2: FILTER PUBLISHERS DATA BY CATEGORY & SEARCH TEXT
+    // =============================================================
+    const selectedCategory = (category || "ACTIVE PUBLISHERS").toUpperCase().trim();
+
+    const filtered = pubData.filter(p => {
+        // Search Filter (First Name, Last Name, Nickname)
+        const fullName = `${p.FNAME || ''} ${p.LName || ''}`.trim();
+        const nickname = p.Nname || '';
+        const matchesSearch = fullName.toLowerCase().includes(filter.toLowerCase()) ||
+                              nickname.toLowerCase().includes(filter.toLowerCase());
+
+        let matchesCategory = true;
+        const statusVal = (p.Status || "").trim().toLowerCase();
+
+        // Normalize primary key as trimmed string
+        const pubIdStr = String(p.IDPub ?? p.IdPubs ?? "").trim();
+
+        // Category Selection Filter
+        switch (selectedCategory) {
+            case "ACTIVE PUBLISHERS":
+                matchesCategory = !p.Status || statusVal === "" || statusVal === "active";
+                break;
+
+            case "ALL PUBLISHERS REPORTED":
+                matchesCategory = reportedPubIds.has(pubIdStr);
+                break;
+
+            case "ALL AUX REPORTED":
+                matchesCategory = reportedAuxIds.has(pubIdStr);
+                break;
+
+            case "ALL RP REPORTED":
+                matchesCategory = reportedRpIds.has(pubIdStr);
+                break;
+
+              case "BY GROUP":
+                matchesCategory = p.GROUP !== undefined && p.GROUP !== null && String(p.GROUP).trim() !== "";
+                break;
+
+
+
+            case "REGULAR PIONEERS":
+                matchesCategory = isTrueMarker(p.RP);
+                break;
+
+
+
+            case "INACTIVES":
+                matchesCategory = statusVal === "inactive" || statusVal === "inactives";
+                break;
+
+
+            case "MONTH AUX APPLIED":
+                matchesCategory = recData.some(r => {
+                    const recordNumber = Number(r.NUMBER);
+                    const recordPubId = String(
+                        r.IdPubs ?? r.IDPub ?? r.idpubs ?? ""
+                    ).trim();
+
+                    const auxChecked = isTrueMarker(
+                        r.AUX ?? r.aux ?? r.AuxPioneer
+                    );
+
+                    return (
+                        recordNumber === targetMonthIndex &&
+                        recordPubId === pubIdStr &&
+                        auxChecked
+                    );
+                });
+                break;
+
+            case "ALL":
+            default:
+                matchesCategory = true;
+                break;
+        }
+
+        // Exclude Inactive, Moved Out, Disqualified, and Removed records from general categories
+        if (selectedCategory !== "ALL" && selectedCategory !== "MOVED OUT" && selectedCategory !== "INACTIVES") {
+            if (statusVal === "inactive" || statusVal === "inactives" || statusVal === "moved out" || statusVal === "disqualified" || statusVal === "removed") {
+                matchesCategory = false;
+            }
+        }
+
+        return matchesSearch && matchesCategory;
+    });
+
+    // Handle Empty Results UI
+    if (filtered.length === 0) {
+        listbox.innerHTML = `<div style="padding: 8px; color: #999; text-align: center; font-size: 11px;">No records found</div>`;
+        const countEl = document.getElementById('listboxCount');
+        if (countEl) countEl.textContent = `Count: 0`;
+        return;
+    }
+
+    // Sort Priority: Group first only when "BY GROUP" is selected; otherwise purely alphabetical (Last Name -> First Name)
+    filtered.sort((a, b) => {
+        if (selectedCategory === "BY GROUP") {
+            const groupA = String(a.GROUP || "");
+            const groupB = String(b.GROUP || "");
+            const groupComp = groupA.localeCompare(groupB, undefined, { numeric: true, sensitivity: 'base' });
+            if (groupComp !== 0) return groupComp;
+        }
+
+        const lastNameA = a.LName || "";
+        const lastNameB = b.LName || "";
+        const lastNameComp = lastNameA.localeCompare(lastNameB, undefined, { sensitivity: 'base' });
+        if (lastNameComp !== 0) return lastNameComp;
+
+        return (a.FNAME || "").localeCompare(b.FNAME || "", undefined, { sensitivity: 'base' });
+    });
+
+    let lastRenderedGroup = null;
+
+    filtered.forEach((p, index) => {
+        const currentGroup = String(p.GROUP || "").trim();
+
+        // Add GROUP HEADER when group changes
+        if (selectedCategory === "BY GROUP" && currentGroup !== lastRenderedGroup) {
+            const groupHeader = document.createElement("div");
+
+            groupHeader.className = "group-header";
+            groupHeader.textContent = `── GROUP ${currentGroup} ──`;
+
+            groupHeader.style.cssText = `
+                color: red;
+                font-weight: bold;
+                font-size: 11px;
+                padding: 6px 8px 3px;
+                margin-top: 4px;
+                pointer-events: none;
+            `;
+
+            listbox.appendChild(groupHeader);
+            lastRenderedGroup = currentGroup;
+        }
+
+        const displayName = `${p.LName || ''}, ${p.FNAME || ''}`.trim();
+
+        const div = document.createElement('div');
+        div.className = "listbox-item";
+
+        // Publisher Name
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = displayName;
+        div.appendChild(nameSpan);
+
+        // Publisher Status Tag
+        if (p.Status && String(p.Status).trim() !== "") {
+            const statusSpan = document.createElement('span');
+
+            statusSpan.className = "status-badge";
+            statusSpan.style.cssText =
+                "font-size: 0.85em; opacity: 0.75; margin-left: 6px; font-style: italic;";
+
+            statusSpan.textContent = `(${String(p.Status).trim()})`;
+
+            div.appendChild(statusSpan);
+        }
+
+        div.dataset.id = p.IDPub ?? p.IdPubs ?? "";
+        div.dataset.status = p.Status || "";
+        div._pubData = p;
+        div._pubIndex = index;
+
+        div.onclick = async () => {
+            currentIndex = div._pubIndex;
+            selectedPubId = p.IDPub ?? p.IdPubs ?? "";
+
+            try {
+                await globalSelectedPubID(selectedPubId);
+                console.log("👤 Global SelectedPubID saved:", selectedPubId);
+            } catch (err) {
+                console.error("❌ Error saving SelectedPubID:", err);
+            }
+
+            selectPublisher(p, div);
+            if (isPhoneMode()) setPhonePane(true); 
+        };
+
+        listbox.appendChild(div);
+    });
+
+    const countEl = document.getElementById('listboxCount');
+    if (countEl) countEl.textContent = `Count: ${filtered.length}`;
+
+    // =============================================================
+    // RESTORE GLOBAL SELECTED PUBLISHER
+    // =============================================================
+    globalSelectedPubID().then(IDPubSel => {
+        if (!IDPubSel) return;
+
+        const matchingEl = listbox.querySelector(`[data-id="${IDPubSel}"]`);
+        if (!matchingEl) return;
+
+        currentIndex = matchingEl._pubIndex;
+        selectedPubId = IDPubSel;
+        currentSelectedPublisher = matchingEl._pubData;
+
+        listbox.querySelectorAll('.listbox-item').forEach(el => el.classList.remove('active','selected'));
+        matchingEl.classList.add('active');
+
+        console.log("🌐 Restoring publisher:", IDPubSel);
+
+        // Load publisher into the form without triggering onclick
+        selectPublisher(matchingEl._pubData, matchingEl);
+    });
+}
+
+
+
+
+// 7. Populate Form Fields
+function populateForm(p) {
+    currentSelectedPublisher = p;
+    
+    const fullName = `${p.FNAME || ''} ${p.LName || ''}`.trim();
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    };
+    
+    // Accept IndexedDB "1"/"0" and CSV/PostgreSQL "True"/"False"
+    const setCheck = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.checked = (
+                val === '1' ||
+                val === 1 ||
+                val === true ||
+                val === 'Y' ||
+                String(val).trim().toUpperCase() === 'TRUE'
+            );
+        }
+    };
+
+    setVal('pubName', fullName);
+    setVal('pubDob', formatDateForInput(p.Birthdate));
+    setVal('pubBaptism', formatDateForInput(p.Baptism));
+    setVal('pubGroup', p.GROUP || '');
+    setVal('pubStatus', p.Status ? p.Status.trim() : "");
+
+    // =====================================================
+    // UPDATE STATUS DISPLAY
+    // =====================================================
+    const statusDisplay = document.getElementById('pubStatusDisplay');
+
+    if (statusDisplay) {
+        const status = p.Status
+            ? String(p.Status).trim()
+            : "";
+
+        // Display status
+        statusDisplay.textContent = status || "Active";
+
+        // Remove previous status classes
+        statusDisplay.classList.remove(
+            'active',
+            'inactive',
+            'moved-out'
+        );
+
+        // Apply current status class
+        switch (status.toUpperCase()) {
+            case 'INACTIVE':
+                statusDisplay.classList.add('inactive');
+                break;
+
+            case 'MOVED OUT':
+                statusDisplay.classList.add('moved-out');
+                break;
+
+            default:
+                statusDisplay.classList.add('active');
+                break;
+        }
+    }
+
+    setCheck('isMale', p.Male);
+    setCheck('isFemale', p.Female);
+    setCheck('isElder', p.Elder);
+    setCheck('isMS', p.MS);
+    setCheck('isRP', p.RP);
+    setCheck('isSP', p.SF); // Maps database property 'SF' to HTML ID 'isSP'
+}
+
+// 8. Direct Edit / Auto-Save to IndexedDB
+        function savePublisherChanges() {
+                    const pub = currentSelectedPublisher;
+                    if (!pub || !pub.IDPub) {
+                        console.warn("⚠️ Cannot save: No publisher selected.");
+                        return;
+                    }
+
+                    // Only the fields this tab is allowed to change
+                    const changes = {
+                        GROUP: document.getElementById('pubGroup')?.value || "",
+                        RP: document.getElementById('isRP')?.checked ? "1" : "0",
+                        Status: document.getElementById('pubStatus')?.value || ""
+                    };
+
+                    const request = indexedDB.open("CongregationDB", 11);
+
+                    request.onerror = (e) => console.error("❌ Failed to open DB:", e.target.error);
+
+                    request.onsuccess = (event) => {
+                        const db = event.target.result;
+                        const tx = db.transaction(["PUBLISHERS"], "readwrite");
+                        const store = tx.objectStore("PUBLISHERS");
+                        let updated = null;
+
+                        const cursorReq = store.openCursor();
+                        cursorReq.onsuccess = (e) => {
+                            const cursor = e.target.result;
+                            if (!cursor) {
+                                if (!updated) console.warn("⚠️ Publisher not found in DB:", pub.IDPub);
+                                return;
+                            }
+                            if (String(cursor.value.IDPub) === String(pub.IDPub)) {
+                                // Start from the FRESH DB record, apply only our 3 fields
+                                updated = Object.assign({}, cursor.value, changes);
+                                cursor.update(updated);
+                                return;
+                            }
+                            cursor.continue();
+                        };
+
+                        tx.oncomplete = () => {
+                            db.close();
+                            if (!updated) return;
+
+                            // Sync the in-memory copy with what is now in the DB
+                            Object.assign(pub, updated);
+
+                            const searchVal = document.getElementById('publisherSearch')?.value || "";
+                            const catVal = document.getElementById('categorySelect')?.value || "ACTIVE PUBLISHERS";
+                            // renderListbox already restores the selected publisher itself
+                            renderListbox(searchVal, catVal);
+                            console.log("✅ Saved Group/RP/Status for", pub.IDPub);
+                        };
+
+                        tx.onerror = (e) => {
+                            console.error("❌ Transaction failed:", e.target.error);
+                            db.close();
+                        };
+                    };
+                }
+
+    // 9. Event Listeners Setup on DOM Load
+    // 9. Event Listeners Setup on DOM Load
+    document.addEventListener('DOMContentLoaded', () => {
+            // Form auto-save bindings 
+            // NOTE: Removed name inputs here so they don't trigger premature re-renders on blur!
+            const formInputIds = ['pubGroup', 'pubStatus', 'isRP'];
+
+            formInputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const triggerEvent = (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'date') ? 'change' : 'blur';
+                    el.addEventListener(triggerEvent, savePublisherChanges);
+                }
+            });
+
+            // Search & Category Dropdown Listeners
+            const searchInput = document.getElementById('publisherSearch');
+            const categorySelect = document.getElementById('categorySelect');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    renderListbox(e.target.value, categorySelect ? categorySelect.value : "ALL");
+                });
+            }
+
+            if (categorySelect) {
+                categorySelect.addEventListener('change', (e) => {
+                    renderListbox(searchInput ? searchInput.value : "", e.target.value);
+                });
+            }
+
+            // Initial Data Load
+            loadPublishersFromIndexedDB();
+        });
+
+    // 10. Robust Document-Level Keydown Handler for Arrow Navigation
+  document.addEventListener('keydown', (e) => {
+    const searchInput = document.getElementById('publisherSearch');
+    const listbox = document.getElementById('publisherListbox');
+    if (!listbox) return;
+    
+    const items = listbox.querySelectorAll('.listbox-item');
+    if (items.length === 0) return;
+
+    const isSearchFocused = document.activeElement === searchInput;
+    const isListboxFocused = listbox.contains(document.activeElement);
+
+    // Trigger when search box is focused OR when items are already being navigated
+    if (isSearchFocused || isListboxFocused || currentIndex >= 0) {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            // Jump to 0 if coming from -1
+            currentIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, items.length - 1);
+            updateKeyboardSelection(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            currentIndex = Math.max(currentIndex - 1, 0);
+            updateKeyboardSelection(items);
+        } else if (e.key === 'Enter') {
+            if (currentIndex >= 0 && items[currentIndex]) {
+                e.preventDefault();
+                items[currentIndex].click();
+            }
+        }
+    }
+});
+
+// Helper for keyboard navigation selection highlighting
+function updateKeyboardSelection(items) {
+    items.forEach((el, index) => {
+        if (index === currentIndex) {
+            // Retrieve record number saved on dataset
+            const recNum = el.dataset.number ? Number(el.dataset.number) : window.SelNumber;
+            
+            // Set global selection variables
+            if (el._pubData) {
+                selectedPubId = el.dataset.id || el._pubData.IDPub || el._pubData.IdPubs || "";
+                window.SelNumber = recNum;
+            }
+
+            // Sync visual classes & scroll into view
+            items.forEach(item => item.classList.remove('active', 'selected'));
+            el.classList.add('active');
+            el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+            // Trigger click simulation / selection handler with all required params
+            if (el._pubData) {
+                if (typeof selectPublisher === 'function') {
+                    selectPublisher(el._pubData, el, recNum);
+                } else if (typeof selectSelectedPublisher === 'function') {
+                    selectSelectedPublisher(el._pubData, recNum);
+                }
+            }
+        }
+    });
+}
+
+// ==========================================
+// CURRENT ACTIVE SERVICE YEAR
+// Reporting month changes every 21st
+// ==========================================
+    const serviceYearNow = new Date();
+
+        let effectiveMonth = serviceYearNow.getMonth();
+        let effectiveYear = serviceYearNow.getFullYear();
+
+        if (serviceYearNow.getDate() < 21) {
+            effectiveMonth--;
+
+            if (effectiveMonth < 0) {
+                effectiveMonth = 11;
+                effectiveYear--;
+            }
+        }
+
+        // Normal 21st-day Service Year
+        let currentServiceYear =
+            effectiveMonth >= 8
+                ? effectiveYear + 1
+                : effectiveYear;
+
+        // If active month was already advanced because
+        // the previous report was CLOSED, use active month.
+        if (typeof window.currentActiveMonthIndex !== "undefined") {
+
+            const activeNumber =
+                Number(window.currentActiveMonthIndex);
+
+            const activeMonthDiff =
+                activeNumber - 194;
+
+            if (activeMonthDiff >= 0) {
+
+                const activeYearShift =
+                    Math.floor(activeMonthDiff / 12);
+
+                let activeMonthOffset =
+                    activeMonthDiff % 12;
+
+                if (activeMonthOffset < 0) {
+                    activeMonthOffset += 12;
+                }
+
+                let activeMonthYear;
+                let activeMonth;
+
+                if (activeMonthOffset >= 4) {
+                    activeMonth =
+                        activeMonthOffset - 4;
+
+                    activeMonthYear =
+                        2026 + activeYearShift;
+
+                } else {
+                    activeMonth =
+                        activeMonthOffset + 8;
+
+                    activeMonthYear =
+                        2025 + activeYearShift;
+                }
+
+                const activeMonthServiceYear =
+                    activeMonth >= 8
+                        ? activeMonthYear + 1
+                        : activeMonthYear;
+
+                // Only use the active month when it is
+                // ahead of the normal effective report month.
+                if (
+                    activeMonthYear > effectiveYear ||
+                    (
+                        activeMonthYear === effectiveYear &&
+                        activeMonth > effectiveMonth
+                    )
+                ) {
+                    currentServiceYear =
+                        activeMonthServiceYear;
+                }
+            }
+        }
+
+        const previousServiceYear =
+            currentServiceYear - 1;
+
+        console.log(
+            "📅 Real Date:",
+            serviceYearNow.toDateString()
+        );
+
+        console.log(
+            "📅 Effective Report Month:",
+            effectiveMonth,
+            effectiveYear
+        );
+
+        console.log(
+            "📅 Current Service Year:",
+            currentServiceYear
+        );
+
+        console.log(
+            "📅 Previous Service Year:",
+            previousServiceYear
+        );
+
+
+console.log("📅 Real Date:", serviceYearNow.toDateString());
+console.log("📅 Effective Report Month:", effectiveMonth);
+console.log("📅 Current Service Year:", currentServiceYear);
+console.log("📅 Previous Service Year:", previousServiceYear);
+
+// Default active selection to current Service Year
+let selectedYear = typeof activeServiceYear !== 'undefined' 
+    ? activeServiceYear 
+    : currentServiceYear;
+
+//===============================
+
+function updateYearDisplay() {
+    const yearDisplay =
+        document.getElementById('yearDisplayText');
+
+    const prevBtn =
+        document.getElementById('prevYearBtn');
+
+    const nextBtn =
+        document.getElementById('nextYearBtn');
+
+    if (!yearDisplay) return;
+
+    const activeSY =
+        Number(activeServiceYear);
+
+    if (!Number.isFinite(Number(selectedYear))) {
+        selectedYear = activeSY;
+    }
+
+    if (Number(selectedYear) >= activeSY) {
+
+        selectedYear = activeSY;
+
+    yearDisplay.innerHTML =
+            `<span class="yr-num">${selectedYear}</span><span class="yr-pill">Current Service Year</span>`;
+
+        if (prevBtn)
+            prevBtn.style.visibility = "visible";
+
+        if (nextBtn)
+            nextBtn.style.visibility = "hidden";
+
+    } else {
+
+    yearDisplay.innerHTML =
+            `<span class="yr-num">${selectedYear}</span><span class="yr-pill">Service Year</span>`;
+
+        if (prevBtn)
+            prevBtn.style.visibility = "hidden";
+
+        if (nextBtn)
+            nextBtn.style.visibility = "visible";
+    }
+
+    // IMPORTANT:
+    // Do NOT call setServiceYear() here.
+    // It would change activeServiceYear when
+    // the user is only viewing the previous year.
+
+    window.selectedYear = selectedYear;
+
+    if (typeof loadS21RecordsForPublisher === 'function') {
+        loadS21RecordsForPublisher();
+    }
+}
+//-------------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+
+    const prevBtn =
+        document.getElementById('prevYearBtn');
+
+    const nextBtn =
+        document.getElementById('nextYearBtn');
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+
+            const activeSY =
+                Number(activeServiceYear);
+
+            console.log("⬅️ Previous Year clicked");
+            console.log("activeServiceYear:", activeSY);
+            console.log("selectedYear:", selectedYear);
+
+            if (selectedYear >= activeSY) {
+                selectedYear = activeSY - 1;
+                updateYearDisplay();
+            }
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+
+            const activeSY =
+                Number(activeServiceYear);
+
+            console.log("➡️ Next Year clicked");
+            console.log("activeServiceYear:", activeSY);
+            console.log("selectedYear:", selectedYear);
+
+            if (selectedYear < activeSY) {
+                selectedYear = activeSY;
+                updateYearDisplay();
+            }
+        });
+    }
+
+    updateYearDisplay();
+});
+
+// ==========================================
+// CALIBRATED SERVICE MONTH NUMBER CALCULATOR
+// ==========================================
+// 🎯 Safe S-21 Month Mapping formula isolated to activeServiceYear
+function getServiceMonthNumber(serviceYear, monthIndex) {
+    const sYear = serviceYear ?? activeServiceYear;
+    const anchorBaseNumber = 26; // Sep 2012 anchor (194 for SY2026 Sep)
+    const anchorYear = 2012;
+    const yearDiff = Number(sYear) - anchorYear;
+    return anchorBaseNumber + (yearDiff * 12) + Number(monthIndex);
+}
+// ==========================================
+// 2. LOAD RECORDS FOR S-21 TABLE
+// ==========================================
+// Optimized and compatible replacement for your loadS21RecordsForPublisher function
+function loadS21RecordsForPublisher(selectedRecordNumber) {
+    if (!currentSelectedPublisher || !currentSelectedPublisher.IDPub) return;
+
+
+    const activePublisherId = currentSelectedPublisher.IDPub;
+
+    const activeMonthIndex = Number(typeof window.getMonthIndex === 'function' ? window.getMonthIndex() : 0);
+    const targetHighlightNumber = selectedRecordNumber !== undefined
+        ? Number(selectedRecordNumber)
+        : (window.SelNumber !== undefined ? Number(window.SelNumber) : activeMonthIndex);
+
+    // -------------------------------------------------------------
+    // Determine once: is this publisher an RP (Regular Pioneer)?
+    // If so, Aux Pioneer never applies to them — lock it regardless of month.
+    // -------------------------------------------------------------
+    const isTrueMarkerPub = v =>
+        ["1", "TRUE", "YES", "Y", "?", "-1"].includes(String(v ?? "").trim().toUpperCase());
+    const publisherIsRP = isTrueMarkerPub(currentSelectedPublisher.RP);
+
+    s21Months.forEach((m) => {
+        const minEl = document.getElementById(`${m.id}-ministry`);
+        const bsEl = document.getElementById(`${m.id}-studies`);
+        const auxEl = document.getElementById(`${m.id}-aux`);
+        const hrsEl = document.getElementById(`${m.id}-hours`);
+        const remTextEl = document.getElementById(`${m.id}-remark`);
+        const remSelEl = document.getElementById(`${m.id}-select`);
+
+        [minEl, bsEl, auxEl, hrsEl, remTextEl, remSelEl].forEach(el => {
+            if (el) el.dataset.publisherId = activePublisherId;
+        });
+
+        if (minEl) minEl.checked = false;
+        if (bsEl) bsEl.value = "";
+        if (auxEl) auxEl.checked = false;
+        if (hrsEl) hrsEl.value = "";
+        if (remTextEl) remTextEl.value = "";
+        if (remSelEl) remSelEl.value = "";
+    });
+
+
+    const request = indexedDB.open("CongregationDB");
+
+    request.onsuccess = (event) => {
+        const db = event.target.result;
+        const transaction = db.transaction(["RECORDS"], "readonly");
+        const store = transaction.objectStore("RECORDS");
+        const getAllRequest = store.getAll();
+
+        getAllRequest.onsuccess = (e) => {
+            const allRecords = e.target.result;
+
+            const publisherRecordMap = new Map();
+            allRecords.forEach(rec => {
+                if (String(rec.IdPubs) === String(activePublisherId)) {
+                    publisherRecordMap.set(Number(rec.NUMBER), rec);
+                }
+            });
+
+            const activeCategory = String(document.getElementById("categorySelect")?.value || "").trim().toUpperCase();
+
+            const isHighlightAllowed = [
+                "ALL PUBLISHERS REPORTED",
+                "ALL AUX REPORTED",
+                "ALL RP REPORTED",
+                "BY GROUP"
+            ].includes(activeCategory);
+
+            s21Months.forEach((m, index) => {
+                const targetNumber = getServiceMonthNumber(selectedYear, index);
+                const rec = publisherRecordMap.get(Number(targetNumber));
+
+                const minEl = document.getElementById(`${m.id}-ministry`);
+                const bsEl = document.getElementById(`${m.id}-studies`);
+                const auxEl = document.getElementById(`${m.id}-aux`);
+                const hrsEl = document.getElementById(`${m.id}-hours`);
+                const remTextEl = document.getElementById(`${m.id}-remark`);
+                const remSelEl = document.getElementById(`${m.id}-select`);
+                const rowEl = document.getElementById(m.id) || (minEl ? minEl.closest('tr') : null);
+
+                if (rec) {
+                    if (minEl) minEl.checked = Boolean(rec.MINISTRY);
+                    if (bsEl) bsEl.value = rec.BS !== undefined ? rec.BS : "";
+                    if (auxEl) auxEl.checked = Boolean(rec.AUX);
+                    if (hrsEl) hrsEl.value = rec.HRS !== undefined ? rec.HRS : "";
+                    if (remTextEl) remTextEl.value = rec.Note || rec.note || rec.REMARK || "";
+                    if (remSelEl) remSelEl.value = rec.REMARKS || rec.remarks || rec.Remark || "";
+                }
+
+                // -------------------------------------------------------------
+                // LOCK FUTURE MONTHS (after the currently active reporting month)
+                // Aux Pioneer checkbox stays enabled unless the publisher is RP.
+                // -------------------------------------------------------------
+                const activeMonthIndexNow = Number(window.currentActiveMonthIndex);
+                const isFutureMonth = targetNumber > activeMonthIndexNow;
+
+                [minEl, bsEl, hrsEl, remTextEl, remSelEl].forEach(el => {
+                    if (el) el.disabled = isFutureMonth;
+                });
+
+                if (auxEl) auxEl.disabled = publisherIsRP || false; // RP publishers never get Aux; otherwise always editable
+
+                if (rowEl) {
+                    rowEl.classList.toggle('s21-row-future', isFutureMonth);
+                }
+
+                if (rowEl) {
+                    const rawDateEntered = rec
+                        ? (rec.Date_entered ?? rec.Date_Entered ?? rec.Date_Number ?? rec.date_entered ?? 0)
+                        : 0;
+
+                    const recordDateEntered = Number(rawDateEntered);
+                    const activeHighlightIdx = Number(targetHighlightNumber);
+
+                    const isTrueMarker = (val) => {
+                        if (val === null || val === undefined) return false;
+                        if (typeof val === "boolean") return val;
+                        if (typeof val === "number") return val !== 0;
+                        const str = String(val).trim().toUpperCase();
+                        return ["1", "Y", "YES", "TRUE", "-1"].includes(str);
+                    };
+
+                    const hasActivity = rec && (
+                        isTrueMarker(rec.MINISTRY) ||
+                        Number(rec.HRS || 0) > 0 ||
+                        Number(rec.BS || 0) > 0 ||
+                        isTrueMarker(rec.AUX) ||
+                        String(rec.REMARKS || rec.remarks || rec.Note || "").trim() !== ""
+                    );
+
+                    // 🎯 FIX: Match targetNumber (the row's month NUMBER) strictly against targetHighlightNumber.
+                    // Removed Date_entered matching to prevent duplicate highlights from batch-saved dates.
+                    const isTargetMonth = hasActivity && (recordDateEntered === activeHighlightIdx);
+                    rowEl.dataset.dateEntered = recordDateEntered;
+
+                    if (isHighlightAllowed && isTargetMonth) {
+                        rowEl.classList.add('s21-row-active');
+                    } else {
+                        rowEl.classList.remove('s21-row-active');
+                    }
+                }
+
+                attachS21AutoCheckListeners(index, m);
+            });
+        };
+
+        getAllRequest.onerror = (err) => {
+            console.error("❌ Failed to bulk load publisher records:", err.target.error);
+        };
+
+        transaction.oncomplete = () => {
+            calculateTotalHours();
+            renderPhoneMonthList();     // ← new
+        };
+    };
+}
+
+// ==========================================
+// 3. SAVE / UPSERT S-21 MONTHLY RECORD
+// ==========================================
+// Automatically inserts a new record or updates an existing one 
+// when any input field in a row is modified.
+// when any input field in a row is modified.
+async function saveS21MonthRecord(monthIndex, snapshot) {
+    const targetPublisherId = snapshot?.publisherId;
+
+    if (!targetPublisherId) {
+        console.warn("⚠️ S21 save: no publisher ID.");
+        return;
+    }
+
+    const m = s21Months[monthIndex];
+
+    if (!m) {
+        console.warn("⚠️ S21 save: invalid monthIndex:", monthIndex);
+        return;
+    }
+
+    const targetNumber = getServiceMonthNumber(selectedYear, monthIndex);
+
+    const dateEnteredNumber = Number(
+        window.currentActiveMonthIndex ??
+        (typeof window.getMonthIndex === "function"
+            ? window.getMonthIndex()
+            : targetNumber)
+    );
+
+    // Read everything from the SNAPSHOT, not the DOM — this is the fix.
+    const ministryVal = snapshot.ministry ? 1 : 0;
+    const bsVal = snapshot.studies ? Number(snapshot.studies) : "";
+    const auxVal = snapshot.aux ? 1 : 0;
+    const hrsVal = snapshot.hours ? Number(snapshot.hours) : "";
+    const noteVal = snapshot.note || "";
+    let remarksVal = snapshot.remarks || "";
+
+    console.log("📝 REMARKS VALUE AT SAVE:", JSON.stringify(remarksVal));
+
+    const userChangedRemarks = snapshot.userChangedRemarks === true;
+
+    const db = await openIndexedDB();
+
+    try {
+        const pub = await new Promise((resolve, reject) => {
+            const tx = db.transaction("PUBLISHERS", "readonly");
+            const req = tx.objectStore("PUBLISHERS").get(String(targetPublisherId));
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+
+        const isTrue = v =>
+            ["1", "TRUE", "YES", "Y", "?", "-1"]
+                .includes(String(v ?? "").trim().toUpperCase());
+
+        const isRP = pub && isTrue(pub.RP);
+        const isNewOrSF = pub && (isTrue(pub.New) || isTrue(pub.NEW) || isTrue(pub.SF));
+
+        const existing = await new Promise((resolve, reject) => {
+            const tx = db.transaction("RECORDS", "readonly");
+            const req = tx.objectStore("RECORDS").get([
+                Number(targetNumber),
+                String(targetPublisherId)
+            ]);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+
+        console.log("🔎 Existing S21 record:", existing);
+
+        if (!userChangedRemarks && !remarksVal) {
+            if (isRP) {
+                remarksVal = "RP";
+            } else if (isNewOrSF) {
+                remarksVal = "SP";
+            }
+        }
+
+        console.log("📝 REMARKS VALUE AFTER AUTO:", JSON.stringify(remarksVal));
+
+        const finalDateEntered =
+            isNewOrSF
+                ? null
+                : (ministryVal ? Number(dateEnteredNumber) : null);
+
+        const hasData =
+            ministryVal ||
+            bsVal !== "" ||
+            auxVal ||
+            hrsVal !== "" ||
+            noteVal !== "" ||
+            remarksVal !== "" ||
+            userChangedRemarks;
+
+        if (!hasData && !existing) {
+            console.log("ℹ️ S21 nothing to save:", targetPublisherId, targetNumber);
+            return;
+        }
+
+        if (!hasData && existing) {
+            const tx = db.transaction("RECORDS", "readwrite");
+            const store = tx.objectStore("RECORDS");
+
+            store.delete([Number(targetNumber), String(targetPublisherId)]);
+
+            await new Promise((resolve, reject) => {
+                tx.oncomplete = resolve;
+                tx.onerror = () => reject(tx.error);
+            });
+
+            window.recordsData = null;
+            window._recordsLoaded = false;
+            window._recordsFetchStarted = false;
+
+            console.log(`🗑️ S21 record removed: ${targetPublisherId}/${targetNumber}`);
+
+            setSyncUnsaved();
+            updateCurrentMonthDebugStorage();
+            return;
+        }
+
+        const record = {
+            IdPubs: String(targetPublisherId),
+            NUMBER: Number(targetNumber),
+            MINISTRY: ministryVal,
+            BS: bsVal,
+            AUX: auxVal,
+            HRS: hrsVal,
+            Note: noteVal,
+            REMARKS: remarksVal,
+            Date_entered: finalDateEntered,
+            updated_at: Date.now(),
+            is_deleted: 0
+        };
+
+        const tx = db.transaction("RECORDS", "readwrite");
+        const store = tx.objectStore("RECORDS");
+
+        console.log("💾 REMARKS BEING WRITTEN:", JSON.stringify(record.REMARKS));
+        store.put(record);
+
+        await new Promise((resolve, reject) => {
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+        });
+
+        window.recordsData = null;
+        window._recordsLoaded = false;
+        window._recordsFetchStarted = false;
+        window.currentMonthSummary = null;
+
+        setSyncUnsaved();
+        updateCurrentMonthDebugStorage();
+
+        console.log("💾 S21 saved directly to IndexedDB:", {
+            IdPubs: record.IdPubs,
+            NUMBER: record.NUMBER,
+            Date_entered: record.Date_entered,
+            REMARKS: record.REMARKS,
+            userChangedRemarks,
+            RP: isRP,
+            New: pub?.New,
+            SF: pub?.SF
+        });
+
+    } catch (error) {
+        console.error("❌ S21 IndexedDB save failed:", error);
+    } finally {
+        db.close();
+    }
+}
+
+// -------------------------------------------------------------
+// AUTO-CHECK & AUTO-REMARK LISTENER HELPER
+// -------------------------------------------------------------
+function attachS21AutoCheckListeners(monthIndex, m) {
+    const minEl = document.getElementById(`${m.id}-ministry`);
+    const bsEl = document.getElementById(`${m.id}-studies`);
+    const hrsEl = document.getElementById(`${m.id}-hours`);
+    const remSelEl = document.getElementById(`${m.id}-select`);
+    const auxEl = document.getElementById(`${m.id}-aux`);
+    const noteEl = document.getElementById(`${m.id}-remark`);
+
+    if (!minEl || !bsEl || !hrsEl) return;
+    if (minEl.dataset.s21Bound === "true") return;
+    minEl.dataset.s21Bound = "true";
+
+    const handleAutoLogic = (e) => {
+        if (e?.isTrusted === false) return;
+
+        // Automatically check Ministry when Hours or Studies are entered
+        if (Number(hrsEl.value) > 0 || Number(bsEl.value) > 0) {
+            minEl.checked = true;
+        }
+
+        // Automatically set Remarks based on publisher status
+        const publisherId =
+            minEl.dataset.publisherId ||
+            (typeof selectedPubId !== "undefined" ? selectedPubId : null);
+
+        if (publisherId && remSelEl && !remSelEl.value) {
+            const pubs =
+                typeof publishersData !== "undefined" &&
+                Array.isArray(publishersData)
+                    ? publishersData
+                    : [];
+
+            const pub = pubs.find(p =>
+                String(p.IDPub ?? "").trim() === String(publisherId).trim()
+            );
+
+            const isTrue = v =>
+                ["1", "TRUE", "YES", "Y", "?", "-1"]
+                    .includes(String(v ?? "").trim().toUpperCase());
+
+            if (pub) {
+                if (isTrue(pub.RP)) {
+                    remSelEl.value = "RP";
+                } else if (isTrue(pub.New) || isTrue(pub.SF)) {
+                    remSelEl.value = "SP";
+                }
+            }
+        }
+
+        // ---------------------------------------------------------
+        // 🔒 SNAPSHOT: capture everything NOW, synchronously.
+        // This is what fixes the race — no matter what happens to the
+        // DOM in the next 200ms (publisher switch, field clear, rebind),
+        // this snapshot is already frozen and safe.
+        // ---------------------------------------------------------
+        const snapshot = {
+            publisherId: minEl.dataset.publisherId,
+            ministry: minEl.checked,
+            studies: bsEl.value,
+            aux: auxEl ? auxEl.checked : false,
+            hours: hrsEl.value,
+            note: noteEl ? noteEl.value : "",
+            remarks: remSelEl ? remSelEl.value : "",
+            userChangedRemarks: remSelEl ? remSelEl.dataset.userChanged === "true" : false
+        };
+
+        clearTimeout(minEl._s21SaveTimer);
+
+        minEl._s21SaveTimer = setTimeout(async () => {
+            if (typeof saveS21MonthRecord === "function") {
+                await saveS21MonthRecord(monthIndex, snapshot); // 👈 pass snapshot, not a DOM element
+            }
+
+            if (typeof renderListbox === "function") {
+                const searchInput = document.getElementById("publisherSearch");
+                const categorySelect = document.getElementById("categorySelect");
+
+                renderListbox(
+                    searchInput?.value || "",
+                    categorySelect?.value || "ACTIVE PUBLISHERS"
+                );
+            }
+
+            if (typeof calculateMonthlySummaryMetrics === "function") {
+                calculateMonthlySummaryMetrics();
+            }
+        }, 200);
+    };
+
+    minEl.addEventListener("change", handleAutoLogic);
+    bsEl.addEventListener("change", handleAutoLogic);
+    hrsEl.addEventListener("change", handleAutoLogic);
+    if (noteEl) noteEl.addEventListener("change", handleAutoLogic);
+    if (auxEl) auxEl.addEventListener("change", handleAutoLogic);
+    if (remSelEl) {
+        remSelEl.addEventListener("change", (e) => {
+            remSelEl.dataset.userChanged = "true";
+            handleAutoLogic(e);
+        });
+    }
+
+    console.log(`✅ S21 listener attached: ${m.name} [${monthIndex}]`);
+}
+
+// 1. Reusable calculation function
+function calculateTotalHours() {
+    let total = 0;
+    document.querySelectorAll('.hours-input').forEach(el => {
+        total += parseFloat(el.value) || 0;
+    });
+    
+    // Clean up floating-point decimals (e.g., 5.300000001 -> 5.3)
+    total = Math.round(total * 100) / 100;
+
+    const totalHoursEl = document.getElementById('totalHours');
+    if (totalHoursEl) {
+        totalHoursEl.value = total;
+    }
+}
+
+// 2. Global listener for live typing updates
+document.addEventListener('input', (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains('hours-input')) {
+        calculateTotalHours();
+    }
+});
+
+
+// storage show all date_Entered
+function updateCurrentMonthDebugStorage() {
+
+    const currentMonthID = Number(
+        window.currentActiveMonthIndex
+    );
+
+    const request = indexedDB.open(
+        "CongregationDB",
+        11
+    );
+
+    request.onsuccess = (event) => {
+
+        const db = event.target.result;
+
+        const tx = db.transaction(
+            ["RECORDS"],
+            "readonly"
+        );
+
+        const store = tx.objectStore("RECORDS");
+
+        const getAllRequest = store.getAll();
+
+        getAllRequest.onsuccess = () => {
+
+            const currentMonthRecords =
+                getAllRequest.result.filter(record =>
+                    Number(record.Date_entered) === currentMonthID
+                );
+
+            const storageData = {
+                CurrentMonthID: currentMonthID,
+                UpdatedAt: new Date().toISOString(),
+                TotalRecords: currentMonthRecords.length,
+                Records: currentMonthRecords
+            };
+
+            // 💾 ACTUALLY SAVE INTO LOCAL STORAGE
+            localStorage.setItem(
+                "CurrentMonthReportedPublishers",
+                JSON.stringify(storageData)
+            );
+
+            db.close();
+        };
+
+        getAllRequest.onerror = () => {
+            console.error(
+                "❌ Failed to read RECORDS."
+            );
+
+            db.close();
+        };
+    };
+
+    request.onerror = () => {
+        console.error(
+            "❌ Failed to open IndexedDB."
+        );
+    };
+}
+
+
+function removeRecordsFromIndexedDB(garbageRecords) {
+    return new Promise((resolve, reject) => {
+        const dbName = window.dbName || "CongregationDB";
+        const dbRequest = indexedDB.open(dbName);
+
+        dbRequest.onerror = (e) => reject(e.target.error);
+
+        dbRequest.onsuccess = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains("RECORDS")) {
+                return resolve();
+            }
+
+            const tx = db.transaction(["RECORDS"], "readwrite");
+            const store = tx.objectStore("RECORDS");
+
+            const directKeys = [];
+            const fallbackTargets = new Set();
+
+            garbageRecords.forEach((rec) => {
+                const primaryKey = rec.id ?? rec.ID ?? rec.Id;
+                if (primaryKey !== undefined && primaryKey !== null) {
+                    directKeys.push(primaryKey);
+                }
+                
+                // Always populate fallback composite keys as a safety net
+                const pubId = String(rec.IdPubs ?? rec.IDPub ?? rec.idpubs ?? "").trim();
+                const num = Number(rec.NUMBER);
+                if (pubId && !isNaN(num)) {
+                    fallbackTargets.add(`${pubId}_${num}`);
+                }
+            });
+
+            // 1. Delete direct primary keys (Coercing Number & String variants)
+            directKeys.forEach((key) => {
+                store.delete(key);
+                if (typeof key === "number") store.delete(String(key));
+                if (typeof key === "string" && !isNaN(Number(key))) store.delete(Number(key));
+            });
+
+            // 2. Cursor sweep to catch records missing primary keys or mismatched ID types
+            const cursorReq = store.openCursor();
+            cursorReq.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const val = cursor.value;
+                    const curPubId = String(val.IdPubs ?? val.IDPub ?? val.idpubs ?? "").trim();
+                    const curNum = Number(val.NUMBER);
+                    const compositeKey = `${curPubId}_${curNum}`;
+
+                    if (fallbackTargets.has(compositeKey)) {
+                        store.delete(cursor.primaryKey);
+                    }
+                    cursor.continue();
+                }
+            };
+
+            tx.oncomplete = () => resolve();
+            tx.onerror = (event) => reject(event.target.error);
+        };
+    });
+}
+
+// ==========================================
+// 4. UNIFIED PUBLISHER SELECTION FUNCTION
+// ==========================================
+// Handles clicking a name in the listbox, highlighting it, 
+// filling user details, and loading their S-21 monthly table.
+        function selectPublisher(p,itemElement) {
+            if (!p) return;
+            currentSelectedPublisher = p;
+
+            // 🔒 Lock saves immediately so stray change events don't cross-contaminate
+            isSwitchingPublisher = true;
+
+
+            // ⚡ 1. Fast active class swap
+            const prevActive = document.querySelector('.listbox-item.active');
+            if (prevActive) prevActive.classList.remove('active');
+
+            // ⚡ 2. Highlight and scroll instantly
+            if (itemElement) {
+                itemElement.classList.add('active');
+                itemElement.scrollIntoView({block:'nearest',behavior:'auto'});
+            }
+
+            // ⚡ 3. Populate primary UI fields synchronously
+            loadPublisherNameIntoUI(p);
+            populateForm(p);
+
+            // ⚡ 4. Defer S-21 records loading & metrics calculation slightly
+            setTimeout(() => {
+                loadS21RecordsForPublisher();
+                refreshSelectedPublisherFromDB();   // ← new
+                isSwitchingPublisher = false;
+            },0);
+        }
+
+// ==========================================
+// EXPANDABLE NAME EDIT LOGIC
+// ==========================================
+const displayBox = document.getElementById('pubNameDisplay');
+const editContainer = document.getElementById('nameEditContainer');
+const editLName = document.getElementById('editLName');
+const editFName = document.getElementById('editFName');
+const editMName = document.getElementById('editMName');
+
+let isEditingName = false;
+
+// 1. Populate display box on load/selection
+function loadPublisherNameIntoUI(p) {
+    if (!displayBox || !p) return;
+
+    const lastName = p.LName || '';
+    const firstName = p.FNAME || '';
+    const middleName = p.MName || '';
+
+    displayBox.value = `${lastName}, ${firstName} ${middleName}`.trim().replace(/\s+/g, ' ');
+    
+    editContainer.style.display = 'none';
+    displayBox.style.display = 'block';
+    isEditingName = false;
+    console.log("🔄 UI loaded name for publisher:", p.IDPub);
+}
+
+function refreshSelectedPublisherFromDB() {
+    const pub = currentSelectedPublisher;
+    if (!pub || !pub.IDPub) return;
+
+    const req = indexedDB.open("CongregationDB", 11);
+    req.onsuccess = (e) => {
+        const db = e.target.result;
+        const getAll = db.transaction(["PUBLISHERS"], "readonly")
+                         .objectStore("PUBLISHERS").getAll();
+        getAll.onsuccess = () => {
+            const fresh = (getAll.result || []).find(
+                r => String(r.IDPub) === String(pub.IDPub)
+            );
+            db.close();
+            // Ignore the result if the user already switched to another publisher
+            if (fresh && currentSelectedPublisher === pub) {
+                Object.assign(pub, fresh);
+                loadPublisherNameIntoUI(pub);
+                populateForm(pub);
+            }
+        };
+        getAll.onerror = () => db.close();
+    };
+}
+
+// 3. Handle clicks outside the edit container
+function handleOutsideClick(e) {
+    console.log("🕵️ Global mousedown detected on target:", e.target);
+    
+    // Check if the click target is outside both the edit container and the display box
+    if (!editContainer.contains(e.target) && e.target !== displayBox) {
+        console.log("🚪 Clicked completely outside name editor. Saving and closing.");
+        saveAndCloseNameEdit();
+    } else {
+        console.log("📌 Click was inside name editor. Staying open.");
+    }
+}
+
+// 4. Save, close, write to IndexedDB
+function saveAndCloseNameEdit() {
+    if (!isEditingName) {
+        console.log("⚠️ saveAndCloseNameEdit called, but isEditingName is false. Skipping.");
+        return;
+    }
+    
+    console.log("💾 Executing saveAndCloseNameEdit()...");
+    isEditingName = false;
+    
+    // Remove the global outside-click listener
+    document.removeEventListener('mousedown', handleOutsideClick);
+
+    if (!currentSelectedPublisher) {
+        console.warn("⚠️ No currentSelectedPublisher found during save.");
+        return;
+    }
+
+    // 1. Grab values from separate inputs
+    currentSelectedPublisher.LName = editLName.value.trim();
+    currentSelectedPublisher.FNAME = editFName.value.trim();
+    currentSelectedPublisher.MName = editMName.value.trim();
+
+    // 2. Rebuild combined display text and Fullname property
+    const combined = `${currentSelectedPublisher.LName}, ${currentSelectedPublisher.FNAME} ${currentSelectedPublisher.MName}`.trim().replace(/\s+/g, ' ');
+    displayBox.value = combined;
+    currentSelectedPublisher.Fullname = combined;
+
+    // 3. Switch view back to the single display box
+    editContainer.style.display = 'none';
+    displayBox.style.display = 'block';
+
+    // 4. Trigger your proven save function to handle IndexedDB cursor write and list refresh
+    savePublisherChanges();
+    console.log("✅ Name updated and handed off to savePublisherChanges()");
+}
+
+
+
+
+// Add this placeholder function anywhere in your global JavaScript
+// Define the missing render function to prevent ReferenceError
+// Define this globally so switchTab() can call it successfully
+// Define this globally so tab switching calls it successfully
+function renderCurrentMonthData() {
+    if (typeof updateMonthSidebarDisplay === 'function') updateMonthSidebarDisplay();
+    if (typeof loadS21RecordsForPublisher === 'function') loadS21RecordsForPublisher();
+    if (typeof loadMonthlyAttendanceData === 'function') loadMonthlyAttendanceData();
+}
+//==============================================================
+
+
+
+
+// Update UI Sidebar Text
+function updateMonthSidebarDisplay() {
+    const monthNavStrong = document.querySelector('.Month-sidebar-nav strong');
+    if (!monthNavStrong) return;
+
+    const now = new Date();
+    const isThisMonth = (window.activeCalendarYear === now.getFullYear() &&   window.activeCalendarMonth === now.getMonth());
+    const monthName = calendarMonthNames[ window.activeCalendarMonth];
+
+    if (isThisMonth) {
+        monthNavStrong.textContent = `${monthName} ${window.activeCalendarYear} - This Month`;
+    } else {
+        monthNavStrong.textContent = `${monthName} ${window.activeCalendarYear}`;
+    }
+}
+
+// Triggered whenever month changes via arrows
+function onMonthOrYearChanged() {
+    console.log(`🔄 Calendar changed to: ${calendarMonthNames[window.activeCalendarMonth]} ${activeCalendarYear} (MonthIndex: ${window.getMonthIndex()})`);
+    updateMonthSidebarDisplay();
+
+    if (typeof loadS21RecordsForPublisher === 'function') {
+        loadS21RecordsForPublisher();
+    }
+
+
+    loadMonthlyAttendanceData();
+
+    // Re-render the publisher listbox for the updated month/year
+    if (typeof renderListbox === 'function') {
+        // Read active search & category inputs (adjust element IDs if yours are named differently)
+        const filterInput = document.getElementById('publisherSearch') || document.getElementById('searchInput');
+        const categorySelect = document.getElementById('publisherCategory') || document.getElementById('categorySelect');
+
+        const currentFilter = filterInput ? filterInput.value : "";
+        const currentCategory = categorySelect ? categorySelect.value : "ALL";
+
+        renderListbox(currentFilter, currentCategory);
+    }
+}
+
+
+
+
+// ==========================================
+// 2. INDEXEDDB DATABASE OPERATIONS
+// ==========================================
+function openCongregationDB(callback) {
+    const request = indexedDB.open("CongregationDB", 11);
+
+    request.onupgradeneeded = event => {
+        const db = event.target.result;
+
+        console.log(
+            `🔄 IndexedDB upgrade: ${event.oldVersion} → ${event.newVersion}`
+        );
+
+        if (!db.objectStoreNames.contains("CongInfo")) {
+            db.createObjectStore("CongInfo", {
+                keyPath: "passcode"
+            });
+        }
+
+        if (!db.objectStoreNames.contains("GROUPS")) {
+            db.createObjectStore("GROUPS", {
+                keyPath: "Group"
+            });
+        }
+
+        if (!db.objectStoreNames.contains("PUBLISHERS")) {
+            db.createObjectStore("PUBLISHERS", {
+                keyPath: "IDPub"
+            });
+        }
+
+        if (!db.objectStoreNames.contains("MonthlyRecords")) {
+            db.createObjectStore("MonthlyRecords", {
+                keyPath: "NUMBER"
+            });
+        }
+
+        if (!db.objectStoreNames.contains("RECORDS")) {
+            db.createObjectStore("RECORDS", {
+                keyPath: ["NUMBER","IdPubs"]
+            });
+        }
+
+        console.log(
+            "✅ IndexedDB stores created:",
+            Array.from(db.objectStoreNames)
+        );
+    };
+
+    request.onsuccess = event => {
+        callback(event.target.result);
+    };
+
+    request.onerror = event => {
+        console.error(
+            "❌ IndexedDB open error:",
+            event.target.error
+        );
+    };
+}
+
+// 🌐 Expose globally so it can be called across iframes and external scripts
+window.loadMonthlyAttendanceData = loadMonthlyAttendanceData;
+
+
+// Save attendance metrics cleanly using IndexedDB in-line key upsert
+// 1. Load attendance metrics using NUMBER as the unique lookup key
+function loadMonthlyAttendanceData() {
+    const targetNumber = Number(window.getMonthIndex());
+
+    // Clear inputs first
+    document.getElementById('activePublishersInput').value = "";
+    document.getElementById('attendcMidweekTotal').value = "";
+    document.getElementById('attendcPublickTotal').value = "";
+    document.getElementById('noMtgs1').value = "";
+    document.getElementById('noMtgs2').value = "";
+    document.getElementById('avgWeekendDisplay').value = "";
+
+    console.group(`📖 [loadMonthlyAttendanceData] Loading NUMBER: ${targetNumber}`);
+
+    openCongregationDB((db) => {
+        if (!db.objectStoreNames.contains("MonthlyRecords")) {
+            console.error("❌ MonthlyRecords object store not found.");
+            console.groupEnd();
+            return;
+        }
+
+        const transaction = db.transaction(["MonthlyRecords"], "readonly");
+        const store = transaction.objectStore("MonthlyRecords");
+
+        let found = false;
+        const cursorReq = store.openCursor();
+
+        cursorReq.onsuccess = (e) => {
+            const cursor = e.target.result;
+
+            if (cursor) {
+                if (Number(cursor.value.NUMBER) === targetNumber) {
+                    found = true;
+                    const rec = cursor.value;
+
+                    console.log(`✅ [FOUND] Attendance record loaded for NUMBER: ${targetNumber}`, rec);
+
+                    document.getElementById('activePublishersInput').value = rec.ActivePublishers || "";
+                    document.getElementById('attendcMidweekTotal').value = rec.AttendcMidweekTotal || "";
+                    document.getElementById('attendcPublickTotal').value = rec.AttendcPublickTotal || "";
+                    document.getElementById('noMtgs1').value = rec.NoMtgs1 || "";
+                    document.getElementById('noMtgs2').value = rec.NoMtgs2 || "";
+
+                    if (typeof calculateWeekendAverage === 'function') {
+                        calculateWeekendAverage();
+                    }
+
+                    console.groupEnd();
+                    return;
+                }
+                cursor.continue();
+                return;
+            }
+
+            if (!found) {
+                console.log(`ℹ️ [NOT FOUND] No attendance record exists for NUMBER: ${targetNumber}`);
+                console.groupEnd();
+            }
+        };
+
+        cursorReq.onerror = (err) => {
+            console.error(`❌ Error fetching record for NUMBER ${targetNumber}:`, err.target.error);
+            console.groupEnd();
+        };
+    });
+}
+
+// 2. Save attendance metrics treating NUMBER as the unique logical ID
+// Save attendance metrics: Corrected cursor scan to find NUMBER and update in-place
+let saveDebounceTimer = null;
+
+function saveMonthlyAttendanceData() {
+    clearTimeout(saveDebounceTimer);
+
+    saveDebounceTimer = setTimeout(() => {
+        const rawMonthIndex = window.getMonthIndex();
+        const targetNumber = Number(rawMonthIndex);
+        updateActivePublishersCount();
+
+        if (isNaN(targetNumber)) {
+            console.error("❌ Save aborted: Invalid or NaN month index:", rawMonthIndex);
+            return;
+        }
+
+        const calYear = Number(window.activeCalendarYear);
+        const calMonthIdx = Number(window.activeCalendarMonth); 
+        const monthName = calendarMonthNames[calMonthIdx] || "";
+        const computedServiceYear = calMonthIdx >= 8 ? calYear + 1 : calYear;
+
+        const activePublisher = Number(document.getElementById('activePublishersInput')?.value) || 0;
+        const inputMidweek = Number(document.getElementById('attendcMidweekTotal')?.value) || 0;
+        const inputPublic = Number(document.getElementById('attendcPublickTotal')?.value) || 0;
+        const inputNoMtgs1 =
+            document.getElementById('noMtgs1')?.value === ""
+                ? ""
+                : Number(document.getElementById('noMtgs1').value);
+
+        const inputNoMtgs2 =
+            document.getElementById('noMtgs2')?.value === ""
+                ? ""
+                : Number(document.getElementById('noMtgs2').value);
+
+        console.group(`💾 [saveMonthlyAttendanceData] Saving NUMBER: ${targetNumber}`);
+
+        openCongregationDB((db) => {
+            if (!db.objectStoreNames.contains("MonthlyRecords")) {
+                console.error("❌ Error: 'MonthlyRecords' store missing during save!");
+                console.groupEnd();
+                return;
+            }
+
+            const transaction = db.transaction(["MonthlyRecords"], "readwrite");
+            const store = transaction.objectStore("MonthlyRecords");
+
+            transaction.oncomplete = () => {
+                console.log(`✨ SUCCESS: Saved record to IndexedDB for NUMBER ${targetNumber}`);
+                if (typeof logAllSavedAttendanceRecords === 'function') {
+                    logAllSavedAttendanceRecords();
+                }
+                console.groupEnd();
+            };
+
+            transaction.onerror = (err) => {
+                console.error("❌ Error saving attendance record:", err.target.error);
+                console.groupEnd();
+            };
+
+            // Safe lookup via cursor scan instead of missing index
+            let found = false;
+            const cursorReq = store.openCursor();
+
+            cursorReq.onsuccess = (e) => {
+                const cursor = e.target.result;
+
+                if (cursor) {
+                    if (Number(cursor.value.NUMBER) === targetNumber) {
+                        found = true;
+                        const existing = cursor.value;
+
+                        console.log(`🟡 Action: UPDATE | Reason: Found existing row matching NUMBER ${targetNumber}`);
+
+                        if (Number(cursor.value.NUMBER) === targetNumber) {
+
+                                found = true;
+
+                                console.log(
+                                    `🟡 Action: UPDATE | Reason: Found existing row matching NUMBER ${targetNumber}`
+                                );
+
+                                const existing = cursor.value;
+
+                                // IMPORTANT:
+                                // Do NOT touch existing.NUMBER.
+                                // It must remain exactly identical to the IndexedDB cursor key.
+
+                                existing.MONTH_ = monthName;
+                                existing.Year = calYear;
+                                existing.ServiceYear = computedServiceYear;
+                                existing.ActivePublishers = activePublisher;
+                                existing.AttendcMidweekTotal = inputMidweek;
+                                existing.AttendcPublickTotal = inputPublic;
+                                existing.NoMtgs1 = inputNoMtgs1;
+                                existing.NoMtgs2 = inputNoMtgs2;
+                                existing.Closed = existing.Closed ?? 0;
+
+                                console.log(
+                                    "🔑 Existing NUMBER:",
+                                    existing.NUMBER,
+                                    "| Type:",
+                                    typeof existing.NUMBER,
+                                    "| Cursor key:",
+                                    cursor.primaryKey,
+                                    "| Cursor key type:",
+                                    typeof cursor.primaryKey
+                                );
+
+                                cursor.update(existing);
+
+                                return;
+                            }
+
+                        cursor.update(updatedRecord);
+                        return;
+                    }
+                    cursor.continue();
+                    return;
+                }
+
+                if (!found) {
+                    console.log(`🟢 Action: CREATE | Reason: No row found matching NUMBER ${targetNumber}`);
+
+                    const newRecord = {
+                        NUMBER: targetNumber,
+                        MONTH_: monthName,
+                        Year: calYear,
+                        ServiceYear: computedServiceYear,
+                        ActivePublishers: activePublisher,
+                        AttendcMidweekTotal: inputMidweek,
+                        AttendcPublickTotal: inputPublic,
+                        NoMtgs1: inputNoMtgs1,
+                        NoMtgs2: inputNoMtgs2,
+                        Closed: 0
+                    };
+
+                    store.add(newRecord);
+                }
+             
+            };
+
+            cursorReq.onerror = (err) => {
+                console.error(`❌ [Cursor Error] Failed reading store for NUMBER ${targetNumber}:`, err.target.error);
+            };
+        });
+    }, 300);
+}
+
+// 3. Helper utility to print a table of all stored monthly records in the console
+function logAllSavedAttendanceRecords() {
+
+}
+
+
+// Calculate Weekend Average Attendance
+function calculateWeekendAverage() {
+    const mtgsValue = document.getElementById('noMtgs2')?.value;
+    const totalValue = document.getElementById('attendcPublickTotal')?.value;
+    const avgDisplayEl = document.getElementById('avgWeekendDisplay');
+
+    const mtgs = mtgsValue === "" ? "" : parseFloat(mtgsValue);
+    const total = totalValue === "" ? "" : parseFloat(totalValue);
+
+    if (mtgs !== "" && total !== "" && mtgs > 0) {
+        avgDisplayEl.value = (total / mtgs).toFixed(1);
+    } else {
+        avgDisplayEl.value = "";
+    }
+}
+
+// ==========================================
+// 3. INITIALIZATION & EVENT LISTENERS / page load
+// ==========================================
+async function initAppSystem() {
+    console.log("🚀 Initializing Application System...");
+
+ 
+    const monthStatusBtn = document.getElementById('monthStatusBtn');
+    if (monthStatusBtn) {
+        monthStatusBtn.onclick = () => {
+            if (typeof closeCurrentMonthReport === 'function') {
+                closeCurrentMonthReport();
+            }
+        };
+    }
+
+    // 2. Setup Arrow Navigation (Only bound ONCE here)
+    const navArrows = document.querySelectorAll('.Month-sidebar-nav .nav-arrow-month');
+    if (navArrows.length >= 2) {
+        const leftArrow = navArrows[0];  
+        leftArrow.style.cursor = 'pointer';
+        leftArrow.onclick = () => {
+              window.activeCalendarMonth--;
+            if (window.activeCalendarMonth < 0) {
+                  window.activeCalendarMonth = 11; 
+                 window.activeCalendarYear--;    
+            }
+            if (typeof onMonthOrYearChanged === 'function') onMonthOrYearChanged();
+            if (typeof calculateMonthlySummaryMetrics === 'function') calculateMonthlySummaryMetrics();
+        };
+
+        const rightArrow = navArrows[1]; 
+        rightArrow.style.cursor = 'pointer';
+        rightArrow.onclick = () => {
+              window.activeCalendarMonth++;
+            if (window.activeCalendarMonth > 11) {
+                  window.activeCalendarMonth = 0;  
+                 window.activeCalendarYear++;    
+            }
+            if (typeof onMonthOrYearChanged === 'function') onMonthOrYearChanged();
+            if (typeof calculateMonthlySummaryMetrics === 'function') calculateMonthlySummaryMetrics();
+        };
+    }
+
+    // 3. Setup Side Box Expand / Collapse Toggle via Event Delegation
+    document.addEventListener('click', (e) => {
+        const sideBox = e.target.closest('#attendanceSideBox');
+        if (!sideBox) return;
+        if (e.target.tagName === 'INPUT') return; // Do not toggle when clicking inside inputs
+
+        const collapsedView = document.getElementById('collapsedAttendanceView');
+        const expandedView = document.getElementById('expandedAttendanceView');
+        const toggleIcon = document.getElementById('attendanceToggleIcon');
+
+        if (!expandedView || !collapsedView) return;
+
+        const isHidden = window.getComputedStyle(expandedView).display === 'none';
+
+        if (isHidden) {
+            expandedView.style.display = 'block';
+            collapsedView.style.display = 'none';
+            if (toggleIcon) toggleIcon.textContent = '▲';
+        } else {
+            expandedView.style.display = 'none';
+            collapsedView.style.display = 'block';
+            if (toggleIcon) toggleIcon.textContent = '▼';
+        }
+    });
+
+    // 4. Auto-calculation and Auto-save on Attendance Input
+    document.addEventListener('input', (e) => {
+        const targetIds = ['noMtgs1', 'attendcMidweekTotal', 'noMtgs2', 'attendcPublickTotal'];
+        if (targetIds.includes(e.target.id)) {
+            if (typeof calculateWeekendAverage === 'function') calculateWeekendAverage();
+            if (typeof saveMonthlyAttendanceData === 'function') saveMonthlyAttendanceData();
+        }
+    });
+
+    // 5. Category & Search Inputs Setup (Default to "ACTIVE PUBLISHERS" & bind listbox)
+    const categorySelectEl = document.getElementById('categorySelect');
+    const searchInput = document.getElementById('publisherSearch');
+
+    if (categorySelectEl) {
+        categorySelectEl.value = "ACTIVE PUBLISHERS";
+        
+        // Re-render listbox when category changes
+        categorySelectEl.addEventListener('change', () => {
+            if (typeof renderListbox === 'function') {
+                renderListbox(searchInput ? searchInput.value : "", categorySelectEl.value);
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            if (typeof renderListbox === 'function') {
+                renderListbox(searchInput.value, categorySelectEl ? categorySelectEl.value : "ACTIVE PUBLISHERS");
+            }
+        });
+    }
+
+    // 6. Initial Startup Load & Safe Renders
+    if (typeof updateMonthSidebarDisplay === 'function') {
+        updateMonthSidebarDisplay();
+    }
+
+    if (typeof loadMonthlyAttendanceData === 'function') {
+        loadMonthlyAttendanceData();
+    }
+
+    if (typeof calculateMonthlySummaryMetrics === 'function') {
+        calculateMonthlySummaryMetrics();
+    }
+
+    // Render listbox on page load using default category
+    if (typeof renderListbox === 'function') {
+        renderListbox(
+            searchInput ? searchInput.value : "", 
+            categorySelectEl ? categorySelectEl.value : "ACTIVE PUBLISHERS"
+        );
+    }
+ 
+  updateCopyMissingReportBtnVisibility(); 
+  updateSidebarClosedState();
+  updateMobileListboxToggleText(); // PHONE MODE: set initial toggle label
+
+
+
+}
+
+// Run safely regardless of DOM loading state
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAppSystem);
+} else {
+    initAppSystem();
+}
+
+//===========================================
+/**
+ * Automatically calculates and updates summary metrics from IndexedDB 'RECORDS'
+ * filtered by matching Date_entered with the selected MonthIndex.
+ * 
+ * @param {number|string} [overrideMonthIndex] - Optional MonthIndex override
+ */
+function calculateMonthlySummaryMetrics(overrideMonthIndex) {
+    const targetMonthIndex = Number(
+        overrideMonthIndex ?? window.currentActiveMonthIndex
+    );
+    console.log("📊 SUMMARY → IndexedDB month:", targetMonthIndex);
+    console.log("📌 Active NUMBER:", window.currentActiveMonthIndex);
+    if (isNaN(targetMonthIndex)) {
+        console.warn("⚠️ Invalid report month:", targetMonthIndex);
+        return;
+    }
+
+     
+    openCongregationDB((db) => {
+        const storeNames = Array.from(db.objectStoreNames);
+        const targetStore = storeNames.find(name =>
+            ["RECORDS", "S21RECORDS"].includes(name.toUpperCase())
+        ) || "RECORDS";
+        const pubStore = storeNames.find(name =>
+            name.toUpperCase() === "PUBLISHERS"
+        ) || "PUBLISHERS";
+        if (!db.objectStoreNames.contains(targetStore)) {
+            console.error(`❌ Store '${targetStore}' not found.`);
+            return;
+        }
+        const storesToOpen = [targetStore];
+        const hasPubStore = db.objectStoreNames.contains(pubStore);
+        if (hasPubStore) storesToOpen.push(pubStore);
+        const tx = db.transaction(storesToOpen, "readonly");
+        const recordsReq = tx.objectStore(targetStore).getAll();
+        const pubsReq = hasPubStore
+            ? tx.objectStore(pubStore).getAll()
+            : null;
+        let recordsData = null;
+        let publishersDataLocal = window.publishersData || [];
+        const processJoinAndSummary = () => {
+            if (recordsData === null) return;
+            const publisherMap = new Map();
+            publishersDataLocal.forEach(p => {
+                const pubId = String(
+                    p.IDPub ?? p.IdPubs ?? ""
+                ).trim();
+                if (pubId) {
+                    publisherMap.set(pubId, {
+                        ...p,
+                        fullName: `${p.LName || ""}, ${p.FNAME || ""}`.trim()
+                    });
+                }
+            });
+            const isTrueMarker = (val) => {
+                if (val === null || val === undefined) return false;
+                if (typeof val === "boolean") return val;
+                if (typeof val === "number") return val !== 0;
+                return ["?", "1", "Y", "YES", "TRUE", "-1"].includes(
+                    String(val).trim().toUpperCase()
+                );
+            };
+            const summary = {
+                pub: { reports: 0, hours: 0, studies: 0, details: [] },
+                aux: { reports: 0, hours: 0, studies: 0, details: [] },
+                rp: { reports: 0, hours: 0, studies: 0, details: [] },
+                total: { reports: 0, hours: 0, studies: 0 }
+            };
+            recordsData.forEach(rec => {
+                // Date_entered determines the report month.
+                // NUMBER is NOT used for monthly report filtering.
+                const reportMonth = Number(rec.Date_entered);
+                if (!Number.isFinite(reportMonth) ||
+                    reportMonth !== targetMonthIndex) {
+                    return;
+                }
+                const pubIdRaw = String(
+                    rec.IdPubs ??
+                    rec.IDPub ??
+                    rec.idpubs ??
+                    ""
+                ).trim();
+                const publisher = publisherMap.get(pubIdRaw) || {
+                    fullName: "Unknown / Unlinked Publisher",
+                    IDPub: pubIdRaw
+                };
+                const hours = Number(
+                    rec.HRS ??
+                    rec.Hours ??
+                    0
+                ) || 0;
+                const studies = Number(
+                    rec.BS ??
+                    rec.Studies ??
+                    0
+                ) || 0;
+                const remarkStr = String(
+                    rec.REMARKS ??
+                    rec.Remarks ??
+                    ""
+                ).trim().toUpperCase();
+                const isRP = remarkStr.includes("RP");
+                const isAux = isTrueMarker(
+                    rec.AUX ??
+                    rec.aux ??
+                    rec.AuxPioneer
+                );
+                const hasMinistryFlag = isTrueMarker(
+                    rec.MINISTRY ??
+                    rec.Ministry
+                );
+                const hasActivity =
+                    hasMinistryFlag ||
+                    hours > 0 ||
+                    studies > 0;
+                if (!hasActivity) return;
+                const joinedRecord = {
+                    ...rec,
+                    publisherName: publisher.fullName,
+                    publisherProfile: publisher
+                };
+                if (isRP) {
+                    summary.rp.reports++;
+                    summary.rp.hours += hours;
+                    summary.rp.studies += studies;
+                    summary.rp.details.push(joinedRecord);
+                } else if (isAux) {
+                    summary.aux.reports++;
+                    summary.aux.hours += hours;
+                    summary.aux.studies += studies;
+                    summary.aux.details.push(joinedRecord);
+                } else {
+                    summary.pub.reports++;
+                    summary.pub.hours += hours;
+                    summary.pub.studies += studies;
+                    summary.pub.details.push(joinedRecord);
+                }
+            });
+            summary.total.reports =
+                summary.pub.reports +
+                summary.aux.reports +
+                summary.rp.reports;
+            summary.total.hours =
+                summary.pub.hours +
+                summary.aux.hours +
+                summary.rp.hours;
+            summary.total.studies =
+                summary.pub.studies +
+                summary.aux.studies +
+                summary.rp.studies;
+            window.currentMonthSummary = summary;
+            console.log(
+                `📊 Summary rebuilt for Date_entered ${targetMonthIndex}:`,
+                summary
+            );
+            if (typeof setVal === "function") {
+                setVal("pub-reports", summary.pub.reports);
+                setVal("pub-hours", summary.pub.hours);
+                setVal("pub-studies", summary.pub.studies);
+                setVal("aux-reports", summary.aux.reports);
+                setVal("aux-hours", summary.aux.hours);
+                setVal("aux-studies", summary.aux.studies);
+                setVal("rp-reports", summary.rp.reports);
+                setVal("rp-hours", summary.rp.hours);
+                setVal("rp-studies", summary.rp.studies);
+                setVal("total-reports", summary.total.reports);
+                setVal("total-hours", summary.total.hours);
+                setVal("total-studies", summary.total.studies);
+            }
+        };
+        recordsReq.onsuccess = e => {
+            recordsData = e.target.result || [];
+            if (!pubsReq) processJoinAndSummary();
+        };
+        if (pubsReq) {
+            pubsReq.onsuccess = e => {
+                publishersDataLocal = e.target.result || [];
+                processJoinAndSummary();
+            };
+        }
+        tx.onerror = e => {
+            console.error(
+                "❌ Summary query error:",
+                e.target.error
+            );
+        };
+    });
+}
+
+// Helper utility to safely update input value
+function setVal(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.value = value || 0;
+    }
+}
+
+window.checkAux = function() {
+    openCongregationDB(db => {
+        const storeNames = Array.from(db.objectStoreNames);
+        const targetStore = storeNames.find(name => 
+            name.toUpperCase() === "RECORDS" || name.toUpperCase() === "S21RECORDS"
+        ) || "RECORDS";
+
+        const tx = db.transaction([targetStore], "readonly");
+        const req = tx.objectStore(targetStore).getAll();
+
+        req.onsuccess = (e) => {
+            const records = e.target.result || [];
+            console.log(`📦 Total RECORDS in IndexedDB: ${records.length}`);
+            
+            // Print breakdown of AUX values
+            const auxBreakdown = {};
+            records.forEach(r => {
+                const val = r.AUX ?? r.aux ?? r.AuxPioneer ?? r.Aux;
+                const key = `[Type: ${typeof val}] ${JSON.stringify(val)}`;
+                auxBreakdown[key] = (auxBreakdown[key] || 0) + 1;
+            });
+            
+            console.group("📊 AUX Value Breakdown");
+            console.table(auxBreakdown);
+            console.groupEnd();
+
+            // Print active AUX records
+            const activeAux = records.filter(r => {
+                const val = r.AUX ?? r.aux ?? r.AuxPioneer ?? r.Aux;
+                const str = String(val ?? "").trim();
+                return str !== "" && str !== "0" && str.toLowerCase() !== "false";
+            });
+
+            console.group(`🏷️ Active AUX Records (${activeAux.length})`);
+            console.table(activeAux);
+            console.groupEnd();
+        };
+    });
+};
+
+
+function RecordLog(targetDateEntered = 198) {
+    const req = indexedDB.open("CongregationDB", 11);
+
+    req.onsuccess = (e) => {
+        const db = e.target.result;
+        const storeNames = Array.from(db.objectStoreNames);
+        const targetStore = storeNames.find(name => 
+            name.toUpperCase() === "RECORDS" || name.toUpperCase() === "S21RECORDS"
+        ) || "RECORDS";
+
+        if (!db.objectStoreNames.contains(targetStore)) {
+            console.error(`Store '${targetStore}' not found in CongregationDB.`);
+            return;
+        }
+
+        const tx = db.transaction(targetStore, "readonly");
+        const getAllReq = tx.objectStore(targetStore).getAll();
+
+        getAllReq.onsuccess = () => {
+            const records = getAllReq.result || [];
+            const filtered = records.filter(r => 
+                Number(r.Date_entered ?? r.NUMBER) === Number(targetDateEntered)
+            );
+
+            if (filtered.length === 0) {
+                console.warn(`⚠️ No records found for Date_entered = ${targetDateEntered}`);
+                return;
+            }
+
+            const headers = ["Index", "IdPubs", "Date_entered", "AUX", "MINISTRY", "HRS", "BS", "REMARKS"];
+            let mdTable = `| ${headers.join(" | ")} |\n`;
+            mdTable += `| ${headers.map(() => "---").join(" | ")} |\n`;
+
+            filtered.forEach((r, idx) => {
+                const row = [
+                    idx + 1,
+                    r.IdPubs ?? r.IDPub ?? r.idpubs ?? "",
+                    r.Date_entered ?? r.NUMBER ?? "",
+                    r.AUX ?? r.aux ?? "",
+                    r.MINISTRY ?? r.Ministry ?? "",
+                    r.HRS ?? r.Hours ?? 0,
+                    r.BS ?? r.Studies ?? 0,
+                    r.REMARKS ?? r.Remarks ?? ""
+                ];
+                mdTable += `| ${row.join(" | ")} |\n`;
+            });
+
+            console.log(`\n=== Markdown Table for Date_entered = ${targetDateEntered} (${filtered.length} records) ===\n`);
+            console.log(mdTable);
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(mdTable)
+                    .then(() => console.log("📋 Copied table to clipboard! You can now paste (Ctrl+V) it here."))
+                    .catch(() => console.log("💡 Highlight and copy the table text above manually."));
+            }
+        };
+    };
+
+    req.onerror = (err) => console.error("Failed to open CongregationDB:", err);
+}
+
+// --------------------------ALL ACTIVE PUBLISHERS COUNT--------------------------
+
+function get6MonthActivePublisherIds(targetMonthIndex) {
+    const target = Number(targetMonthIndex);
+    const startMonthIndex = target - 5;
+    
+    const recData = Array.isArray(window.recordsData) ? window.recordsData : [];
+    const pubData = (typeof publishersData !== 'undefined' && Array.isArray(publishersData)) ? publishersData : [];
+
+    // 1. Build a Set of active Publisher IDs (Status is empty OR "active")
+    const activePubIds = new Set(
+        pubData
+            .filter(p => {
+                const statusVal = (p.Status || "").trim().toLowerCase();
+                return !p.Status || statusVal === "" || statusVal === "active";
+            })
+            .map(p => String(p.IDPub ?? p.IdPubs ?? "").trim())
+    );
+
+    const isTrueMarker = (val) => {
+        if (!val) return false;
+        if (typeof val === "boolean") return val;
+        if (typeof val === "number") return val !== 0;
+        return ["?", "1", "Y", "YES", "TRUE", "-1"].includes(String(val).trim().toUpperCase());
+    };
+
+    const reportedIds = new Set();
+
+    recData.forEach(r => {
+        const monthNum = Number(r.Date_entered ?? r.NUMBER);
+        if (monthNum >= startMonthIndex && monthNum <= target) {
+            const rawPubId = r.IdPubs ?? r.IDPub ?? r.idpubs;
+            if (rawPubId === undefined || rawPubId === null) return;
+
+            const pubIdStr = String(rawPubId).trim();
+            if (!pubIdStr) return;
+
+            // Skip publishers who are inactive, moved out, or otherwise non-active
+            if (activePubIds.size > 0 && !activePubIds.has(pubIdStr)) return;
+
+            const hours = Number(r.HRS || r.Hours || 0);
+            const studies = Number(r.BS || r.Studies || 0);
+            const remarkStr = String(r.REMARKS || r.Remarks || "").trim().toUpperCase();
+            const isRP = remarkStr === "RP" || remarkStr.startsWith("RP ");
+            const isAux = isTrueMarker(r.AUX ?? r.aux ?? r.AuxPioneer ?? r.Aux);
+            const hasMinistryFlag = isTrueMarker(r.MINISTRY || r.Ministry);
+
+            if (hasMinistryFlag || hours > 0 || studies > 0 || isAux || isRP) {
+                reportedIds.add(pubIdStr);
+            }
+        }
+    });
+
+    return reportedIds;
+}
+
+// ----------------------- irregulars
+/**
+ * Returns a Set of Publisher IDs who are IRREGULAR.
+ * Adjusts the evaluation window for newly started, reactivated, or moved-in publishers 
+ * by checking REMARKS for start markers.
+ * 
+ * @param {number} targetMonthIndex - The active month NUMBER (e.g., 194)
+ * @returns {Set<string>} Set of irregular publisher IDs
+ */
+function getIrregularPublisherIds(targetMonthIndex) {
+    const target = Number(targetMonthIndex);
+    const startWindowIndex = target - 5; // Default 6-month window: [target - 5, target]
+
+    const recData = Array.isArray(window.recordsData) ? window.recordsData : [];
+    const pubData = (typeof publishersData !== 'undefined' && Array.isArray(publishersData)) ? publishersData : [];
+
+    // 1. Get Active Publishers (Status is empty OR "active")
+    const activePubSet = new Set(
+        pubData
+            .filter(p => {
+                const statusVal = (p.Status || "").trim().toLowerCase();
+                return !p.Status || statusVal === "" || statusVal === "active";
+            })
+            .map(p => String(p.IDPub ?? p.IdPubs ?? "").trim())
+    );
+
+    const isTrueMarker = (val) => {
+        if (!val) return false;
+        if (typeof val === "boolean") return val;
+        if (typeof val === "number") return val !== 0;
+        return ["?", "1", "Y", "YES", "TRUE", "-1"].includes(String(val).trim().toUpperCase());
+    };
+
+    // Keywords in REMARKS that mark a publisher's starting month
+    const startKeywords = ["NEW UPB", "NEW UBP", "NEW", "RETURNED", "REACTIVATED", "MOVED IN"];
+
+    const isStartRemark = (remarkStr) => {
+        if (!remarkStr) return false;
+        const upper = String(remarkStr).trim().toUpperCase();
+        return startKeywords.some(kw => upper.includes(kw));
+    };
+
+    // Map: pubId -> Map<monthNum, { isReporting: boolean, isStart: boolean }>
+    const pubHistory = new Map();
+    activePubSet.forEach(pubId => {
+        if (pubId) pubHistory.set(pubId, new Map());
+    });
+
+    // Populate history from recData within [startWindowIndex, target]
+    recData.forEach(r => {
+        const monthNum = Number(r.Date_entered ?? r.NUMBER);
+        if (monthNum >= startWindowIndex && monthNum <= target) {
+            const rawPubId = r.IdPubs ?? r.IDPub ?? r.idpubs;
+            if (rawPubId === undefined || rawPubId === null) return;
+
+            const pubIdStr = String(rawPubId).trim();
+            if (!pubHistory.has(pubIdStr)) return;
+
+            const hours = Number(r.HRS || r.Hours || 0);
+            const studies = Number(r.BS || r.Studies || 0);
+            const remarkStr = String(r.REMARKS || r.Remarks || "").trim();
+            const isRP = remarkStr.toUpperCase() === "RP" || remarkStr.toUpperCase().startsWith("RP ");
+            const isAux = isTrueMarker(r.AUX ?? r.aux ?? r.AuxPioneer ?? r.Aux);
+            const hasMinistryFlag = isTrueMarker(r.MINISTRY || r.Ministry);
+
+            const isReporting = hasMinistryFlag || hours > 0 || studies > 0 || isAux || isRP;
+            const isStart = isStartRemark(remarkStr);
+
+            pubHistory.get(pubIdStr).set(monthNum, { isReporting, isStart });
+        }
+    });
+
+    const irregularPubIds = new Set();
+
+    pubHistory.forEach((monthsMap, pubId) => {
+        // Step 1: Find effective start month within the 6-month window
+        let effectiveStartMonth = startWindowIndex;
+
+        for (let m = startWindowIndex; m <= target; m++) {
+            const mData = monthsMap.get(m);
+            if (mData && mData.isStart) {
+                effectiveStartMonth = m; // Reset start month to when they actually joined/reactivated
+                break;
+            }
+        }
+
+        // Step 2: Evaluate report consistency from effectiveStartMonth to target
+        let reportedCount = 0;
+        let missedCount = 0;
+
+        for (let m = effectiveStartMonth; m <= target; m++) {
+            const mData = monthsMap.get(m);
+            if (mData && mData.isReporting) {
+                reportedCount++;
+            } else {
+                missedCount++;
+            }
+        }
+
+        // Irregular criteria:
+        // - Missed at least 1 report during their active tenure window (missedCount > 0)
+        // - Has reported at least once (reportedCount > 0)
+        if (missedCount > 0 && reportedCount > 0) {
+            irregularPubIds.add(pubId);
+        }
+    });
+
+    return irregularPubIds;
+}
+
+
+// ==========================================
+// 3. CLOSE REPORT ACTION FUNCTION
+// ==========================================
+
+function updateMonthDisplay() {
+    const displayEl = document.getElementById("monthDisplayText");
+    if (!displayEl) return;
+
+    const monthName = calendarMonthNames[window.activeCalendarMonth] || "";
+    displayEl.textContent = `${monthName} ${window.activeCalendarYear}`;
+}
+
+// ==========================================
+async function syncMonthStatusUI() {
+    const btn=document.getElementById("monthStatusBtn");
+    if(!btn) return;
+
+    if(typeof updateMonthDisplay==="function") updateMonthDisplay();
+
+    const activeMonthIndex=Number(
+        window.currentActiveMonthIndex ??
+        (typeof window.getMonthIndex==="function"?window.getMonthIndex():0)
+    );
+
+    console.group(`🔄 [syncMonthStatusUI] Checking status for NUMBER: ${activeMonthIndex}`);
+
+    const request=indexedDB.open("CongregationDB",11);
+
+    request.onerror=(event)=>{
+        console.error("❌ Database open error in syncMonthStatusUI:",event.target.error);
+        setButtonUIState(btn,false);
+        console.groupEnd();
+    };
+
+    request.onupgradeneeded=(event)=>{
+        console.log(`🔄 IndexedDB upgrade: ${event.oldVersion} → ${event.newVersion}`);
+    };
+
+    request.onsuccess=(event)=>{
+        const db=event.target.result;
+
+        console.log("📦 DB VERSION:",db.version);
+
+        if(!db.objectStoreNames.contains("MonthlyRecords")){
+            console.warn("⚠️ MonthlyRecords object store missing; defaulting button to open.");
+            setButtonUIState(btn,false);
+            db.close();
+            console.groupEnd();
+            return;
+        }
+
+        const tx=db.transaction(["MonthlyRecords"],"readonly");
+        const store=tx.objectStore("MonthlyRecords");
+
+        // NUMBER is stored as a STRING in IndexedDB.
+        const getReq=store.get(String(activeMonthIndex));
+
+        getReq.onsuccess=(evt)=>{
+            const rec=evt.target.result;
+
+            if(rec){
+                const isClosed=Number(rec.Closed)===1;
+
+                console.log(
+                    `✅ [FOUND] Record for NUMBER ${activeMonthIndex} | ` +
+                    `Closed Status: ${isClosed} (${rec.Closed})`
+                );
+
+                const today=new Date();
+
+                if(isClosed && today.getDate()<21){
+                    const nextNumber=activeMonthIndex+1;
+
+                    console.log(
+                        `🔒 NUMBER ${activeMonthIndex} is CLOSED → ` +
+                        `Bypassing 21st-day rule → NUMBER ${nextNumber}`
+                    );
+
+                    db.close();
+                    console.groupEnd();
+
+                    syncGlobalsFromMonthNumber(nextNumber);
+
+                    // Rebuild summary for the NEW reporting month.
+                    calculateMonthlySummaryMetrics(nextNumber);
+
+                    selectedYear=activeServiceYear;
+
+                    if(typeof setServiceYear==="function"){
+                        setServiceYear(activeServiceYear);
+                    }
+
+                    if(typeof updateMonthDisplay==="function"){
+                        updateMonthDisplay();
+                    }
+
+                    updateYearDisplay();
+
+                    syncMonthStatusUI();
+
+                    return;
+                }
+
+                setButtonUIState(btn,isClosed);
+
+                db.close();
+                console.groupEnd();
+                return;
+            }
+
+            console.log(
+                `ℹ️ [NOT FOUND] No record for NUMBER ` +
+                `${activeMonthIndex} | ` +
+                `Defaulting button state to OPEN (false)`
+            );
+
+            setButtonUIState(btn,false);
+
+            db.close();
+            console.groupEnd();
+        };
+
+        getReq.onerror=(event)=>{
+            console.error(
+                `❌ Error reading NUMBER ${activeMonthIndex}:`,
+                event.target.error
+            );
+
+            setButtonUIState(btn,false);
+
+            db.close();
+            console.groupEnd();
+        };
+    };
+}
+
+function setButtonUIState(btn, isClosed) {
+    if (isClosed) {
+        btn.textContent = "CLOSED";
+        btn.classList.remove("active");
+        btn.classList.add("closed");
+        btn.style.backgroundColor = "#ffebee";
+        btn.style.color = "#c62828";
+        btn.style.borderColor = "#ef5350";
+        btn.style.cursor = "not-allowed";
+        btn.disabled = true;
+    } else {
+        btn.textContent = "Active";
+        btn.classList.remove("closed");
+        btn.classList.add("active");
+        btn.style.backgroundColor = "#e8f5e9";
+        btn.style.color = "#2e7d32";
+        btn.style.borderColor = "#4caf50";
+        btn.style.cursor = "pointer";
+        btn.disabled = false;
+    }
+}
+
+// Call on page refresh
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const IDPubSel = await globalSelectedPubID();
+            checkAndAutoCloseOverdueMonths(); // 👈 this line is the only edit to what you already have
+            syncMonthStatusUI();
+        });
+
+// 2. Close report function integrated with UI sync
+async function closeCurrentMonthReport() {
+    const btn = document.getElementById("monthStatusBtn");
+    if (btn && btn.disabled) return;
+
+    const displayEl =
+        document.getElementById("monthDisplayText");
+
+    const targetMonthName =
+        displayEl
+            ? displayEl.textContent
+            : "this month";
+
+    const confirmed = await window.parent.showCustomConfirm(
+        "Are you sure you want to close this monthly report?",
+        {
+            okText: "Yes, Close",
+            cancelText: "Cancel"
+        }
+    );
+
+if (!confirmed) return;
+
+    if (
+        typeof saveDebounceTimer !== "undefined" &&
+        saveDebounceTimer
+    ) {
+        clearTimeout(saveDebounceTimer);
+    }
+
+    const targetNumber =
+        Number(window.currentActiveMonthIndex);
+
+    const parts =
+        targetMonthName.trim().split(/\s+/);
+
+    const monthStr = parts[0] || "";
+
+    const yearNum =
+        Number(parts[1]) ||
+        new Date().getFullYear();
+
+    const activePubs =
+        Number(
+            document.getElementById(
+                "activePublishersInput"
+            )?.value
+        ) || 0;
+
+    const midMeetings =
+        Number(
+            document.getElementById("noMtgs1")?.value
+        ) || 0;
+
+    const midAttendance =
+        Number(
+            document.getElementById(
+                "attendcMidweekTotal"
+            )?.value
+        ) || 0;
+
+    const endMeetings =
+        Number(
+            document.getElementById("noMtgs2")?.value
+        ) || 0;
+
+    const endAttendance =
+        Number(
+            document.getElementById(
+                "attendcPublickTotal"
+            )?.value
+        ) || 0;
+
+    console.group(
+        `🔒 [closeCurrentMonthReport] Processing NUMBER: ${targetNumber}`
+    );
+
+    openCongregationDB((db) => {
+
+        if (
+            !db.objectStoreNames.contains(
+                "MonthlyRecords"
+            )
+        ) {
+            console.error(
+                "❌ MonthlyRecords object store not found."
+            );
+            console.groupEnd();
+            return;
+        }
+
+        const tx =
+            db.transaction(
+                ["MonthlyRecords"],
+                "readwrite"
+            );
+
+        const store =
+            tx.objectStore("MonthlyRecords");
+
+        window.currentMonthClosed = 1;
+
+        let found = false;
+
+        const cursorReq =
+            store.openCursor();
+
+        cursorReq.onsuccess = (e) => {
+
+            const cursor = e.target.result;
+
+            if (cursor) {
+
+                if (
+                    Number(cursor.value.NUMBER) ===
+                    targetNumber
+                ) {
+
+                    found = true;
+
+                    const record =
+                        cursor.value;
+
+                    console.log(
+                        `🟡 Action: UPDATE | Reason: Found existing record for NUMBER ${targetNumber}`
+                    );
+
+                    record.AttendcMidweekTotal =
+                        midAttendance;
+
+                    record.AttendcPublickTotal =
+                        endAttendance;
+
+                    record.NoMtgs1 =
+                        midMeetings;
+
+                    record.NoMtgs2 =
+                        endMeetings;
+
+                    record.ActivePublishers =
+                        activePubs;
+
+                    record.Closed = 1;
+
+                    cursor.update(record);
+
+                    console.log(
+                        `✅ UPDATE queued for NUMBER ${targetNumber}`
+                    );
+
+                    return;
+                }
+
+                cursor.continue();
+                return;
+            }
+
+            if (!found) {
+
+                console.log(
+                    `🟢 Action: CREATE | Reason: No existing record found matching NUMBER ${targetNumber}`
+                );
+
+                const newRecord = {
+                    NUMBER: targetNumber,
+                    MONTH_: monthStr,
+                    Year: yearNum,
+                    ServiceYear:
+                        typeof selectedYear !==
+                        "undefined"
+                            ? selectedYear
+                            : yearNum,
+                    AttendcMidweekTotal:
+                        midAttendance,
+                    AttendcPublickTotal:
+                        endAttendance,
+                    NoMtgs1:
+                        midMeetings,
+                    NoMtgs2:
+                        endMeetings,
+                    ActivePublishers:
+                        activePubs,
+                    Closed: 1
+                };
+
+                store.add(newRecord);
+
+                console.log(
+                    `✅ CREATE queued for NUMBER ${targetNumber}`
+                );
+            }
+        };
+
+        // ============================================
+        // TRANSACTION COMPLETED SUCCESSFULLY
+        // ============================================
+        tx.oncomplete = () => {
+                console.log(
+                    `✅ IndexedDB transaction completed for NUMBER ${targetNumber}`
+                );
+
+                window.currentMonthClosed = 1;
+
+                const nextNumber = targetNumber + 1;
+
+                // Move active month first.
+                syncGlobalsFromMonthNumber(nextNumber);
+
+                // Rebuild summary using Date_entered for the NEW month.
+                calculateMonthlySummaryMetrics(nextNumber);
+
+                // Keep active Service Year synchronized.
+                currentServiceYear = activeServiceYear;
+                selectedYear = activeServiceYear;
+
+                if (typeof setServiceYear === "function") {
+                    setServiceYear(activeServiceYear);
+                }
+
+                // Refresh UI.
+                updateMonthDisplay();
+                updateMonthSidebarDisplay();
+                updateYearDisplay();  
+
+                if (typeof syncMonthStatusUI === "function") {
+                    syncMonthStatusUI();
+                }
+
+                if (typeof renderListbox === "function") {
+                    renderListbox("", "ACTIVE PUBLISHERS");
+                }
+
+                console.log(
+                    `➡️ Advanced from NUMBER ${targetNumber} to NUMBER ${nextNumber}`
+                );
+
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = "Close Report";
+                }
+
+                console.groupEnd();
+                db.close();
+            };
+    });
+}
+
+async function onReportCloseSuccess() {
+    await syncMonthStatusUI();
+
+    if (typeof updateMonthReportingState === 'function') {
+        await updateMonthReportingState();
+    }
+    if (typeof renderListbox === 'function') {
+        renderListbox("", "ACTIVE PUBLISHERS");
+    }
+}
+
+
+
+function updateActivePublishersCount() {
+    openCongregationDB((db) => {
+        if (!db.objectStoreNames.contains("PUBLISHERS")) {
+            console.error("❌ 'PUBLISHERS' store missing!");
+            return;
+        }
+
+        const tx = db.transaction(["PUBLISHERS"], "readonly");
+        const store = tx.objectStore("PUBLISHERS");
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+            const publishers = request.result || [];
+
+            const activeCount = publishers.reduce((count, pub) => {
+                const status = (pub.Status || "").trim();
+                // Count if Status is "Active" or empty/falsy
+                if (status === "Active" || status === "") {
+                    return count + 1;
+                }
+                return count;
+            }, 0);
+
+            const inputEl = document.getElementById("activePublishersInput");
+            if (inputEl) {
+                inputEl.value = activeCount;
+                // Trigger input event in case autosave listeners are attached to activePublishersInput
+                inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+
+            console.log(`✅ Active Publishers Count: ${activeCount}`);
+        };
+
+        request.onerror = (err) => console.error("❌ Error fetching PUBLISHERS:", err.target.error);
+    });
+}
+
+function updateSidebarClosedState() {
+    const targetNumber = Number(window.currentActiveMonthIndex);
+    if (isNaN(targetNumber)) return;
+
+    openCongregationDB((db) => {
+        if (!db.objectStoreNames.contains("MonthlyRecords")) return;
+
+        const tx = db.transaction(["MonthlyRecords"], "readonly");
+        const store = tx.objectStore("MonthlyRecords");
+
+        // Helper function to process UI updating once record is found
+        const handleRecordResult = (rec) => {
+            console.log(`📦 [DEBUG] Record result for NUMBER ${targetNumber}:`, rec);
+
+            const isClosed = rec ? Number(rec.Closed) === 1 : false;
+            window.currentMonthClosed = isClosed ? 1 : 0;
+
+            const statusBtn = document.getElementById("monthStatusBtn");
+            if (statusBtn) {
+                statusBtn.textContent = isClosed ? "Closed" : "Active";
+                statusBtn.className = `status-btn ${isClosed ? "closed" : "active"}`;
+                statusBtn.style.borderColor = isClosed ? "#f44336" : "#4caf50";
+                statusBtn.style.backgroundColor = isClosed ? "#ffebee" : "#e8f5e9";
+                statusBtn.style.color = isClosed ? "#c62828" : "#2e7d32";
+            }
+
+            const sidebar = document.querySelector(".s21-sidebar");
+            if (sidebar) {
+                const inputs = sidebar.querySelectorAll("input");
+                const attendanceIds = ["noMtgs1", "attendcMidweekTotal", "noMtgs2", "attendcPublickTotal"];
+
+                inputs.forEach((input) => {
+                    const isAttendance = attendanceIds.includes(input.id);
+
+                    if (isClosed) {
+                        input.readOnly = true;
+                        input.disabled = true;
+                        input.style.backgroundColor = "#f5f5f5";
+                        input.style.cursor = "not-allowed";
+                    } else {
+                        input.readOnly = !isAttendance;
+                        input.disabled = false;
+                        input.style.backgroundColor = "#ffffff";
+                        input.style.cursor = isAttendance ? "text" : "default";
+                    }
+                });
+            }
+        };
+
+        // 🛡️ Safely query via index if it exists, or fall back to scanning store records
+        if (store.indexNames.contains("NUMBER")) {
+            const numberIndex = store.index("NUMBER");
+            const request = numberIndex.get(targetNumber);
+            request.onsuccess = (e) => handleRecordResult(e.target.result);
+            request.onerror = () => handleRecordResult(undefined);
+        } else {
+            const getAllReq = store.getAll();
+            getAllReq.onsuccess = (e) => {
+                const records = e.target.result || [];
+                const matched = records.find(r => Number(r.NUMBER) === targetNumber || Number(r.number) === targetNumber);
+                handleRecordResult(matched);
+            };
+            getAllReq.onerror = () => handleRecordResult(undefined);
+        }
+    });
+}
+
+function togglePubStatusDropdown() {
+    const label = document.getElementById("pubStatusDisplay");
+    const select = document.getElementById("pubStatus");
+
+    if (!label || !select) return;
+
+    label.style.display = "none";
+    select.classList.add("show");
+    select.focus();
+}
+
+
+function changePubStatus(value) {
+    const label = document.getElementById("pubStatusDisplay");
+    const select = document.getElementById("pubStatus");
+
+    if (!label || !select) return;
+
+    const text = value || "Active";
+
+    const statusClass = {
+        "": "active",
+        "Inactive": "inactive",
+        "Moved Out": "moved-out",
+        "Removed": "removed",
+        "Disqualified": "disqualified"
+    }[value] || "active";
+
+    label.textContent = text;
+    label.className = `pub-status-label ${statusClass}`;
+
+    // Return immediately to the normal label
+    select.classList.remove("show");
+    label.style.display = "inline-block";
+
+    console.log("📌 Publisher status changed:", text);
+}
+
+
+// If the dropdown loses focus, return to normal label
+document.addEventListener("click", function (event) {
+    const label = document.getElementById("pubStatusDisplay");
+    const select = document.getElementById("pubStatus");
+
+    if (!label || !select) return;
+
+    // Ignore clicks on the label or dropdown itself
+    if (
+        event.target === label ||
+        event.target === select
+    ) {
+        return;
+    }
+
+    // If dropdown is currently open, close it
+    if (select.classList.contains("show")) {
+        select.classList.remove("show");
+        label.style.display = "inline-block";
+    }
+});
+
+
+// If user tabs away from the dropdown
+document.getElementById("pubStatus")?.addEventListener("blur", function () {
+    const label = document.getElementById("pubStatusDisplay");
+
+    if (!label) return;
+
+    this.classList.remove("show");
+    label.style.display = "inline-block";
+});
+
+
+
+
+// ==========================================
+// AUTO-CLOSE OVERDUE MONTHLY REPORT (on load)
+// Submission deadline = 20th of the current month, for LAST month's report.
+// If the user never closed it manually, auto-close it now.
+// ==========================================
+
+function getCalendarInfoFromNumber(num) {
+    const target = Number(num);
+    const diff = target - 194; // Anchor: NUMBER 194 = September 2025
+    const yearShift = Math.floor(diff / 12);
+    let monthOffset = diff % 12;
+    if (monthOffset < 0) monthOffset += 12;
+
+    let calMonth, calYear;
+    if (monthOffset >= 4) {
+        calMonth = monthOffset - 4;
+        calYear = 2026 + yearShift;
+    } else {
+        calMonth = monthOffset + 8;
+        calYear = 2025 + yearShift;
+    }
+
+    const serviceYear = 2026 + yearShift;
+
+    return {
+        calMonth,
+        calYear,
+        serviceYear,
+        monthName: calendarMonthNames[calMonth]
+    };
+}
+
+function autoCloseMonthRecord(targetNumber, onDone) {
+    const request = indexedDB.open("CongregationDB", 11);
+
+    request.onsuccess = (event) => {
+        const db = event.target.result;
+
+        if (!db.objectStoreNames.contains("MonthlyRecords") || !db.objectStoreNames.contains("PUBLISHERS")) {
+            console.warn("⚠️ Auto-close aborted: required stores missing.");
+            db.close();
+            if (onDone) onDone();
+            return;
+        }
+
+        const pubTx = db.transaction(["PUBLISHERS"], "readonly");
+        const pubReq = pubTx.objectStore("PUBLISHERS").getAll();
+
+        pubReq.onsuccess = () => {
+            const publishers = pubReq.result || [];
+            const activeCount = publishers.reduce((count, pub) => {
+                const status = (pub.Status || "").trim().toLowerCase();
+                return (status === "" || status === "active") ? count + 1 : count;
+            }, 0);
+
+            const tx = db.transaction(["MonthlyRecords"], "readwrite");
+            const store = tx.objectStore("MonthlyRecords");
+
+            let found = false;
+            const cursorReq = store.openCursor();
+
+            cursorReq.onsuccess = (e) => {
+                const cursor = e.target.result;
+
+                if (cursor) {
+                    if (Number(cursor.value.NUMBER) === Number(targetNumber)) {
+                        found = true;
+                        const existing = cursor.value;
+
+                        existing.ActivePublishers = activeCount;
+                        existing.Closed = 1;
+
+                        cursor.update(existing);
+                        console.log(`🔒 [Auto-Close] Updated existing MonthlyRecords row → NUMBER ${targetNumber}`, existing);
+                        return;
+                    }
+                    cursor.continue();
+                    return;
+                }
+
+                // No matching row found at all — create one, matching the legacy shape exactly
+                if (!found) {
+                    const info = getCalendarInfoFromNumber(targetNumber);
+                    const nowStr = new Date().toLocaleString('en-US', {
+                        day: 'numeric', month: 'short', year: 'numeric',
+                        hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
+                    }).replace(',', '');
+
+                    const newRecord = {
+                        ID: "",
+                        NUMBER: Number(targetNumber),
+                        MONTH_: info.monthName,
+                        Year: String(info.calYear),
+                        ServiceYear: String(info.serviceYear),
+                        Mos: "",
+                        group: "",
+                        Text: "",
+                        AttendcMidweekTotal: "0",
+                        AttendcPublickTotal: "0",
+                        ACTIVE: "True",
+                        ActivePublishers: String(activeCount),
+                        updated: nowStr,
+                        NoMtgs1: "0",
+                        NoMtgs2: "0",
+                        ExtraNumber: "0",
+                        ExtraText: "",
+                        passcode: localStorage.getItem("user_passcode") || "",
+                        Closed: 1
+                    };
+
+                    store.add(newRecord);
+                    console.log(`🆕 [Auto-Close] Created new CLOSED MonthlyRecords row (matched legacy shape) → NUMBER ${targetNumber}`, newRecord);
+                }
+            };
+
+            cursorReq.onerror = (err) => {
+                console.error("❌ [Auto-Close] Cursor error:", err.target.error);
+            };
+
+            tx.oncomplete = () => {
+                db.close();
+                console.log(`✅ [Auto-Close] Transaction complete for NUMBER ${targetNumber}`);
+                if (onDone) onDone();
+            };
+
+            tx.onerror = (err) => {
+                console.error("❌ [Auto-Close] Transaction failed:", err.target.error);
+                db.close();
+                if (onDone) onDone();
+            };
+        };
+
+        pubReq.onerror = (err) => {
+            console.error("❌ [Auto-Close] Failed to read PUBLISHERS:", err.target.error);
+            db.close();
+            if (onDone) onDone();
+        };
+    };
+
+    request.onerror = (event) => {
+        console.error("❌ [Auto-Close] Failed to open DB:", event.target.error);
+        if (onDone) onDone();
+    };
+}
+
+function getMaxClosedMonthNumber(callback) {
+    const request = indexedDB.open("CongregationDB", 11);
+
+    request.onsuccess = (event) => {
+        const db = event.target.result;
+
+        if (!db.objectStoreNames.contains("MonthlyRecords")) {
+            db.close();
+            callback(null);
+            return;
+        }
+
+        const tx = db.transaction(["MonthlyRecords"], "readonly");
+        const store = tx.objectStore("MonthlyRecords");
+        const cursorReq = store.openCursor();
+
+        let maxClosed = null;
+
+        cursorReq.onsuccess = (e) => {
+            const cursor = e.target.result;
+
+            if (cursor) {
+                const num = Number(cursor.value.NUMBER);
+                const isClosed = Number(cursor.value.Closed) === 1;
+
+                if (isClosed && (maxClosed === null || num > maxClosed)) {
+                    maxClosed = num;
+                }
+
+                cursor.continue();
+                return;
+            }
+
+            db.close();
+            callback(maxClosed);
+        };
+
+        cursorReq.onerror = (err) => {
+            console.error("❌ [Auto-Close] Failed scanning for max closed month:", err.target.error);
+            db.close();
+            callback(null);
+        };
+    };
+
+    request.onerror = (event) => {
+        console.error("❌ [Auto-Close] Failed to open DB:", event.target.error);
+        callback(null);
+    };
+}
+
+function checkAndAutoCloseOverdueMonths() {
+    const today = new Date();
+    if (today.getDate() < 21) {
+        console.log("📅 [Auto-Close] Before the 21st — nothing overdue yet.");
+        return;
+    }
+
+    const overdueUpTo = Number(window.currentActiveMonthIndex) - 1;
+
+    getMaxClosedMonthNumber((maxClosed) => {
+        // Determine where to start closing from:
+        // - If a closed record exists, start right after it.
+        // - If none exists at all, only close the single immediately-overdue month
+        //   (don't walk back through unknown history on a fresh/unclosed dataset).
+        const startFrom = (maxClosed !== null) ? (maxClosed + 1) : overdueUpTo;
+
+        if (startFrom > overdueUpTo) {
+            console.log(`✅ [Auto-Close] Nothing overdue — max closed is NUMBER ${maxClosed}, active is ${overdueUpTo + 1}.`);
+            return;
+        }
+
+        console.log(`⏰ [Auto-Close] Closing NUMBER ${startFrom} through ${overdueUpTo}...`);
+        closeRange(startFrom, overdueUpTo);
+    });
+}
+
+function closeRange(current, upTo) {
+    if (current > upTo) {
+        console.log("✅ [Auto-Close] Done closing overdue range.");
+        return;
+    }
+
+    autoCloseMonthRecord(current, () => {
+        closeRange(current + 1, upTo);
+    });
+}
+
+
+function updateCopyMissingReportBtnVisibility() {
+    const btn = document.getElementById("copyMissingReportBtn");
+    const categorySelect = document.getElementById("categorySelect");
+    if (!btn || !categorySelect) return;
+
+    const isByGroup = categorySelect.value === "By Group";
+    btn.style.display = isByGroup ? "inline-block" : "none";
+}
+
+
+function getMissingReportWindow() {
+    const activeNumber = Number(window.currentActiveMonthIndex);
+    const months = [];
+    for (let n = activeNumber - 5; n <= activeNumber; n++) {
+        months.push(n);
+    }
+    return months;
+}
+
+function buildMissingReportText(callback) {
+    const monthNumbers = getMissingReportWindow();
+
+    const request = indexedDB.open("CongregationDB", 11);
+
+    request.onsuccess = (event) => {
+        const db = event.target.result;
+        const tx = db.transaction(["PUBLISHERS", "RECORDS"], "readonly");
+        const pubReq = tx.objectStore("PUBLISHERS").getAll();
+        const recReq = tx.objectStore("RECORDS").getAll();
+
+        let publishers = null;
+        let records = null;
+
+        const process = () => {
+            if (publishers === null || records === null) return;
+            db.close();
+
+            const isReported = (r) => {
+                const ministry = String(r?.MINISTRY ?? "").trim();
+                return ministry === "1" || ministry === "?";
+            };
+
+            const isAux = (r) => {
+                const val = r?.AUX;
+                if (val === null || val === undefined) return false;
+                if (typeof val === "boolean") return val;
+                if (typeof val === "number") return val !== 0;
+                return ["?", "1", "Y", "YES", "TRUE", "-1"].includes(String(val).trim().toUpperCase());
+            };
+
+            const getStartNumber = (id) => {
+                const rows = records
+                    .filter(r => String(r.IdPubs) === String(id))
+                    .filter(r => {
+                        const remark = String(r.REMARKS ?? "").trim().toUpperCase();
+                        return ["NEW UPB", "NEW UBP", "UPB", "UBP"].includes(remark);
+                    })
+                    .sort((a, b) => Number(a.NUMBER) - Number(b.NUMBER));
+                return rows.length ? Number(rows[0].NUMBER) : null;
+            };
+
+            const activePubs = publishers.filter(p => {
+                const status = String(p.Status ?? "").trim().toUpperCase();
+                return status === "ACTIVE" || status === "";
+            });
+
+            const groupedResults = new Map();
+
+            activePubs.forEach(p => {
+                const pubId = String(p.IDPub ?? "").trim();
+                const group = String(p.GROUP || "").trim() || "No Group";
+                const lastName = p.LName || "";
+                const firstName = p.FNAME || "";
+                const displayName = `${lastName}, ${firstName}`.trim().replace(/^,\s*/, "");
+
+                const startNumber = getStartNumber(pubId);
+                const applicableMonths = monthNumbers.filter(n => startNumber == null || n >= startNumber);
+
+                const missingMonths = [];
+
+                applicableMonths.forEach(n => {
+                    const recs = records.filter(r =>
+                        String(r.IdPubs) === String(pubId) && Number(r.NUMBER) === n
+                    );
+
+                    const reported = recs.some(isReported);
+
+                    if (!reported) {
+                        const abbrev = getCalendarInfoFromNumber(n).monthName.slice(0, 3);
+                        const auxThisMonth = recs.some(isAux);
+                        missingMonths.push({ abbrev, isAP: auxThisMonth });
+                    }
+                });
+
+                if (missingMonths.length > 0) {
+                    if (!groupedResults.has(group)) groupedResults.set(group, []);
+                    groupedResults.get(group).push({ displayName, lastName, firstName, missingMonths });
+                }
+            });
+
+            const sortedGroups = [...groupedResults.keys()].sort((a, b) =>
+                a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+            );
+
+            let output = "";
+
+            sortedGroups.forEach(group => {
+                const pubs = groupedResults.get(group);
+                pubs.sort((a, b) => {
+                    const lastComp = a.lastName.localeCompare(b.lastName, undefined, { sensitivity: 'base' });
+                    if (lastComp !== 0) return lastComp;
+                    return a.firstName.localeCompare(b.firstName, undefined, { sensitivity: 'base' });
+                });
+
+                output += `GROUP ${group}\n`;
+
+                let counter = 1;
+                pubs.forEach(pub => {
+                    pub.missingMonths.forEach(({ abbrev, isAP }) => {
+                        output += `${counter}) ${pub.displayName} : ${abbrev}${isAP ? " AP" : ""}\n`;
+                        counter++;
+                    });
+                });
+
+                output += "\n";
+            });
+
+            callback(output.trim());
+        };
+
+        pubReq.onsuccess = () => { publishers = pubReq.result || []; process(); };
+        recReq.onsuccess = () => { records = recReq.result || []; process(); };
+        pubReq.onerror = () => { console.error("❌ Failed to read PUBLISHERS"); callback(null); };
+        recReq.onerror = () => { console.error("❌ Failed to read RECORDS"); callback(null); };
+    };
+
+    request.onerror = () => { console.error("❌ Failed to open DB"); callback(null); };
+}
+
+function copyMissingReportToClipboard() {
+    buildMissingReportText((text) => {
+        if (!text) {
+            showCustomAlert
+                ? showCustomAlert("No missing reports found, or an error occurred.")
+                : alert("No missing reports found, or an error occurred.");
+            return;
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text)
+                .then(() => showCopyPopup())
+                .catch(() => fallbackCopy(text));
+        } else {
+            fallbackCopy(text);
+        }
+    });
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand("copy");
+        showCopyPopup();
+    } catch (err) {
+        console.error("❌ Fallback copy failed:", err);
+        showCustomAlert
+            ? showCustomAlert("Could not copy automatically. Please copy manually.")
+            : alert("Could not copy automatically. Please copy manually.");
+    }
+    document.body.removeChild(textarea);
+}
+
+
+// ==========================================
+// PHONE MODE: Collapsible listbox dropdown
+// ==========================================
+function toggleMobileListbox() {
+    const container = document.getElementById('listboxScrollContainer');
+    if (!container) return;
+    container.classList.toggle('mobile-collapsed');
+    updateMobileListboxToggleText();
+}
+
+function updateMobileListboxToggleText() {
+    const textEl = document.getElementById('mobileListboxToggleText');
+    const container = document.getElementById('listboxScrollContainer');
+    if (!textEl || !container) return;
+
+    const isCollapsed = container.classList.contains('mobile-collapsed');
+
+    if (currentSelectedPublisher) {
+        const name = `${currentSelectedPublisher.LName || ''}, ${currentSelectedPublisher.FNAME || ''}`
+            .trim().replace(/^,\s*/, '');
+        textEl.textContent = `${name} ${isCollapsed ? '▾' : '▴'}`;
+    } else {
+        textEl.textContent = `Select Publisher ${isCollapsed ? '▾' : '▴'}`;
+    }
+}
+
+// ==========================================
+// PHONE MODE: Collapsible monthly summary
+// ==========================================
+function toggleMobileSummary() {
+    const sidebar = document.getElementById('s21Sidebar');
+    const icon = document.getElementById('mobileSummaryToggleIcon');
+    if (!sidebar) return;
+
+    sidebar.classList.toggle('mobile-expanded');
+    if (icon) icon.textContent = sidebar.classList.contains('mobile-expanded') ? '▴' : '▾';
+}
+
+// ==========================================
+// PHONE MODE: Notify parent (index.html) to hide/show
+// the bottom tab bar based on scroll direction.
+// Harmless on desktop — index.html decides whether to act on it.
+// ==========================================
+(function () {
+    let lastScrollY = window.scrollY || 0;
+    let ticking = false;
+
+    function handleScroll() {
+        const currentScrollY = window.scrollY || 0;
+        const delta = currentScrollY - lastScrollY;
+
+        if (Math.abs(delta) > 5) {
+            if (delta > 0 && currentScrollY > 10) {
+                window.parent.postMessage({ type: 'hideTabBar' }, '*');
+            } else if (delta < 0) {
+                window.parent.postMessage({ type: 'showTabBar' }, '*');
+            }
+            lastScrollY = currentScrollY;
+        }
+
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(handleScroll);
+            ticking = true;
+        }
+    }, { passive: true });
+})();
+
+// ==========================================
+// PHONE MODE: month list + edit popup
+// ==========================================
+let editingMonthIndex = -1;
+let editingRemarksTouched = false;
+
+// ==========================================
+// PHONE GRID: tap to toggle, keypad for numbers
+// ==========================================
+let phoneState = [];
+let phoneCells = [];
+let phonePubId = null;
+let phoneSaveQueue = Promise.resolve();
+let phoneNeedsListRefresh = false;
+let phoneTotalEl = null;
+
+
+const phoneIsTrue = v => ["1", "TRUE", "YES", "Y", "?", "-1"].includes(String(v ?? "").trim().toUpperCase());
+
+
+function renderPhoneMonthList(recMap) {
+    const box = document.getElementById('s21PhoneList');
+    if (!box) return;
+
+    const year = (typeof selectedYear !== 'undefined' && selectedYear) ? selectedYear : activeServiceYear;
+    const activeNum = Number(window.currentActiveMonthIndex);
+    const pubIsRP = !!currentSelectedPublisher && phoneIsTrue(currentSelectedPublisher.RP);
+    const pos = n => { const x = Number(n); return x > 0 ? String(x) : ''; };
+
+    phonePubId = currentSelectedPublisher ? String(currentSelectedPublisher.IDPub) : null;
+
+        // read from the desktop table's inputs (already filled from IndexedDB), so both views always match
+    const gi = (m, id) => document.getElementById(`${m.id}-${id}`);
+    phoneState = s21Months.map(m => {
+        const hrsEl = gi(m, 'hours');
+        return {
+            locked: !phonePubId || !hrsEl || hrsEl.disabled,      // future months are disabled by the loader
+            auxLocked: pubIsRP,
+            ministry: !!gi(m, 'ministry')?.checked,
+            studies: pos(gi(m, 'studies')?.value),
+            aux: !!gi(m, 'aux')?.checked,
+            hours: pos(gi(m, 'hours')?.value),
+            note: (gi(m, 'remark')?.value || '').trim(),
+            remarks: (gi(m, 'select')?.value || '').trim()
+        };
+    });
+
+    box.innerHTML = '';
+    phoneCells = [];
+
+    const sy = document.createElement('div');
+    sy.className = 'phone-sy';
+    sy.textContent = `SERVICE YEAR ${year}`;
+    box.appendChild(sy);
+
+    const table = document.createElement('table');
+    table.className = 'p21-table';
+
+    const head = table.createTHead().insertRow();
+    [String(year), 'Shared', 'BS', 'AUX', 'HRS', 'Comments'].forEach(t => {
+        const th = document.createElement('th');
+        th.textContent = t;
+        head.appendChild(th);
+    });
+
+    const body = table.createTBody();
+    s21Months.forEach((m, i) => {
+        const st = phoneState[i];
+        const tr = body.insertRow();
+        if (st.locked) tr.className = 'locked';
+
+        const cMonth = tr.insertCell(); cMonth.className = 'p21-m'; cMonth.textContent = m.name.slice(0, 3);
+        const cMin = tr.insertCell();
+        const cBs = tr.insertCell();
+        const cAux = tr.insertCell();
+        const cHrs = tr.insertCell();
+        const cNote = tr.insertCell(); cNote.className = 'p21-note';
+
+        // number box that opens the phone keyboard
+        const mkNum = (field, decimal) => {
+            const el = document.createElement('input');
+            el.type = 'text';                                  // text + inputMode: no spinner arrows
+            el.inputMode = decimal ? 'decimal' : 'numeric';
+            el.maxLength = decimal ? 5 : 3;
+            el.className = 'p21-in';
+            el.value = st[field];
+            el.disabled = st.locked;
+            el.onfocus = () => el.select();
+            el.onkeydown = e => { if (e.key === 'Enter') el.blur(); };
+            el.oninput = () => {
+                let v = el.value.replace(decimal ? /[^0-9.]/g : /[^0-9]/g, '');
+                if (decimal) { const p = v.split('.'); if (p.length > 2) v = p[0] + '.' + p.slice(1).join(''); }
+                if (v !== el.value) el.value = v;
+                st[field] = v;
+                paintPhoneTotal();                             // total updates while typing
+            };
+            el.onchange = () => { st[field] = el.value.replace(/\.$/, ''); queuePhoneSave(i); };
+            return el;
+        };
+        const inBs = mkNum('studies', false);
+        const inHrs = mkNum('hours', true);
+        cBs.appendChild(inBs);
+        cHrs.appendChild(inHrs);
+
+        const rem = document.createElement('div');
+        rem.className = 'p21-rem';
+        rem.textContent = st.remarks;               // read-only label (RP, New UBP, ...)
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.value = st.note;
+        inp.disabled = st.locked;
+        cNote.appendChild(rem);
+        cNote.appendChild(inp);
+
+                // Shared / AUX: plain cells, the whole cell toggles the ✔ on and off
+        const wire = (cell, field, disabled) => {
+            if (disabled) return;
+            cell.classList.add('p21-tap');
+            cell.onclick = () => { st[field] = !st[field]; queuePhoneSave(i); };
+        };
+        wire(cMin, 'ministry', st.locked);
+        wire(cAux, 'aux', st.locked || st.auxLocked);   // RP publishers never get AUX
+        if (st.auxLocked) cAux.classList.add('p21-off');
+
+        phoneCells[i] = { min: cMin, bs: inBs, aux: cAux, hrs: inHrs, note: inp };
+        if (!st.locked) inp.onchange = () => { st.note = inp.value.trim(); queuePhoneSave(i); };
+        paintPhoneRow(i);
+    });
+
+    box.appendChild(table);
+    phoneTotalEl = document.createElement('div');
+    phoneTotalEl.className = 'phone-total';
+    box.appendChild(phoneTotalEl);
+    paintPhoneTotal();
+}
+
+function paintPhoneRow(i) {
+    const st = phoneState[i], c = phoneCells[i];
+    if (!st || !c) return;
+    c.min.textContent = st.ministry ? '✔' : '';
+    c.aux.textContent = st.aux ? '✔' : '';
+    if (document.activeElement !== c.bs)  c.bs.value = st.studies;    // never overwrite what's being typed
+    if (document.activeElement !== c.hrs) c.hrs.value = st.hours;
+}
+
+function paintPhoneTotal() {
+    if (!phoneTotalEl) return;
+    const total = phoneState.reduce((s, st) => s + (parseFloat(st.hours) || 0), 0);
+    phoneTotalEl.textContent = `Total hours: ${Math.round(total * 100) / 100}`;
+}
+
+function togglePhoneField(i, field) {
+    const st = phoneState[i];
+    if (!st || st.locked) return;
+    if (field === 'aux' && st.auxLocked) return;
+    commitKeypad();
+    st[field] = !st[field];
+    queuePhoneSave(i);
+}
+
+// keep the hidden desktop table in step, so it is correct if the window is resized
+function syncHiddenTableRow(i) {
+    const m = s21Months[i], st = phoneState[i];
+    const g = id => document.getElementById(`${m.id}-${id}`);
+    if (g('ministry')) g('ministry').checked = st.ministry;
+    if (g('studies'))  g('studies').value = st.studies;
+    if (g('aux'))      g('aux').checked = st.aux;
+    if (g('hours'))    g('hours').value = st.hours;
+    if (g('remark'))   g('remark').value = st.note;
+    calculateTotalHours();
+}
+
+function queuePhoneSave(i) {
+    const st = phoneState[i];
+    if (!st || !phonePubId) return;
+
+    // same rule as the desktop table: hours or studies imply ministry
+    if (Number(st.hours) > 0 || Number(st.studies) > 0) st.ministry = true;
+
+    paintPhoneRow(i);
+    paintPhoneTotal();
+    syncHiddenTableRow(i);
+
+    const snapshot = {
+        publisherId: phonePubId,
+        ministry: st.ministry,
+        studies: st.studies,
+        aux: st.aux,
+        hours: st.hours,
+        note: st.note,
+        remarks: st.remarks,          // existing value is kept as is
+        userChangedRemarks: false
+    };
+
+    phoneNeedsListRefresh = true;
+    // saves run one after another so quick taps can't overwrite each other
+    phoneSaveQueue = phoneSaveQueue
+        .then(() => saveS21MonthRecord(i, snapshot))
+        .then(() => { if (typeof calculateMonthlySummaryMetrics === 'function') calculateMonthlySummaryMetrics(); })
+        .catch(err => console.error('❌ Phone save failed:', err));
+}
+
+
+
+function openMonthEditor(i) {
+    const m = s21Months[i];
+    const g = id => document.getElementById(`${m.id}-${id}`);
+    if (!currentSelectedPublisher || !g('hours') || g('hours').disabled) return;
+
+    editingMonthIndex = i;
+    editingRemarksTouched = false;
+
+    document.getElementById('mTitle').textContent = m.name.toUpperCase();
+    document.getElementById('mMin').checked = g('ministry').checked;
+    document.getElementById('mBs').value = g('studies').value;
+    document.getElementById('mAux').checked = g('aux').checked;
+    document.getElementById('mAux').disabled = g('aux').disabled;   // RP publishers can't be AUX
+    document.getElementById('mHrs').value = g('hours').value;
+    document.getElementById('mNote').value = g('remark').value;
+
+    const rem = document.getElementById('mRem');
+    rem.innerHTML = g('select').innerHTML;      // same dropdown options as the table
+    rem.value = g('select').value;
+    rem.onchange = () => { editingRemarksTouched = true; };
+
+    document.getElementById('s21Modal').classList.add('show');
+}
+
+function closeMonthEditor() {
+    document.getElementById('s21Modal').classList.remove('show');
+    editingMonthIndex = -1;
+}
+
+async function saveMonthEditor() {
+    const i = editingMonthIndex;
+    if (i < 0) return;
+    const m = s21Months[i];
+    const minEl = document.getElementById(`${m.id}-ministry`);
+
+    const studies = document.getElementById('mBs').value;
+    const hours = document.getElementById('mHrs').value;
+
+    const snapshot = {
+        publisherId: minEl?.dataset.publisherId || currentSelectedPublisher?.IDPub,
+        // same rule as the desktop table: hours or studies imply ministry
+        ministry: document.getElementById('mMin').checked || Number(hours) > 0 || Number(studies) > 0,
+        studies,
+        aux: document.getElementById('mAux').checked,
+        hours,
+        note: document.getElementById('mNote').value.trim(),
+        remarks: document.getElementById('mRem').value,
+        userChangedRemarks: editingRemarksTouched
+    };
+
+    closeMonthEditor();
+    await saveS21MonthRecord(i, snapshot);
+
+    // Same follow-up as your desktop auto-save
+    loadS21RecordsForPublisher();     // reloads inputs, then re-renders the phone list
+    renderListbox(
+        document.getElementById('publisherSearch')?.value || "",
+        document.getElementById('categorySelect')?.value || "ACTIVE PUBLISHERS"
+    );
+    if (typeof calculateMonthlySummaryMetrics === 'function') calculateMonthlySummaryMetrics();
+}
+
+
+// PHONE ONLY: left pane drawer
+function isPhoneMode() {
+    return window.matchMedia('(max-width: 600px)').matches;
+}
+
+function setPhonePane(collapsed) {
+    const pane = document.querySelector('.s21-listbox-pane');
+    const handle = document.getElementById('phonePaneHandle');
+    if (!pane) return;
+    pane.classList.toggle('phone-collapsed', collapsed);
+    if (handle) handle.textContent = collapsed ? '>' : '<';
+}
+
+function togglePhonePane() {
+    const pane = document.querySelector('.s21-listbox-pane');
+    if (!pane) return;
+    const willOpen = pane.classList.contains('phone-collapsed');
+
+    if (willOpen && phoneNeedsListRefresh) {
+        phoneNeedsListRefresh = false;
+        phoneSaveQueue.then(() => renderListbox(
+            document.getElementById('publisherSearch')?.value || "",
+            document.getElementById('categorySelect')?.value || "ACTIVE PUBLISHERS"
+        ));
+    }
+    setPhonePane(!willOpen);
+}
+
+// PHONE: the pane lives inside the card so it matches the card's height; desktop keeps it as a left column
+function placePhonePane() {
+    const wrapper = document.querySelector('.s21-wrapper');
+    const card = document.querySelector('.s21-card');
+    const pane = document.querySelector('.s21-listbox-pane');
+    const overlay = document.getElementById('paneOverlay');
+    if (!wrapper || !card || !pane) return;
+        // the month grid must live inside the card, so the card (and the pane) reach the Total row
+    const grid = document.getElementById('s21PhoneList');
+    if (grid && grid.parentElement !== card) card.appendChild(grid);
+
+    if (isPhoneMode()) {
+        if (pane.parentElement !== card) {
+            card.appendChild(pane);
+            if (overlay) card.appendChild(overlay);
+        }
+    } else if (pane.parentElement === card) {
+        wrapper.insertBefore(pane, card);
+        if (overlay) wrapper.insertBefore(overlay, card);
+    }
+}
+// keep a reference to the media query: an unreferenced one can silently stop firing
+const s21PhoneMQ = window.matchMedia('(max-width: 600px)');
+s21PhoneMQ.addEventListener('change', placePhonePane);
+window.addEventListener('resize', placePhonePane);
+window.addEventListener('load', placePhonePane);
+if (window.ResizeObserver) new ResizeObserver(placePhonePane).observe(document.documentElement);
+placePhonePane();
+
+function showCopyPopup() {
+    if (typeof showCustomAlert === "function") {
+        showCustomAlert("✅ Copied!\n\nReady to paste in Messenger.");
+    } else {
+        alert("✅ Copied! Ready to paste in Messenger.");
+    }
+}
+
+
+
+</script>
