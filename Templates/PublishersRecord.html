@@ -497,6 +497,24 @@
     display:block;
 }
 
+/* ===== Remarks flag chip ===== */
+.rem-chip { position: relative; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+    min-width: 26px; height: 16px; padding: 0 8px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.rem-chip .rem-label { pointer-events: none; }
+.rem-chip .remark-select {
+    position: absolute !important; inset: 0; width: 100% !important; height: 100% !important;
+    min-width: 0 !important; flex: none !important; padding: 0 !important; margin: 0 !important;
+    border: none !important; opacity: 0; cursor: pointer;
+}
+.rem-chip.flag-start   { background: #e6f4ea; color: #1e7e34; }
+.rem-chip.flag-pioneer { background: #e8f0fe; color: #1a56c4; }
+.rem-chip.flag-end     { background: #fdecea; color: #c62828; }
+.rem-chip.flag-other   { background: #f1f1f1; color: #555; }
+.rem-chip.empty { background: transparent; color: #b0b8c0; border: 1px dashed #d5dbe1; font-weight: 400; opacity: 0; }
+tr:hover .rem-chip.empty, .rem-chip.empty:focus-within { opacity: 1; }   /* the "+" appears on row hover */
+.rem-chip.dis { opacity: .4; }
+.rem-chip.dis .remark-select { cursor: default; }
 
 
 </style>
@@ -774,9 +792,10 @@ const calendarMonthNames = [
                 <td><input type="number" min="0" class="text-center study-input" id="${m.id}-studies" data-month="${index}"></td>
                 <td class="text-center"><input type="checkbox" class="table-check aux-check" id="${m.id}-aux" data-month="${index}"></td>
                 <td><input type="number" min="0" step="0.5" class="text-center hours-input" id="${m.id}-hours" data-month="${index}"></td>
-                <td class="remarks-container">
+                 <td class="remarks-container">
                     <input type="text" class="remark-text" id="${m.id}-remark" data-month="${index}">
-                         <select class="remark-select" id="${m.id}-select" data-month="${index}">
+                    <span class="rem-chip empty"><span class="rem-label">＋</span>
+                        <select class="remark-select" id="${m.id}-select" data-month="${index}">
                             <option value=""></option>
                             <option value="INACTIVE">Inactive</option>
                             <option value="MOVED OUT">Moved Out</option>
@@ -789,6 +808,7 @@ const calendarMonthNames = [
                             <option value="RP">RP</option>
                             <option value="SP">SP</option>
                         </select>
+                    </span>
                 </td>
             `;
             tbody.appendChild(row);
@@ -1663,6 +1683,8 @@ function loadS21RecordsForPublisher() {
         transaction.oncomplete = () => {
             calculateTotalHours();
         };
+
+        refreshRemChips();
     };
 }
 
@@ -3819,6 +3841,40 @@ document.getElementById("pubStatus")?.addEventListener("blur", function () {
 });
 
 
+// ==========================================
+// REMARKS FLAG CHIP
+// ==========================================
+const REM_FLAGS = {
+    "NEW UBP":      { label: "New UBP",      cls: "start" },
+    "MOVED IN":     { label: "Moved In",     cls: "start" },
+    "REACTIVATED":  { label: "Reactivated",  cls: "start" },
+    "REINSTATED":   { label: "Reinstated",   cls: "start" },
+    "RP":           { label: "RP",           cls: "pioneer" },
+    "SP":           { label: "SP",           cls: "pioneer" },
+    "INACTIVE":     { label: "Inactive",     cls: "end" },
+    "MOVED OUT":    { label: "Moved Out",    cls: "end" },
+    "DISQUALIFIED": { label: "Disqualified", cls: "end" },
+    "REMOVED":      { label: "Removed",      cls: "end" }
+};
+
+function refreshRemChip(m) {
+    const sel = document.getElementById(`${m.id}-select`);
+    const chip = sel && sel.closest('.rem-chip');
+    if (!chip) return;
+    const key = String(sel.value || '').trim().toUpperCase();
+    const f = REM_FLAGS[key];
+    chip.className = 'rem-chip ' + (f ? 'flag-' + f.cls : (key ? 'flag-other' : 'empty')) + (sel.disabled ? ' dis' : '');
+    chip.querySelector('.rem-label').textContent = f ? f.label : (key || '＋');
+}
+function refreshRemChips() { s21Months.forEach(refreshRemChip); }
+
+// when the user picks a flag
+document.addEventListener('change', e => {
+    if (e.target.classList && e.target.classList.contains('remark-select') && e.target.dataset.month !== undefined) {
+        const m = s21Months[Number(e.target.dataset.month)];
+        if (m) refreshRemChip(m);
+    }
+});
 
 
 
