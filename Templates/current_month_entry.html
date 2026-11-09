@@ -841,6 +841,15 @@ function syncGlobalsFromMonthNumber(targetNumber) {
         return d.toISOString().split('T')[0];
     }
 
+    function isCheckedMarker(val) {
+        if (val === null || val === undefined) return false;
+        if (typeof val === "boolean") return val;
+        if (typeof val === "number") return val !== 0;
+        return ["?", "1", "Y", "YES", "TRUE", "-1"].includes(String(val).trim().toUpperCase());
+    }
+
+
+
     // 4. Load Data from IndexedDB
     function loadPublishersFromIndexedDB() {
     const request = indexedDB.open("CongregationDB", 11);
@@ -909,6 +918,8 @@ function syncGlobalsFromMonthNumber(targetNumber) {
     };
 }
    
+
+
 
 // 6. Main Listbox Renderer & Filter (Default category changed to ACTIVE PUBLISHERS)
 function renderListbox(filter = "", category = "ACTIVE PUBLISHERS") {
@@ -1858,9 +1869,9 @@ function loadS21RecordsForPublisher(selectedRecordNumber) {
                 const rowEl = document.getElementById(m.id) || (minEl ? minEl.closest('tr') : null);
 
                 if (rec) {
-                    if (minEl) minEl.checked = Boolean(rec.MINISTRY);
+                    if (minEl) minEl.checked = isCheckedMarker(rec.MINISTRY);
                     if (bsEl) bsEl.value = rec.BS !== undefined ? rec.BS : "";
-                    if (auxEl) auxEl.checked = Boolean(rec.AUX);
+                    if (auxEl) auxEl.checked = isCheckedMarker(rec.AUX);
                     if (hrsEl) hrsEl.value = rec.HRS !== undefined ? rec.HRS : "";
                     if (remTextEl) remTextEl.value = rec.Note || rec.note || rec.REMARK || "";
                     if (remSelEl) remSelEl.value = rec.REMARKS || rec.remarks || rec.Remark || "";
