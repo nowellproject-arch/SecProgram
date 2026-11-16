@@ -603,7 +603,7 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Phone Mode 3"
+git commit -m "Phone Mode test"
 git push origin main
 
 

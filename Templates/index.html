@@ -569,16 +569,20 @@ body { height: 100vh; height: 100dvh; }
       
       
       <!-- DYNAMIC TAB PANELS -->
-    <div id="tab-1" class="tab-panel active">
-        <!-- 12-row full layout embedded seamlessly via iframe -->
-        <iframe src="/Templates/current_month_entry.html" style="width: 100%; height: 100%; border: none;"></iframe>
+    <!-- DYNAMIC TAB PANELS -->
+      <div id="tab-1" class="tab-panel active">
+          <iframe
+              src="/Templates/current_month_entry.html?v=3"
+              style="width: 100%; height: 100%; border: none;">
+          </iframe>
       </div>
+
       <div id="tab-2" class="tab-panel">
-     <iframe src="/Templates/PublishersRecord.html" style="width: 100%; height: 100%; border: none;"></iframe>
-   
+          <iframe
+              src="/Templates/PublishersRecord.html?v=3"
+              style="width: 100%; height: 100%; border: none;">
+          </iframe>
       </div>
-      <div id="tab-3" class="tab-panel"></div>
-      <div id="tab-4" class="tab-panel"></div>
 
     </div>
 
