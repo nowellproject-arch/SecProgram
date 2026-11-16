@@ -23,38 +23,62 @@
     }
 
     html, body {
-      height: 100%;
-      overflow: hidden; /* Stops browser viewport scrollbar */
-      background-color: var(--bg-body);
-      color: var(--text-main);
+    height: 100dvh !important;
+    overflow: visible !important;
     }
-
     body {
-      padding: 8px 12px;
+    padding: 0 !important;
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 8px;
+      height: calc(100vh - 100px); /* Fixed missing minus sign */
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
     }
 
-   .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1.1fr 1fr;
-        grid-template-rows: auto 1fr;
-        gap: 8px;
-        height: calc(100vh - 100px); /* Changed from -16px to -100px */
-        width: 100%;
-        max-width: 1400px;
-        margin: 0 auto;
-        }
-   .card {
-        border: 2px solid #0b0b0c;
-        border-radius: 8px;
-      
-        background: var(--card-bg);
-        padding: 8px 10px;
-        display: flex;
-        flex-direction: column;
-        height: 100%;          /* Lock card height to the grid cell */
-        max-height: 100%;      /* Prevent expanding past the screen */
-        overflow: hidden;      /* Keep AI box fixed inside the card boundary */
-        }
+    .card {
+      border: 2px solid #0b0b0c;
+      border-radius: 8px;
+      background: var(--card-bg);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;          /* Lock card height to the grid cell */
+      max-height: 100%;      /* Prevent expanding past the screen */
+      overflow: hidden;      /* Keep AI box fixed inside the card boundary */
+      box-sizing: border-box;
+    }
+
+    /* --- RESPONSIVE PATCH: STACK COLUMNS ON NARROW SCREENS --- */
+    @media (max-width: 900px) {
+      html, body {
+        height: auto;
+        overflow-y: auto; /* Re-enable page scrolling when stacked */
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr; /* Collapse into 1 column */
+        grid-template-rows: auto;   /* Let rows size naturally */
+        height: auto;               /* Remove fixed viewport height */
+      }
+
+      .card {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+      }
+
+      /* Optional: Reorder cards so Left Column items stay together before Right Column items */
+      .dashboard-grid > .card:nth-child(1) { order: 1; } /* Congregation Meetings */
+      .dashboard-grid > .card:nth-child(3) { order: 2; } /* Publisher Analysis */
+      .dashboard-grid > .card:nth-child(2) { order: 3; } /* Field Service Activity */
+      .dashboard-grid > .card:nth-child(4) { order: 4; } /* Active Publishers Table */
+    }
+
 
         .card-title {
         font-size: 13px;

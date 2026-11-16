@@ -215,42 +215,104 @@
       flex: 1;
     }
 
-    
+   /* ===== LEFT ICON RAIL + FLOATING TOP BAR ===== */
+  .rail { position: fixed; left: 0; top: 0; bottom: 0; width: 56px; height: auto;
+    flex-direction: column; align-items: center; gap: 6px; padding-top: 12px;
+    background: #2b2b2b; z-index: 60; transition: transform .25s ease; }
+  .rail .tab-button { width: 42px; height: 42px; padding: 0; justify-content: center;
+    border-radius: 10px; color: #cfcfcf; }
+  .rail .tab-button svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .rail .tab-button.active { color: #fff; }
+  .rail .tab-button.active::before { top: 0; height: 100%; border-radius: 10px; }
 
+  .top-bar { position: fixed; left: 56px; right: 0; top: 0; z-index: 50; transition: transform .25s ease; }
+  .tab-title { flex: 1; padding-left: 18px; font-size: 15px; font-weight: bold; letter-spacing: .3px; }
+  .app-version { font-size: 10px; opacity: .6; margin-right: 14px; }
+  .admin-tools { 
+    display: flex; 
+    align-items: center; 
+  }
+  /* Hide ONLY the Log Out button when NOT on the Admin tab */
+  body:not(.on-admin) #btn-logout,
+  body:not(.on-admin) .logout-btn { 
+    display: none; 
+  }
+
+  body.on-admin .admin-tools { display: flex; }          /* Log Out + Backup only on the Administration tab */
+
+  .main-container { margin: 50px 0 0 56px; transition: margin .25s ease; }
+
+
+
+/* ===== PHONE MODE: below 500px the icon rail becomes a bottom tab bar ===== */
+@media screen and (max-width: 800px) {
+  .rail {
+    top: auto; bottom: 0; left: 0; right: 0;
+    width: auto; height: 56px;
+    flex-direction: row; justify-content: space-around; align-items: center;
+    gap: 0; padding: 0 6px;
+    background: #333333;
+  }
+  .rail .tab-button { flex: 1; width: auto; height: 44px; margin: 0 4px; }
+
+  /* top bar spans the full width and keeps the selected tab's name */
+  .top-bar { left: 0; }
+  .tab-title { padding-left: 12px; font-size: 14px; }
+  .app-version { display: none; }
+
+  /* compact Log Out / Backup area (Administration tab only) */
+  .admin-tools > div[style] { margin-right: 6px !important; gap: 6px !important; }
+  #sync-status { font-size: 11px !important; }
+  #btn-cloud-sync svg { width: 30px; height: 30px; }
+  .top-right { padding-right: 8px; }
+  .top-right button { font-size: 10px; }
+
+  /* the page gives up the side space and leaves room for the bottom bar */
+  .main-container { margin: 50px 0 56px 0; }
+  .content-area { padding: 0; }                /* so the tab pages get the full screen width */
+
+  /* auto-hide: the top bar slides up and the bottom bar slides down */
+  body.bars-hidden .rail { transform: translateY(100%); }
+  body.bars-hidden .top-bar { transform: translateY(-100%); }
+  body.bars-hidden .main-container { margin: 0; }
+}
+
+/* let flexbox size the iframes instead of height:100% */
+body { height: 100vh; height: 100dvh; }
+.main-container, .content-area, .tab-panel { min-height: 0; }
+.tab-panel.active > iframe { flex: 1 1 auto; width: 100%; height: auto !important; min-height: 0; border: none; }
+
+/* an iframe calling scrollIntoView must not be able to scroll the page frame */
+@supports (overflow: clip) { .main-container { overflow: clip; } }
 
   </style>
   <script src="/static/js/indexeddb.js"></script>
 </head>
 <body>
 
-  <!-- TOP HEADER -->
-<div class="top-bar">
-
-    <div class="logo-section">
-        SecProgram <span class="version" id="appVersion">Version --</span>
-    </div>
-
-  <nav class="top-nav">
-    <button class="tab-button active"
-      onclick="switchTab(event, 'tab-1')">
-      Current Month Entry
+  <!-- LEFT ICON RAIL -->
+  <nav class="top-nav rail" id="rail">
+    <button class="tab-button active" title="Current Month Entry" onclick="switchTab(event, 'tab-1')">
+      <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
     </button>
-
-    <button class="tab-button"
-      onclick="switchTab(event, 'tab-2')">
-      Publisher Record
+    <button class="tab-button" title="Publisher Record" onclick="switchTab(event, 'tab-2')">
+      <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
     </button>
-
-    <button class="tab-button"
-      onclick="switchTab(event, 'tab-3')">
-      Congregation Analysis Report
+    <button class="tab-button" title="Congregation Analysis Report" onclick="switchTab(event, 'tab-3')">
+      <svg viewBox="0 0 24 24"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
     </button>
-
-    <button class="tab-button"
-      onclick="switchTab(event, 'tab-4')">
-      ADMINISTRATION
+    <button class="tab-button" title="Administration" onclick="switchTab(event, 'tab-4')">
+      <svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
     </button>
   </nav>
+
+  <!-- TOP HEADER -->
+  <div class="top-bar" id="topHeaderBar">
+    <div class="tab-title" id="tabTitle">Current Month Entry</div>
+    <span class="app-version" id="appVersion">Version --</span>
+
+    <div class="admin-tools">
 
       <!-- SYNC STATUS & CLOUD DROPDOWN -->
 <div style="
@@ -494,38 +556,13 @@
     Log Out
   </button>
 </div>
-
+</div>
 </div>
 
   <!-- MAIN WRAPPER -->
   <div class="main-container">
-
-    <!-- LEFT SIDEBAR -->
-    <div class="sidebar">
-      <ul class="sidebar-menu">
-        <li class="sidebar-item"><a href="#">&#8862; Home</a></li>
-        <li class="sidebar-item header">FIELD SERVICE</li>
-        <li class="sidebar-item sidebar-sub-item"><a href="#">Group Assignments</a></li>
-        <li class="sidebar-item sidebar-sub-item">
-            <a href="/s21Card" target="_blank">S-21 Cards</a>
-        </li>
-        <li class="sidebar-item header">REPORTS</li>
-
-        <li class="sidebar-item sidebar-sub-item">
-            <a href="/COReport" target="_blank">For CO Report</a>
-        </li>
-
-          
-        <li class="sidebar-item sidebar-sub-item">
-            <a href="/s88" target="_blank">Attendance S-88</a>
-        </li>
-
-        <li class="sidebar-item header">DATA MANAGEMENT</li>
-        <li class="sidebar-item sidebar-sub-item"><a onclick="triggerMultipleUpload()">Import CSV Files</a></li>
-      </ul>
-
-      <input type="file" id="file-input" style="display: none;" multiple accept=".csv" />
-    </div>
+       <input type="file" id="file-input" style="display: none;" multiple accept=".csv" />
+    
 
     <!-- MAIN CONTENT AREA -->
     <div class="content-area">
@@ -597,6 +634,13 @@ const TAB_CONFIG={
     }
 };
    
+
+const TAB_TITLES = {
+    'tab-1': 'Current Month Entry',
+    'tab-2': 'Publisher Record',
+    'tab-3': 'Congregation Analysis Report',
+    'tab-4': 'Administration'
+};
 // 2. TAB SWITCHING LOGIC
 async function switchTab(event,tabId){
     document.querySelectorAll('.tab-panel').forEach(panel=>{
@@ -609,8 +653,12 @@ async function switchTab(event,tabId){
 
     const activePanel=document.getElementById(tabId);
     if(!activePanel)return;
-
+    document.getElementById('tabTitle').textContent = TAB_TITLES[tabId] || '';
+    document.body.classList.toggle('on-admin', tabId === 'tab-4');
+    window.showBars?.();                       // always show the bars when changing tabs
     activePanel.classList.add('active');
+    window.scrollTo(0, 0);                                       // undo any push-up caused by the previous tab
+    document.querySelectorAll('.main-container, .content-area').forEach(el => { el.scrollTop = 0; });
 
     const selectedButton=event?.currentTarget||
         document.querySelector(`.top-nav button[onclick*="'${tabId}'"]`);
@@ -1198,7 +1246,64 @@ async function loadSubForm(tabId,filename,callback){
 
 loadAppVersion();
 
+(function () {
+  const lastY = new WeakMap();
+  let lock = 0;
+  const isPhone = () => matchMedia('(max-width: 800px)').matches;
+  
+   function setBars(hide) {
+    if (!isPhone()) {                                                // desktop: the bars never hide
+      document.body.classList.remove('bars-hidden');
+      return;
+    }
+    if (Date.now() < lock) return;                                   // ignore the jitter caused by the resize
+    if (document.body.classList.contains('bars-hidden') === hide) return;
+    lock = Date.now() + 700;
+    document.body.classList.toggle('bars-hidden', hide);
+  }
 
+  window.showBars = () => { lock = 0; setBars(false); };
+
+  // 1) scroll events (desktop, and phones that report scrolling)
+   function onScroll(e) {
+    const t = e.target.nodeType === 9 ? e.target.scrollingElement : e.target;
+    if (!t) return;
+    const y = t.scrollTop;
+    if (!lastY.has(t)) { lastY.set(t, y); return; }      // first event: just remember where we are
+    const d = y - lastY.get(t);
+    if (Math.abs(d) < 8) return;                         // small moves add up until they pass 8px
+    lastY.set(t, y);
+    setBars(d > 0 && y > 10);                            // down hides, up shows
+  }
+
+  // 2) touch swipes (phone mode only): finger up hides the bars, finger down shows them
+  let ty = 0;
+  const tStart = e => { ty = e.touches[0].clientY; };
+  const tMove = e => {
+    if (!isPhone()) return;
+    const y = e.touches[0].clientY, d = ty - y;
+    if (Math.abs(d) < 24) return;
+    ty = y;
+    setBars(d > 0);
+  };
+
+  // listen on the main page and inside every iframe tab (same origin)
+  function hookDoc(doc) {
+    if (!doc || doc._barsHooked) return;
+    doc._barsHooked = true;
+    doc.addEventListener('scroll', onScroll, true);
+    doc.addEventListener('touchstart', tStart, { passive: true });
+    doc.addEventListener('touchmove', tMove, { passive: true });
+  }
+  function hook(iframe) {
+    const attach = () => { try { hookDoc(iframe.contentWindow.document); } catch (e) {} };
+    iframe.addEventListener('load', attach); attach();
+  }
+  hookDoc(document);
+  matchMedia('(max-width: 800px)').addEventListener('change', e => { if (!e.matches) document.body.classList.remove('bars-hidden'); });
+  document.querySelectorAll('iframe').forEach(hook);
+  new MutationObserver(() => document.querySelectorAll('iframe').forEach(hook)).observe(document.body, { childList: true, subtree: true });
+})();
 
   </script>
 
