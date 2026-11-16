@@ -114,10 +114,21 @@
       box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
       z-index: auto;
     }
-    #layout .rowgrid {
-      grid-template-columns: 15% 10% 10% 9% 11% 45%;
-    }
   }
+
+        /* column order: Month | Shared | BS | AUX | HRS | Comments */
+  .rowgrid { grid-template-columns: 8% 8% 9% 8% 10% 53%; }      /* phone */
+  .num { font-size: 14px; padding: 0; }
+  .chip { min-width: 30px; padding: 0 7px; }
+  .note { padding: 0 4px; }
+
+  @media (min-width: 768px) {
+    #layout .rowgrid { grid-template-columns: 8% 8% 9% 8% 10% 53%; }   /* abbreviated months */
+  }
+  @media (min-width: 1200px) {
+    #layout .rowgrid { grid-template-columns: 14% 8% 9% 8% 10% 51%; }   /* full month names need a little more */
+  }
+  
 
   @media (min-width: 1024px) {
     #layout {
@@ -209,7 +220,7 @@
         </div>
 
         <!-- Column Headers -->
-        <div class="rowgrid grid grid-cols-[16%_11%_13%_10%_13%_37%] bg-[#6b5b95]/90 text-white text-[11px] font-bold tracking-wide py-2 px-2 text-center items-center">
+        <div class="rowgrid grid grid-cols-[9% 6% 10% 7% 14% 100%] bg-[#6b5b95]/90 text-white text-[11px] font-bold tracking-wide py-2 px-2 text-center items-center">
           <div id="thYear" class="text-left pl-1 text-[13px] font-extrabold"></div>
           <div>Shared</div>
           <div>BS</div>
@@ -411,8 +422,8 @@ function rows() {
     const lab = f ? f[0] : (s.rem || '＋');
     const d = s.lock ? 'disabled' : '';
     const dim = s.lock ? 'opacity-40' : '';
-    return `<div class="rowgrid grid grid-cols-[16%_11%_13%_10%_13%_37%] items-center h-8 px-1 ${i % 2 ? 'bg-slate-50' : 'bg-white'}">
-      <b class="text-xs pl-1 ${dim}"><span class="m-s">${MON[i]}</span><span class="m-l">${MLONG[i]}</span></b>
+    return `<div class="rowgrid grid items-center h-10 px-1 ${i % 2 ? 'bg-slate-50' : 'bg-white'}">
+    <b class="text-xs pl-1 ${dim}"><span class="m-s">${MON[i]}</span><span class="m-l">${MLONG[i]}</span></b>
       <label class="flex justify-center ${dim}"><input type="checkbox" data-i="${i}" data-f="min" ${s.min ? 'checked' : ''} ${d} class="w-5 h-5 accent-[#6b5b95]"></label>
       <input class="num ${dim}" inputmode="numeric" maxlength="3" data-i="${i}" data-f="bs" value="${s.bs}" ${d}>
       <label class="flex justify-center"><input type="checkbox" data-i="${i}" data-f="aux" ${s.aux ? 'checked' : ''} ${rp || noPub ? 'disabled' : ''} class="w-5 h-5 accent-[#6b5b95]"></label>
