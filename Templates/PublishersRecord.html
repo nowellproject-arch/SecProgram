@@ -1,108 +1,152 @@
 <style>
     :root {
-        --row-height: 22px; /* Easily adjust overall table row height here */
+        --row-height: 22px;
     }
 
-       .s21-wrapper {
-        display: flex;
-        gap: 10px;
+    .s21-app-container {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: #1e293b;
+        background-color: #f1f5f9;
+        min-height: 100vh;
+        padding-bottom: 3rem;
+    }
+
+    .s21-wrapper {
+        display: grid;
+        grid-template-columns: 240px minmax(0, 1fr) 260px;
+        gap: 16px;
         max-width: 1650px;
-        margin: 15px auto;
-        font-family: Arial, sans-serif;
-        align-items: flex-start;
+        margin: 0 auto;
+        padding: 12px;
+        align-items: start;
     }
 
     @media screen and (max-width: 1024px) {
-        .s21-listbox-pane {
-            flex: 1 1 auto;
-            width: 100%; /* Spans full width when stacked on small screens */
+        .s21-wrapper {
+            grid-template-columns: minmax(0, 1fr) 260px;
         }
     }
 
+    @media screen and (max-width: 768px) {
+        .s21-wrapper {
+            grid-template-columns: 100%;
+            padding: 8px;
+        }
+        
+    }
 
-    /* LEFT LANE: Narrowed Publisher Listbox / Navigation */
-     .s21-listbox-pane {
-        flex: 0 0 220px; /* Prevents auto-stretching on zoom */
-        width: 220px;    /* Fixed base width */
-        box-sizing: border-box;
+    /* Mobile Publisher Switcher Bar */
+    .mobile-pub-switcher {
+        display: none;
         background: #fff;
-        border: 2px solid #222;
-        padding: 8px;
-        border-radius: 4px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        border-radius: 16px;
+        border: 1px solid rgba(107, 91, 149, 0.25);
+        padding: 6px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        align-items: center;
+        gap: 8px;
+    }
+    @media screen and (max-width: 1024px) {
+        .mobile-pub-switcher {
+            display: flex;
+        }
+    }
+
+    /* LEFT LANE: Publisher Listbox / Navigation Pane */
+    .s21-listbox-pane {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        padding: 10px;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         display: flex;
         flex-direction: column;
         gap: 8px;
+        position: sticky;
+        top: 12px;
+        height: calc(100vh - 24px);
+        box-sizing: border-box;
     }
 
     .listbox-header-title {
-        font-weight: bold;
-        font-size: 11px;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 4px;
+        font-weight: 800;
+        font-size: 13px;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 6px;
+        color: #334155;
     }
 
     .listbox-container {
-        border: 1px solid #aaa;
+        border: 1px solid #e2e8f0;
         background: #fafafa;
-        height: 330px;
+        flex: 1;
         overflow-y: auto;
-        overflow-x: auto; /* Handles long publisher names horizontally */
-        border-radius: 2px;
-        padding: 2px;
+        overflow-x: auto;
+        border-radius: 8px;
+        padding: 4px;
     }
 
     .listbox-item {
-        padding: 4px 6px;
-        font-size: 11px;
+        padding: 6px 8px;
+        font-size: 12px;
         cursor: pointer;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid #f1f5f9;
         background-color: transparent !important;
         user-select: none;
+        border-radius: 6px;
+        font-weight: 500;
     }
 
-    /* Customize what happens on hover (e.g., a subtle grey instead of blue, or transparent to remove it entirely) */
     .listbox-item:hover {
-        background-color: #f1f1f1 !important; /* Change to transparent if you want zero color change */
+        background-color: #f1f5f9 !important;
         color: inherit !important;
     }
 
-    /* Style for the active/selected item */
     .listbox-item.active {
-        background-color: #007bff !important; /* Change this to your preferred selection color or match your theme */
+        background-color: #6b5b95 !important;
         color: white !important;
+        font-weight: 700;
     }
 
     .listbox-count {
-        font-size: 12px;
-        font-style: bold;    
-        color: #555;
+        font-size: 11px;
+        color: #64748b;
         text-align: right;
-        font-weight: bold;
+        font-weight: 700;
+        padding-top: 4px;
+        border-top: 1px solid #e2e8f0;
     }
 
-    /* MID: Widened Publisher Record Card (Emphasis on Remarks) */
+    /* MID: Snug S-21 Record Card */
     .s21-card {
-        flex: 6;
-        background: #fff;
-        padding: 12px 16px;
+        background: #f6f4fa;
+        padding: 14px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        border: 2px solid #0b0b0c;
-        border-radius: 8px;
-         }
+        border: 2px solid rgba(107, 91, 149, 0.35);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
 
     .s21-header {
-        border-bottom: 2px solid #333;
-        padding-bottom: 8px;
-        margin-bottom: 10px;
+        background: #fff;
+        border: 1px solid rgba(107, 91, 149, 0.2);
+        padding: 12px;
+        border-radius: 14px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     }
 
     .row-group {
         display: flex;
         gap: 12px;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
         align-items: center;
         font-size: 12px;
+    }
+    .row-group:last-child {
+        margin-bottom: 0;
     }
 
     .grid-4 {
@@ -112,45 +156,44 @@
         align-items: center;
     }
 
-     .status-spiritual-row {
+    .status-spiritual-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-top: 1px dashed #ddd;
-        padding-top: 6px;
-        margin-top: 4px;
-        margin-bottom: 20px;
-        padding-right: 10%; /* Adjust this percentage to move the right item away from the right border */
+        border-top: 1px dashed #cbd5e1;
+        padding-top: 8px;
+        margin-top: 8px;
     }
 
-    .flex-grow { flex-grow: 1; }
-
     .form-control {
-        padding: 2px 4px;
-        border: 1px solid #aaa;
-        border-radius: 2px;
+        padding: 2px 6px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
         font-size: 12px;
         width: 100%;
         box-sizing: border-box;
-        height: 24px;
-    }
-
-    .status-badge {
-        background: #ffebee;
-        color: #c62828;
-        padding: 2px 6px;
-        font-weight: bold;
-        border-radius: 3px;
-        font-size: 11px;
+        height: 30px;
+        background: #fff;
     }
 
     .gender-box, .spiritual-box, .privileges-inline {
         display: flex;
         gap: 10px;
         align-items: center;
+        font-weight: 600;
+        color: #475569;
+        font-size: 11px;
     }
 
-    /* Exact Form-Fitting Table Styling with Widened Remarks Column */
+    /* S-21 Form-Fitting Table Styling */
+    .s21-table-wrapper {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid rgba(107, 91, 149, 0.25);
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
     .s21-table {
         table-layout: fixed;
         width: 100%;
@@ -158,7 +201,7 @@
     }
 
     .s21-table th, .s21-table td {
-        border: 1px solid #222;
+        border: 1px solid #cbd5e1;
         padding: 0px 3px;
         font-size: 11px;
         vertical-align: middle;
@@ -166,25 +209,27 @@
     }
 
     .s21-table th {
-        background-color: #aeabab;
+        background-color: #6b5b95;
+        color: white;
         text-align: center;
         font-weight: bold;
         line-height: 1.1;
-        padding: 4px;
+        padding: 6px 4px;
+        border-color: #584980;
     }
 
-    /* Column Width Allocations (Remarks widened substantially) */
-    .s21-table th:nth-child(1), .s21-table td:nth-child(1) { width: 13%; }
-    .s21-table th:nth-child(2), .s21-table td:nth-child(2) { width: 6%; }
-    .s21-table th:nth-child(3), .s21-table td:nth-child(3) { width: 6%; }
-    .s21-table th:nth-child(4), .s21-table td:nth-child(4) { width: 8%; }
-    .s21-table th:nth-child(5), .s21-table td:nth-child(5) { width: 6%; }
+    /* Column Width Allocations */
+    .s21-table th:nth-child(1), .s21-table td:nth-child(1) { width: 15%; }
+    .s21-table th:nth-child(2), .s21-table td:nth-child(2) { width: 10%; }
+    .s21-table th:nth-child(3), .s21-table td:nth-child(3) { width: 10%; }
+    .s21-table th:nth-child(4), .s21-table td:nth-child(4) { width: 9%; }
+    .s21-table th:nth-child(5), .s21-table td:nth-child(5) { width: 11%; }
     .s21-table th:nth-child(6), .s21-table td:nth-child(6) { width: 100%; }
 
     .sub-text {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: normal;
-        color: #000000;
+        color: rgba(255,255,255,0.85);
     }
 
     .s21-table input[type="text"],
@@ -200,340 +245,290 @@
         text-align: center;
     }
 
-    .s21-table select {
-        border: 1px solid #ccc;
-        background: #fff;
-        height: calc(var(--row-height) - 4px);
-        font-size: 10px;
-        padding: 0;
-    }
-
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .font-bold { font-weight: bold; }
     
-    .table-check {
-        width: 13px;
-        height: 13px;
-        cursor: pointer;
-        display: block;
-        margin: 0 auto;
-    }
+    .total-row { background-color: #f8fafc; font-weight: bold; }
 
-.remarks-container {
+  .remarks-container {
         display: flex;
-        gap: 4px;
+        gap: 6px; /* Adds a nice little space between the input and dropdown */
         align-items: center;
         height: 100%;
-        padding: 0 4px;
+        padding: 8 6px;
         width: 100%;
         box-sizing: border-box;
     }
 
     .remark-text { 
         flex: 1; 
-        width: auto !important;
-        min-width: 0;
+        min-width: 60px;
+        border: none;
+        background: transparent;
+        padding: 4px;
+        font-size: 13px;
+        outline: none;
     }
 
-.remark-select { 
-        flex: 0 0 75px !important; /* <--- Increase this value (e.g., 90px or 100px) */
-        width: 75px !important;    /* <--- Increase this value to match */
-        min-width: 75px;           /* <--- Increase this value to match */
+    td.remarks-container {
+    padding: 0 !important;
     }
-    .total-row { background-color: #f9f9f9; }
 
-    /* RIGHT SIDE: Extra Narrowed Service Year Summary Sidebar */
-   /* Container Layout */
-.s21-sidebar {
-  flex: 0.9;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 220px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
+    /* Optional: subtle border when hovering over the cell/input */
+    .remark-text:focus {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+    }
+    .remark-select { 
+        flex: 0 0 75px !important;
+        width: 75px !important;
+        min-width: 75px;
+        height: calc(var(--row-height) - 4px);
+        font-size: 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+    }
 
-/* Card & Box Styling */
-.side-box {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
+    /* RIGHT SIDE: Sidebar / Summary */
+    .s21-sidebar {
+        flex: 0 0 260px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: sticky;
+        top: 12px;
+    }
 
-.action-box {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+    .side-box {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
 
-/* Fieldset Styling for Grouped Options */
-.side-fieldset {
-  position: relative;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 14px 12px 10px 12px;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin: 0;
-}
+    .action-box {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
 
-.side-fieldset-legend {
-  width: auto;
-  padding: 0 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0;
-  border-bottom: none;
-}
+    .side-fieldset {
+        position: relative;
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 14px 12px 10px 12px;
+        background: #ffffff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        margin: 0;
+    }
 
-   .side-label {
-        font-size: 9px;
-        color: #444;
+    .side-fieldset-legend {
+        padding: 0 6px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .side-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
         display: block;
-        margin-bottom: 1px;
+        margin-bottom: 2px;
     }
 
-/* Form Controls & Labels */
-.custom-check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-  min-height: auto;
-}
+    .custom-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
 
-.custom-check:last-child {
-  margin-bottom: 0;
-}
+    .custom-check .form-check-input {
+        cursor: pointer;
+        width: 14px;
+        height: 14px;
+        accent-color: #6b5b95;
+    }
 
-.custom-check .form-check-input {
-  cursor: pointer;
-  margin-top: 0;
-  width: 14px;
-  height: 14px;
-}
+    .custom-check .form-check-label {
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        color: #334155;
+        user-select: none;
+    }
 
-.custom-check .form-check-label {
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  color: #334155;
-  user-select: none;
-}
+    .sub-options-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-left: 20px;
+        margin-top: 6px;
+        padding-left: 8px;
+        border-left: 2px solid #f1f5f9;
+    }
 
-.sub-options-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-left: 20px;
-  margin-top: 6px;
-  padding-left: 8px;
-  border-left: 2px solid #f1f5f9;
-}
+    /* Modern Buttons */
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 8px 12px;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        cursor: pointer;
+    }
 
-/* Modern Button Styling */
-.btn-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-  cursor: pointer;
-}
+    .btn-icon {
+        width: 14px;
+        height: 14px;
+    }
 
-.btn-icon {
-  width: 14px;
-  height: 14px;
-}
+    .btn-preview {
+        background-color: #f8fafc;
+        color: #1e293b;
+        border-color: #cbd5e1;
+    }
+    .btn-preview:hover { background-color: #f1f5f9; }
 
-/* Button Variants */
-.btn-preview {
-  background-color: #f8fafc;
-  color: #1e293b;
-  border-color: #cbd5e1;
-}
+    .btn-add {
+        background-color: #6b5b95;
+        color: #ffffff;
+    }
+    .btn-add:hover { background-color: #584980; }
 
-.btn-preview:hover {
-  background-color: #f1f5f9;
-  border-color: #94a3b8;
-}
+    .btn-danger-soft {
+        background-color: #fef2f2;
+        color: #dc2626;
+        border-color: #fecaca;
+    }
+    .btn-danger-soft:hover { background-color: #fee2e2; }
 
-.btn-add {
-  background-color: #2563eb;
-  color: #ffffff;
-}
+    /* Status badge & dropdown toggles */
+    .status-control {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .pub-status-label {
+        font-weight: 700;
+        cursor: pointer;
+        user-select: none;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+    }
+    .pub-status-label.active { background: #dcfce7; color: #15803d; }
+    .pub-status-label.inactive { background: #ffedd5; color: #c2410c; }
+    .pub-status-label.moved-out { background: #f1f5f9; color: #475569; }
+    .pub-status-label.removed { background: #f3e8ff; color: #7e22ce; }
+    .pub-status-label.disqualified { background: #fee2e2; color: #b91c1c; }
 
-.btn-add:hover {
-  background-color: #1d4ed8;
-}
-
-.btn-danger-soft {
-  background-color: #fef2f2;
-  color: #dc2626;
-  border-color: #fecaca;
-}
-
-.btn-danger-soft:hover {
-  background-color: #fee2e2;
-  border-color: #fca5a5;
-}
-
-/* Modal Improvements */
-.custom-modal-backdrop {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(2px);
-  z-index: 9999;
-  justify-content: center;
-  align-items: center;
-}
-
-.custom-modal-content {
-  background: #ffffff;
-  width: 85%;
-  height: 85%;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.custom-modal-header {
-  padding: 12px 20px;
-  background: #f8fafc;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.custom-modal-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.custom-modal-close {
-  background: none;
-  border: none;
-  font-size: 22px;
-  color: #64748b;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.custom-modal-close:hover {
-  color: #0f172a;
-}
-
-.custom-modal-iframe {
-  width: 100%;
-  height: 100%;
-  border: none; 
-}
-    .mt-1 { margin-top: 2px; }
+    .pub-status-dropdown {
+        display: none;
+        height: 26px;
+        font-size: 11px;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px;
+        background: #fff !important;
+        cursor: pointer;
+    }
+    .pub-status-dropdown.show { display: block; }
 
 
-.status-control{
-    position:relative;
-    display:flex;
-    align-items:center;
-    gap:6px;
-}
-.status-control label{
-    margin:0;
-}
-.pub-status-label{
-    font-weight:700;
-    cursor:pointer;
-    user-select:none;
-}
-.pub-status-label:hover{
-    text-decoration:underline;
-}
-.pub-status-label.active{
-    color:#d32f2f;
-}
-.pub-status-label.inactive{
-    color:#e67e22;
-}
-.pub-status-label.moved-out{
-    color:#7f8c8d;
-}
-.pub-status-label.removed{
-    color:#8e44ad;
-}
-.pub-status-label.disqualified{
-    color:#c0392b;
-}
-.pub-status-dropdown{
-    display:none;
-    height:26px;
-    font-size:12px;
-    border:1px solid #aaa !important;
-    background:#fff !important;
-    cursor:pointer;
-}
-.pub-status-dropdown.show{
-    display:block;
+    @media screen and (max-width: 1024px) {
+    .s21-listbox-pane {
+        position: fixed; left: 0; top: 0; bottom: 0; right: auto;
+        width: 86%; max-width: 340px; height: 100%; z-index: 1000;
+        border-radius: 0 18px 18px 0;
+        transform: translateX(-105%); visibility: hidden;
+        transition: transform .22s ease, visibility 0s .22s;
+        box-shadow: 8px 0 30px rgba(15,23,42,.3);
+    }
+    .s21-listbox-pane.open { transform: none; visibility: visible; transition: transform .22s ease, visibility 0s; }
+    #listBackdrop { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 999; }
+    #listBackdrop.show { display: block; }
+    }
+
+    .name-nav{display:none;order:10;gap:4px;flex:none}
+    .name-nav button{width:30px;height:30px;border-radius:10px;background:#f1f5f9;border:0;font-weight:700;color:#475569}
+    .listtab{display:none}
+    @media screen and (max-width:1024px){
+        .s21-card{position:relative;padding-left:40px}
+        .listtab{display:flex;flex-direction:column;align-items:center;gap:6px;position:absolute;left:8px;top:14px;bottom:14px;width:24px;padding:6px 0;border:0;border-radius:12px;background:#6b5b95;color:#fff;overflow:hidden;cursor:pointer}
+        .listtab .ico{font-size:15px;line-height:1}
+        .listtab .lab{flex:1;min-height:0;writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;font-weight:700;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .name-nav{display:inline-flex}
+    }
+  
+
+    /* ===== S-21 card reaches the bottom of the list pane; taller rows ===== */
+@media screen and (min-width: 1025px) {
+    /* same height as the sticky list pane (100vh - 24px), so both bottoms line up */
+    .s21-card { min-height: calc(100vh - 24px); box-sizing: border-box; }
+    .s21-table-wrapper { flex: 1; display: flex; flex-direction: column; }
+    .s21-table { flex: 1; height: 100%; }          /* the spare height is shared by all rows */
 }
 
-/* ===== Remarks flag chip ===== */
-.rem-chip { position: relative; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
-    min-width: 26px; height: 16px; padding: 0 8px; border-radius: 999px;
-    font-size: 10px; font-weight: 700; white-space: nowrap; cursor: pointer; }
-.rem-chip .rem-label { pointer-events: none; }
-.rem-chip .remark-select {
-    position: absolute !important; inset: 0; width: 100% !important; height: 100% !important;
+/* phone / tablet: bigger tap targets */
+@media screen and (max-width: 1024px) {
+    :root { --row-height: 44px; }
+    .s21-table input[type="text"],
+    .s21-table input[type="number"] { font-size: 16px !important; }   /* 16px stops iOS zooming on focus */
+    .s21-table input[type="checkbox"] { width: 22px; height: 22px; display: block; margin: 0 auto; accent-color: #6b5b95; }
+    .remark-select { flex: 0 0 90px !important; width: 90px !important; min-width: 90px; font-size: 14px; }
+    .s21-table td strong { font-size: 12px; }
+    }
+
+
+    /* ===== rows copy the Current Month Entry look ===== */
+    :root { --row-height: 32px; }
+    .s21-table tbody tr:nth-child(even) td { background: #f8fafc; }
+    .s21-table td strong { font-size: 12px; font-weight: 700; }
+    .s21-table input[type="number"] { font-size: 16px !important; font-weight: 700; color: #6b5b95; }
+    .s21-table input.remark-text { font-size: 14px !important; text-align: left; }
+    .s21-table input[type="checkbox"] { width: 20px; height: 20px; display: block; margin: 0 auto; accent-color: #6b5b95; cursor: pointer; }
+    .s21-table tr.s21-row-future td { opacity: .4; }
+
+    /* remark chip */
+    .rem-chip { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none;
+    min-width: 34px; height: 26px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+    .rem-chip .lab { pointer-events: none; }
+    .rem-chip .remark-select { position: absolute !important; inset: 0; width: 100% !important; height: 100% !important;
     min-width: 0 !important; flex: none !important; padding: 0 !important; margin: 0 !important;
-    border: none !important; opacity: 0; cursor: pointer;
-}
-.rem-chip.flag-start   { background: #e6f4ea; color: #1e7e34; }
-.rem-chip.flag-pioneer { background: #e8f0fe; color: #1a56c4; }
-.rem-chip.flag-end     { background: #fdecea; color: #c62828; }
-.rem-chip.flag-other   { background: #f1f1f1; color: #555; }
-.rem-chip.empty { background: transparent; color: #b0b8c0; border: 1px dashed #d5dbe1; font-weight: 400; opacity: 0; }
-tr:hover .rem-chip.empty, .rem-chip.empty:focus-within { opacity: 1; }   /* the "+" appears on row hover */
-.rem-chip.dis { opacity: .4; }
-.rem-chip.dis .remark-select { cursor: default; }
+    border: none !important; opacity: 0; cursor: pointer; font-size: 16px !important; }
+    .c-start   { background: #e6f4ea; color: #1e7e34; }
+    .c-pioneer { background: #e8f0fe; color: #1a56c4; }
+    .c-end     { background: #fdecea; color: #c62828; }
+    .c-none    { border: 1px dashed #cbd5e1; color: #94a3b8; font-weight: 400; }
+    .rem-chip.dis { opacity: .4; }
 
-
+    
 </style>
+
 <div class="s21-app-container">
-    <!-- Global Year Navigation Header spanning the top of the entire workspace -->
-        <!-- Narrower Minimal Year Navigation Header -->
-                <div class="year-nav-header" style="display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; color: #5b3d88; font-size: 14px; max-width: 280px; margin: 0 auto 8px auto;">
-                    <span id="prevYearBtn" class="nav-arrow-year" style="cursor: pointer; font-weight: bold; user-select: none; font-size: 16px;">&lt;</span>
-                    <strong id="yearDisplayText">Loading...</strong>
-                    <span id="nextYearBtn" class="nav-arrow-year" style="cursor: pointer; font-weight: bold; user-select: none; font-size: 16px;">&gt;</span>
-                </div>
-    <!-- Main Workspace Wrapper -->
+    <div id="listBackdrop" onclick="closeList()"></div>
     <div class="s21-wrapper">
-        <!-- LEFT LANE: Publisher Listbox, Dropdown Category & Search -->
+
+        <!-- =========================================================
+             LEFT LANE: PUBLISHERS LISTBOX PANE
+             ========================================================= -->
         <div class="s21-listbox-pane">
             <div class="listbox-header-title">Publishers List</div>
             <div>
                 <label class="side-label">Category:</label>
-                <select id="categorySelect" class="form-control" style="height: 24px; font-size: 11px;">
+                <select id="categorySelect" class="form-control">
                     <option value="ALL">All</option>
                     <option value="ACTIVE PUBLISHERS">ACTIVE PUBLISHERS</option>
                     <option value="ELDERS">ELDERS</option>
@@ -549,7 +544,7 @@ tr:hover .rem-chip.empty, .rem-chip.empty:focus-within { opacity: 1; }   /* the 
             </div>
             <div>
                 <label class="side-label">Search:</label>
-                <input type="text" id="publisherSearch" placeholder="Type to search..." class="form-control" style="height: 24px;">
+                <input type="text" id="publisherSearch" placeholder="Type to search..." class="form-control">
             </div>
             <div class="listbox-container" id="publisherListbox">
                 <!-- Populated via script -->
@@ -557,50 +552,53 @@ tr:hover .rem-chip.empty, .rem-chip.empty:focus-within { opacity: 1; }   /* the 
             <div class="listbox-count" id="listboxCount">Count: 0</div>
         </div>
 
-        <!-- MID: Snug S-21 Record Card -->
+        <!-- =========================================================
+             MID LANE: S-21 RECORD CARD & TABLE
+             ========================================================= -->
         <div class="s21-card">
-            <div class="s21-header">
-                                        <!-- The Hidden Separate Edit Fields (Revealed on click) -->
-                      <div class="row-group name-row">
-                            <label><strong>Name:</strong></label>
-                            
-                            <!-- The Single Display Box -->
-                            <input type="text" id="pubNameDisplay" readonly class="form-control" placeholder="Click to edit name" style="border: 1px solid #aaa !important; background: #fff !important; max-width: 210px; cursor: pointer;" title="Click to edit name parts">
 
-                            <!-- The Hidden Separate Edit Fields (Revealed on click) -->
-                            <div id="nameEditContainer" style="display: none; gap: 5px; align-items: center;">
-                                <input type="text" id="editLName" placeholder="Last Name" class="form-control" style="width: 150px;" title="Last Name">
-                                <input type="text" id="editFName" placeholder="First Name" class="form-control" style="width: 150px;" title="First Name">
-                                <input type="text" id="editMName" placeholder="Middle" class="form-control" style="width: 150px;" title="Middle Name">
-                            </div>
-                        </div>
-               
-                                                
+            <button id="mobileOpenList" class="listtab" aria-label="Open publisher list">
+                <span class="ico">☰</span><span id="mobileCatLabel" class="lab"></span>
+            </button>
+            <!-- Publisher Details Header Card -->
+            <div class="s21-header">
+                <div class="row-group name-row">
+                    <label class="font-bold text-slate-700">Name:</label>
+                    <input type="text" id="pubNameDisplay" readonly class="form-control" placeholder="Click to edit name" style="cursor: pointer;" title="Click to edit name parts">
+                    <div class="name-nav">
+                        <button id="mobilePrevPub" type="button">&lt;</button>
+                        <button id="mobileNextPub" type="button">&gt;</button>
+                    </div>
+                    <div id="nameEditContainer" style="display: none; gap: 5px; align-items: center; flex: 1;">
+                        <input type="text" id="editLName" placeholder="Last Name" class="form-control" title="Last Name">
+                        <input type="text" id="editFName" placeholder="First Name" class="form-control" title="First Name">
+                        <input type="text" id="editMName" placeholder="Middle" class="form-control" title="Middle Name">
+                    </div>
+                </div>
+         
                 <div class="row-group grid-4">
                     <div>
-                        <label>Date of birth:</label>
-                        <input type="date" id="pubDob" class="form-control" style="border: 1px solid #aaa !important; background: #fff !important;">
+                        <label class="side-label">Date of birth:</label>
+                        <input type="date" id="pubDob" class="form-control">
                     </div>
                     <div>
-                        <label>Date of baptism:</label>
-                        <input type="date" id="pubBaptism" class="form-control" style="border: 1px solid #aaa !important; background: #fff !important;">
+                        <label class="side-label">Date of baptism:</label>
+                        <input type="date" id="pubBaptism" class="form-control">
                     </div>
                     <div>
-                        <label>Group:</label>
-                        <input type="text" id="pubGroup" value="" class="form-control text-center" style="border: 1px solid #aaa !important; background: #fff !important;">
+                        <label class="side-label">Group:</label>
+                        <input type="text" id="pubGroup" value="" class="form-control text-center font-bold">
                     </div>
                     <div class="gender-box">
-                        <label><input type="checkbox" id="isMale"> M</label>
-                        <label><input type="checkbox" id="isFemale"> F</label>
+                        <label><input type="checkbox" id="isMale" class="accent-[#6b5b95]"> M</label>
+                        <label><input type="checkbox" id="isFemale" class="accent-[#6b5b95]"> F</label>
                     </div>
                 </div>
 
                 <div class="row-group status-spiritual-row">
-                     <div>
-                     <div class="status-control">
-                        <label>Status:</label>
+                    <div class="status-control">
+                        <label class="font-bold text-slate-700">Status:</label>
                         <span id="pubStatusDisplay" class="pub-status-label active" onclick="togglePubStatusDropdown()">Active</span>
-
                         <select id="pubStatus" class="pub-status-dropdown" onchange="changePubStatus(this.value)">
                             <option value="">Active</option>
                             <option value="Inactive">Inactive</option>
@@ -608,128 +606,126 @@ tr:hover .rem-chip.empty, .rem-chip.empty:focus-within { opacity: 1; }   /* the 
                             <option value="Removed">Removed</option>
                             <option value="Disqualified">Disqualified</option>
                         </select>
-
-                        </div>
-                        </div>
-                     <div class="privileges-inline">
-                        <label><input type="checkbox" id="isElder"> Elder</label>
-                        <label><input type="checkbox" id="isMS"> MS</label>
-                        <label><input type="checkbox" id="isRP"> RP</label>
-                        <label><input type="checkbox" id="isSP"> SP</label>
+                    </div>
+                    <div class="privileges-inline">
+                        <label><input type="checkbox" id="isElder" class="accent-[#6b5b95]"> Elder</label>
+                        <label><input type="checkbox" id="isMS" class="accent-[#6b5b95]"> MS</label>
+                        <label><input type="checkbox" id="isRP" class="accent-[#6b5b95]"> RP</label>
+                        <label><input type="checkbox" id="isSP" class="accent-[#6b5b95]"> SP</label>
                     </div>
                 </div>
             </div>
 
-            <table class="s21-table">
-                <thead>
-                    <tr>
-                        <th style="width: 15%;">Service Year<br><span class="sub-text" id="serviceYearDisplay">2026</span></th>
-                        <th style="width: 11%;">Shared in Ministry</th>
-                        <th style="width: 10%;">Bible Studies</th>
-                        <th style="width: 11%;">Auxiliary Pioneer</th>
-                        <th style="width: 11%;">Hours <span class="sub-text">(Pioneer)</span></th>
-                        <th style="width: 35%;">Remarks</th>
-                    </tr>
-                </thead>
-                <tbody id="s21TableBody">
-                    <!-- Populated dynamically via script with individual month IDs -->
-                </tbody>
-                <tfoot>
-                    <tr class="total-row">
-                        <td colspan="4" class="text-right" style="padding-right: 8px;"><strong>Total</strong></td>
-                        <td><input type="text" id="totalHours" value="0" readonly class="text-center font-bold"></td>
-                        <td></td>
-                    </tr>
-                </tfoot>
-            </table>
+            <!-- S-21 Monthly Table with Sticky Integrated Service Year Header Bar -->
+            <div class="s21-table-wrapper">
+                <table class="s21-table">
+                    <thead>
+                        <tr>
+                            <th colspan="6" style="padding: 6px 10px; background: linear-gradient(to right, #584980, #6b5b95);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                    <span id="prevYearBtn" style="cursor: pointer; font-weight: bold; padding: 2px 8px; background: rgba(255,255,255,0.15); border-radius: 6px;">&lt;</span>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span class="sub-text">Service Year</span>
+                                        <strong id="yearDisplayText" style="font-size: 13px;">2026</strong>
+                                    </div>
+                                    <span id="nextYearBtn" style="cursor: pointer; font-weight: bold; padding: 2px 8px; background: rgba(255,255,255,0.15); border-radius: 6px;">&gt;</span>
+                                </div>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th style="width: 15%;">Service Year<br><span class="sub-text" id="serviceYearDisplay">2026</span></th>
+                            <th style="width: 10%;">Shared in Ministry</th>
+                            <th style="width: 10%;">Bible Studies</th>
+                            <th style="width: 9%;">Auxiliary Pioneer</th>
+                            <th style="width: 11%;">Hours <span class="sub-text">(Pioneer)</span></th>
+                            <th style="width: 45%;">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="s21TableBody">
+                        <!-- Populated dynamically via script -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="4" class="text-right" style="padding-right: 8px;"><strong>Total</strong></td>
+                            <td><input type="text" id="totalHours" value="0" readonly class="text-center font-bold"></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
         </div>
 
-    <!-- MONTHLY REPORT SIDEBAR -->
-<div class="s21-sidebar">
-  
-  <!-- Print Preview Header -->
-  <div class="side-box text-center p-2">
-    <button type="button" id="btnPrintPreview" class="btn btn-action btn-preview w-100">
-      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="6 9 6 2 18 2 18 9"></polyline>
-        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-        <rect x="6" y="14" width="12" height="8"></rect>
-      </svg>
-      Print Preview
-    </button>
-  </div>
+        <!-- =========================================================
+             RIGHT LANE: SIDEBAR & OPTIONS
+             ========================================================= -->
+        <div class="s21-sidebar">
+            
+            <!-- Print Preview Header -->
+            <div class="side-box text-center">
+                <button type="button" id="btnPrintPreview" class="btn btn-action btn-preview w-full">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    Print Preview
+                </button>
+            </div>
 
-  <!-- Fieldset Group for Options -->
-  <fieldset class="side-fieldset">
-    <legend class="side-fieldset-legend">Cong. Pubs. Record</legend>
+            <!-- Fieldset Group for Options -->
+            <fieldset class="side-fieldset">
+                <legend class="side-fieldset-legend">Cong. Pubs. Record</legend>
 
-    <div class="form-check custom-check">
-      <input class="form-check-input" type="checkbox" id="chkMultipleSelection">
-      <label class="form-check-label" for="chkMultipleSelection">
-        Multiple Selection
-      </label>
+                <div class="form-check custom-check">
+                    <input class="form-check-input" type="checkbox" id="chkMultipleSelection">
+                    <label class="form-check-label" for="chkMultipleSelection">Multiple Selection</label>
+                </div>
+
+                <div class="form-check custom-check">
+                    <input class="form-check-input" type="checkbox" id="chkByFSG">
+                    <label class="form-check-label" for="chkByFSG">By FSG</label>
+                </div>
+
+                <!-- Indented Sub-options -->
+                <div class="sub-options-group">
+                    <div class="form-check custom-check">
+                        <input class="form-check-input" type="radio" name="fsgGroup" id="radioRegPioneers">
+                        <label class="form-check-label" for="radioRegPioneers">Regular Pioneers</label>
+                    </div>
+                    <div class="form-check custom-check">
+                        <input class="form-check-input" type="radio" name="fsgGroup" id="radioPublishers">
+                        <label class="form-check-label" for="radioPublishers">Publishers</label>
+                    </div>
+                    <div class="form-check custom-check">
+                        <input class="form-check-input" type="radio" name="fsgGroup" id="radioUnbaptized">
+                        <label class="form-check-label" for="radioUnbaptized">Unbaptized</label>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- Publisher Actions -->
+            <div class="side-box action-box">
+                <button type="button" id="btnAddPublisher" class="btn btn-action btn-add w-full">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Publisher
+                </button>
+
+                <button type="button" id="btnDeletePublisher" class="btn btn-action btn-danger-soft w-full">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Delete Publisher
+                </button>
+            </div>
+
+        </div>
+
     </div>
-
-    <div class="form-check custom-check">
-      <input class="form-check-input" type="checkbox" id="chkByFSG">
-      <label class="form-check-label" for="chkByFSG">
-        By FSG
-      </label>
-    </div>
-
-    <!-- Indented Sub-options -->
-    <div class="sub-options-group">
-      <div class="form-check custom-check">
-        <input class="form-check-input" type="radio" name="fsgGroup" id="radioRegPioneers">
-        <label class="form-check-label" for="radioRegPioneers">
-          Regular Pioneers
-        </label>
-      </div>
-      <div class="form-check custom-check">
-        <input class="form-check-input" type="radio" name="fsgGroup" id="radioPublishers">
-        <label class="form-check-label" for="radioPublishers">
-          Publishers
-        </label>
-      </div>
-      <div class="form-check custom-check">
-        <input class="form-check-input" type="radio" name="fsgGroup" id="radioUnbaptized">
-        <label class="form-check-label" for="radioUnbaptized">
-          Unbaptized
-        </label>
-      </div>
-    </div>
-  </fieldset>
-
-  <!-- Publisher Actions -->
-  <div class="side-box action-box">
-    <button type="button" id="btnAddPublisher" class="btn btn-action btn-add w-100">
-      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
-      Add Publisher
-    </button>
-
-    <button type="button" id="btnDeletePublisher" class="btn btn-action btn-danger-soft w-100">
-      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="3 6 5 6 21 6"></polyline>
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-      </svg>
-      Delete Publisher
-    </button>
-  </div>
-
-</div>
-
-<!-- PDF Print Preview Modal -->
-<div id="printPreviewModal" class="custom-modal-backdrop">
-  <div class="custom-modal-content">
-    <div class="custom-modal-header">
-      <h3 class="custom-modal-title">Publisher Record Preview</h3>
-      <button type="button" class="custom-modal-close" onclick="document.getElementById('printPreviewModal').style.display='none'">&times;</button>
-    </div>
-    <iframe id="pdfPreviewIframe" class="custom-modal-iframe"></iframe>
-  </div>
 </div>
 
 
@@ -792,9 +788,9 @@ const calendarMonthNames = [
                 <td><input type="number" min="0" class="text-center study-input" id="${m.id}-studies" data-month="${index}"></td>
                 <td class="text-center"><input type="checkbox" class="table-check aux-check" id="${m.id}-aux" data-month="${index}"></td>
                 <td><input type="number" min="0" step="0.5" class="text-center hours-input" id="${m.id}-hours" data-month="${index}"></td>
-                 <td class="remarks-container">
+                <td class="remarks-container">
                     <input type="text" class="remark-text" id="${m.id}-remark" data-month="${index}">
-                    <span class="rem-chip empty"><span class="rem-label">＋</span>
+                    <span class="rem-chip c-none"><span class="lab">＋</span>
                         <select class="remark-select" id="${m.id}-select" data-month="${index}">
                             <option value=""></option>
                             <option value="INACTIVE">Inactive</option>
@@ -813,6 +809,7 @@ const calendarMonthNames = [
             `;
             tbody.appendChild(row);
         });
+
     }
 
     // 2. Hours Calculation Logic
@@ -861,14 +858,6 @@ const calendarMonthNames = [
         if (isNaN(d.getTime())) return "";
         return d.toISOString().split('T')[0];
     }
-
-function isCheckedMarker(val) {
-    if (val === null || val === undefined) return false;
-    if (typeof val === "boolean") return val;
-    if (typeof val === "number") return val !== 0;
-    return ["?", "1", "Y", "YES", "TRUE", "-1"].includes(String(val).trim().toUpperCase());
-}
-
 
     // 4. Load Data from IndexedDB
     function loadPublishersFromIndexedDB() {
@@ -1216,6 +1205,8 @@ filtered.forEach((p, index) => {
                 }
 
                 selectPublisher(p, div);
+                if (isNarrow()) closeList();
+
             };
 
 
@@ -1642,9 +1633,9 @@ function loadS21RecordsForPublisher() {
                 const rowEl = document.getElementById(m.id) || (minEl ? minEl.closest('tr') : null);
 
                 if (rec) {
-                    if (minEl) minEl.checked = isCheckedMarker(rec.MINISTRY);
+                    if (minEl) minEl.checked = Boolean(rec.MINISTRY);
                     if (bsEl) bsEl.value = rec.BS !== undefined ? rec.BS : "";
-                    if (auxEl) auxEl.checked = isCheckedMarker(rec.AUX);
+                    if (auxEl) auxEl.checked = Boolean(rec.AUX);
                     if (hrsEl) hrsEl.value = rec.HRS !== undefined ? rec.HRS : "";
 
                     // SAFE CASING FALLBACKS FOR REMARKS
@@ -1673,6 +1664,7 @@ function loadS21RecordsForPublisher() {
                 // Attach listeners using the correct 'index' variable
                 attachS21AutoCheckListeners(index, m);
             });
+           refreshRemChips();
         };
 
         getAllRequest.onerror = (err) => {
@@ -1683,8 +1675,6 @@ function loadS21RecordsForPublisher() {
         transaction.oncomplete = () => {
             calculateTotalHours();
         };
-
-        refreshRemChips();
     };
 }
 
@@ -2145,6 +2135,7 @@ function attachS21AutoCheckListeners(monthIndex, m) {
                     }
                 }
             }
+            refreshRemChip(m);
 
         // Save only through IndexedDB
         if (typeof saveS21MonthRecord === "function") {
@@ -2278,6 +2269,7 @@ function selectPublisher(p,itemElement) {
     }
 
     loadPublisherNameIntoUI(p);
+    updateMobileBar(p);
     populateForm(p);
 
     setTimeout(() => {
@@ -2574,6 +2566,7 @@ function initAppSystem() {
 
     if (categorySelectEl) {
         categorySelectEl.value = "ACTIVE PUBLISHERS";
+        updateMobileBar(currentSelectedPublisher);
         
         // Re-render listbox when category changes
         categorySelectEl.addEventListener('change', () => {
@@ -3558,6 +3551,7 @@ function clearPublisherForm() {
             calculateTotalHours();
         }
     }
+    if (typeof refreshRemChips === 'function') refreshRemChips();
     console.log("🧹 Publisher form and S-21 table cleared for new publisher.");
 }
 
@@ -3841,41 +3835,51 @@ document.getElementById("pubStatus")?.addEventListener("blur", function () {
 });
 
 
-// ==========================================
-// REMARKS FLAG CHIP
-// ==========================================
-const REM_FLAGS = {
-    "NEW UBP":      { label: "New UBP",      cls: "start" },
-    "MOVED IN":     { label: "Moved In",     cls: "start" },
-    "REACTIVATED":  { label: "Reactivated",  cls: "start" },
-    "REINSTATED":   { label: "Reinstated",   cls: "start" },
-    "RP":           { label: "RP",           cls: "pioneer" },
-    "SP":           { label: "SP",           cls: "pioneer" },
-    "INACTIVE":     { label: "Inactive",     cls: "end" },
-    "MOVED OUT":    { label: "Moved Out",    cls: "end" },
-    "DISQUALIFIED": { label: "Disqualified", cls: "end" },
-    "REMOVED":      { label: "Removed",      cls: "end" }
-};
 
+// ===== narrow screens: the publishers list is a bottom sheet =====
+const isNarrow = () => matchMedia('(max-width: 1024px)').matches;
+function openList()  { document.querySelector('.s21-listbox-pane')?.classList.add('open');    document.getElementById('listBackdrop')?.classList.add('show'); }
+function closeList() { document.querySelector('.s21-listbox-pane')?.classList.remove('open'); document.getElementById('listBackdrop')?.classList.remove('show'); }
+
+// < and > step through the names currently in the list (same category and search as the sheet)
+function stepPub(d) {
+  const items = [...document.querySelectorAll('#publisherListbox .listbox-item')];
+  if (!items.length) return;
+  let i = items.findIndex(el => el.classList.contains('active'));
+  i = i < 0 ? (d > 0 ? 0 : items.length - 1) : i + d;
+  if (i >= 0 && i < items.length) items[i].click();
+}
+
+function updateMobileBar(p) {
+   
+  const n = document.getElementById('mobileBarName'), l = document.getElementById('mobileCatLabel'), c = document.getElementById('categorySelect');
+  if (n && p) n.textContent = `${p.LName || ''}, ${p.FNAME || ''}`.replace(/^,\s*/, '');
+   if (l && c) l.textContent = c.options[c.selectedIndex].text;
+}
+
+document.getElementById('mobileOpenList')?.addEventListener('click', openList);
+document.getElementById('mobilePrevPub')?.addEventListener('click', () => stepPub(-1));
+document.getElementById('mobileNextPub')?.addEventListener('click', () => stepPub(1));
+document.getElementById('categorySelect')?.addEventListener('change', () => updateMobileBar(currentSelectedPublisher));
+updateMobileBar(null);
+
+
+// ===== remark chip (same look and labels as the Current Month Entry page) =====
+const REM_FLAGS = {
+  'NEW UBP': ['UBP','start'], 'MOVED IN': ['IN','start'], 'REACTIVATED': ['REACT','start'], 'REINSTATED': ['REINST','start'],
+  'RP': ['RP','pioneer'], 'SP': ['SP','pioneer'],
+  'INACTIVE': ['INACT','end'], 'MOVED OUT': ['OUT','end'], 'DISQUALIFIED': ['DQ','end'], 'REMOVED': ['REM','end']
+};
 function refreshRemChip(m) {
-    const sel = document.getElementById(`${m.id}-select`);
-    const chip = sel && sel.closest('.rem-chip');
-    if (!chip) return;
-    const key = String(sel.value || '').trim().toUpperCase();
-    const f = REM_FLAGS[key];
-    chip.className = 'rem-chip ' + (f ? 'flag-' + f.cls : (key ? 'flag-other' : 'empty')) + (sel.disabled ? ' dis' : '');
-    chip.querySelector('.rem-label').textContent = f ? f.label : (key || '＋');
+  const sel = document.getElementById(`${m.id}-select`), chip = sel && sel.closest('.rem-chip');
+  if (!chip) return;
+  const key = String(sel.value || '').trim().toUpperCase(), f = REM_FLAGS[key];
+  chip.className = 'rem-chip ' + (f ? 'c-' + f[1] : 'c-none') + (sel.disabled ? ' dis' : '');
+  chip.querySelector('.lab').textContent = f ? f[0] : (key || '＋');
 }
 function refreshRemChips() { s21Months.forEach(refreshRemChip); }
-
-// when the user picks a flag
-document.addEventListener('change', e => {
-    if (e.target.classList && e.target.classList.contains('remark-select') && e.target.dataset.month !== undefined) {
-        const m = s21Months[Number(e.target.dataset.month)];
-        if (m) refreshRemChip(m);
-    }
+document.addEventListener('change', e => {                 // when the user picks a flag
+  const el = e.target;
+  if (el.classList && el.classList.contains('remark-select') && el.dataset.month !== undefined) refreshRemChip(s21Months[Number(el.dataset.month)]);
 });
-
-
-
 </script>
