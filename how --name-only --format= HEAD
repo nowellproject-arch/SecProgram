@@ -1,0 +1,7 @@
+[33m8573b50[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Phone Mode 2
+ MyNote.txt                      |    2 [32m+[m[31m-[m
+ Temp/PublishersRecord1.html     | 3881 [32m++++++++++++++++++++++++++++++++++++++[m
+ Temp/PublishersRecord_New.html  | 3885 [32m+++++++++++++++++++++++++++++++++++++++[m
+ Templates/PublishersRecord.html | 1114 [32m+++++[m[31m------[m
+ version.json                    |    2 [32m+[m[31m-[m
+ 5 files changed, 8327 insertions(+), 557 deletions(-)
