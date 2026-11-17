@@ -1734,9 +1734,9 @@ function loadS21RecordsForPublisher() {
                 const rowEl = document.getElementById(m.id) || (minEl ? minEl.closest('tr') : null);
 
                 if (rec) {
-                    if (minEl) minEl.checked = Boolean(rec.MINISTRY);
+                    if (minEl) minEl.checked = isTrueMarker(rec.MINISTRY);
                     if (bsEl) bsEl.value = rec.BS !== undefined ? rec.BS : "";
-                    if (auxEl) auxEl.checked = Boolean(rec.AUX);
+                    if (auxEl) auxEl.checked = isTrueMarker(rec.AUX);
                     if (hrsEl) hrsEl.value = rec.HRS !== undefined ? rec.HRS : "";
 
                     // SAFE CASING FALLBACKS FOR REMARKS

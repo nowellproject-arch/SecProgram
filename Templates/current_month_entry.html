@@ -380,7 +380,8 @@ const getAll = (db, s) => new Promise((res, rej) => { const r = db.transaction(s
 async function init() {
   setActive(Number(typeof getMonthIndex === 'function' ? getMonthIndex() : 0));
   const db = await openDB();
-  pubs = await getAll(db, 'PUBLISHERS'); recs = await getAll(db, 'RECORDS');
+  pubs = [...new Map((await getAll(db, 'PUBLISHERS')).map(p => [String(p.IDPub), p])).values()];
+  recs = [...new Map((await getAll(db, 'RECORDS')).map(r => [Number(r.NUMBER) + '|' + String(r.IdPubs), r])).values()];
   db.close();
   await loadMonthly();
   if (closed && new Date().getDate() < 21) { setActive(active + 1); await loadMonthly(); }   // closed early: move on to the next month
@@ -390,7 +391,7 @@ async function init() {
   pub = pubs.find(p => String(p.IDPub) === String(id)) || sorted().find(isActivePub) || pubs[0] || null;
   paintAll();
 }
-const nameOf = p => `${p.LName || ''}, ${p.FNAME || ''}`.replace(/^,\s*/, '').trim();
+const nameOf = p => `${p.LName || ''}, ${p.FNAME ?? p.Fname ?? ''}`.replace(/^,\s*/, '').trim();
 const sorted = () => [...pubs].sort((a, b) => (a.LName || '').localeCompare(b.LName || '') || (a.FNAME || '').localeCompare(b.FNAME || ''));
 
 function build() {
@@ -416,7 +417,12 @@ function paintAll() {
     const s = String(pub.Status || '').trim() || 'Active';
     $('pStatus').textContent = 'Status: ' + s;
        $('pStatus').className = 'ml-auto text-[11px] font-bold px-2 py-1 rounded-lg ' + (s === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600');
-  }
+    } else {
+    $('pName').value = ''; $('pGroup').value = ''; $('pRP').checked = false;
+    $('pStatus').textContent = ''; $('pStatus').className = '';
+    }
+    $('pGroup').disabled = $('pRP').disabled = !pub;
+
     build(); rows(); summary(); paintAtt(); navArrows(); refreshList();
 }
 
@@ -441,6 +447,8 @@ function rows() {
         <span class="chip ${chip}"><span class="lab">${lab}</span><select data-i="${i}" data-f="rem" ${d}>${OPTS.replace(`value="${s.rem}"`, `value="${s.rem}" selected`)}</select></span>
       </div></div>`;
   }).join('');
+  $('rows').classList.toggle('opacity-40', noPub);
+  $('rows').classList.toggle('pointer-events-none', noPub);
   $('tot').textContent = Math.round(st.reduce((a, s) => a + (parseFloat(s.hr) || 0), 0) * 100) / 100;
 }
 
@@ -456,6 +464,7 @@ $('rows').addEventListener('change', e => {
 
 // same record shape and rules as the desktop save (hours/studies imply shared, RP/SP auto flag, delete when empty)
 function save(i) {
+  if (!pub) return;
   const s = st[i], id = String(pub.IDPub), n = s.n;
   if ((+s.hr > 0) || (+s.bs > 0)) s.min = true;
   const rp = T(pub.RP), nw = T(pub.New) || T(pub.NEW) || T(pub.SF);
@@ -478,6 +487,7 @@ function save(i) {
 }
 
 function patchPub(ch) {                                              // only Group / RP, applied to the fresh DB record
+   if (!pub) return;
   Object.assign(pub, ch);
   queue = queue.then(async () => {
     const db = await openDB(), tx = db.transaction('PUBLISHERS', 'readwrite'), os = tx.objectStore('PUBLISHERS');
