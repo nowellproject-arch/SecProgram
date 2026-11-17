@@ -1,6 +1,6 @@
 <style>
     :root {
-        --row-height: 22px;
+        --row-height: 41px;
     }
 
     .s21-app-container {
@@ -466,9 +466,10 @@
     .listtab{display:none}
     @media screen and (max-width:1024px){
         .s21-card{position:relative;padding-left:40px}
-        .listtab{display:flex;flex-direction:column;align-items:center;gap:6px;position:absolute;left:8px;top:14px;bottom:14px;width:24px;padding:6px 0;border:0;border-radius:12px;background:#6b5b95;color:#fff;overflow:hidden;cursor:pointer}
+        .listtab{display:flex;flex-direction:column;align-items:center;gap:6px;position:absolute;left:8px;top:14px;bottom:14px;width:24px;padding:6px 0;border:0;background:#6b5b95;color:#fff;overflow:hidden;box-shadow: 3px 2px 8px rgba(0, 0, 0, 0.2); cursor:pointer}
         .listtab .ico{font-size:15px;line-height:1}
         .listtab .lab{flex:1;min-height:0;writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;font-weight:700;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        
         .name-nav{display:inline-flex}
     }
   
@@ -477,8 +478,8 @@
 @media screen and (min-width: 1025px) {
     /* same height as the sticky list pane (100vh - 24px), so both bottoms line up */
     .s21-card { min-height: calc(100vh - 24px); box-sizing: border-box; }
-    .s21-table-wrapper { flex: 1; display: flex; flex-direction: column; }
-    .s21-table { flex: 1; height: 100%; }          /* the spare height is shared by all rows */
+    .s21-table-wrapper {  display: flex; flex-direction: column; }
+    .s21-table { flex: 2; height: 100%; }          /* the spare height is shared by all rows */
 }
 
 /* phone / tablet: bigger tap targets */
@@ -493,7 +494,7 @@
 
 
     /* ===== rows copy the Current Month Entry look ===== */
-    :root { --row-height: 32px; }
+    :root { --row-height: 43px; }
     .s21-table tbody tr:nth-child(even) td { background: #f8fafc; }
     .s21-table td strong { font-size: 12px; font-weight: 700; }
     .s21-table input[type="number"] { font-size: 16px !important; font-weight: 700; color: #6b5b95; }
@@ -514,6 +515,61 @@
     .c-none    { border: 1px dashed #cbd5e1; color: #94a3b8; font-weight: 400; }
     .rem-chip.dis { opacity: .4; }
 
+.s21-table th .short { display: none; }
+
+@media screen and (max-width: 1024px) {
+    .s21-table th .full { display: none; }
+    .s21-table th .short { display: inline; }
+
+    .s21-table { table-layout: fixed; width: 100%; }
+    .s21-table thead tr:nth-child(2) th { font-size: 10px; padding: 4px 2px; }
+    .s21-table td { padding-left: 2px; padding-right: 2px; }
+    .s21-table td input[type="number"],
+    .s21-table td input[type="text"] { width: 100%; min-width: 0; padding: 0 2px; text-align: center; }
+    .s21-table input.remark-text { text-align: left; }
+
+    /* month name clipped to first 3 letters */
+    .s21-table td:first-child strong {
+        display: inline-block; width: 3.4ch; overflow: hidden;
+        white-space: nowrap; vertical-align: bottom;
+    }
+}
+
+    .s21-table col.c-month { width: 40px; }
+    .s21-table col.c-shr   { width: 30px; }
+    .s21-table col.c-bs    { width: 30px; }
+    .s21-table col.c-aux   { width: 30px; }
+    .s21-table col.c-hrs   { width: 30px; }
+    .s21-table col.c-rem   { width: 80px; }
+
+    /* ===== phone: narrow columns, Remarks gets everything that is left ===== */
+    @media screen and (max-width: 1024px) {
+        .s21-card { padding: 10px 10px 10px 36px; }
+        .listtab { left: 6px; top: 10px; bottom: 10px; width: 22px; }
+        .s21-table thead tr:first-child th { width: auto !important; }
+        .s21-table col.c-month { width: 50px; }
+        .s21-table col.c-shr   { width: 40px; }
+        .s21-table col.c-bs    { width: 36px; }
+        .s21-table col.c-aux   { width: 30px; }
+        .s21-table col.c-hrs   { width: 42px; }
+        .s21-table col.c-rem   { width: 130px; }
+        /* col.c-rem has no width, so it takes the remaining space */
+        .s21-table thead tr:nth-child(2) th { font-size: 9px; padding: 4px 1px; }
+        .s21-table td input[type="number"] { padding: 0 !important; }
+        input.remark-text { text-overflow: ellipsis; }
+        .remark-text[readonly] { cursor: pointer; }
+    }
+
+    /* ===== comment popup ===== */
+    .note-modal { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(15,23,42,.5); align-items: center; justify-content: center; padding: 16px; }
+    .note-modal.show { display: flex; }
+    .note-box { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 14px; box-shadow: 0 20px 50px rgba(15,23,42,.35); }
+    .note-title { font-size: 12px; font-weight: 800; color: #4c3e70; margin-bottom: 8px; }
+    .note-box textarea { width: 100%; min-height: 140px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px 10px; font-size: 16px; line-height: 1.4; resize: vertical; box-sizing: border-box; }
+    .note-box textarea:focus { outline: none; border-color: #6b5b95; box-shadow: 0 0 0 3px rgba(107,91,149,.18); }
+    .note-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+    .note-actions button { height: 36px; padding: 0 16px; border-radius: 10px; font-weight: 700; font-size: 13px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; }
+    .note-actions .save { background: #6b5b95; border-color: #6b5b95; color: #fff; }
     
 </style>
 
@@ -618,10 +674,19 @@
 
             <!-- S-21 Monthly Table with Sticky Integrated Service Year Header Bar -->
             <div class="s21-table-wrapper">
-                <table class="s21-table">
+                 <table class="s21-table">
+                    <table class="s21-table">
+                        <colgroup>
+                            <col class="c-month">
+                            <col class="c-shr">
+                            <col class="c-bs">
+                            <col class="c-aux">
+                            <col class="c-hrs">
+                            <col class="c-rem">
+                        </colgroup>
                     <thead>
                         <tr>
-                            <th colspan="6" style="padding: 6px 10px; background: linear-gradient(to right, #584980, #6b5b95);">
+                            <th colspan="6" style="padding: 6px 50px; background: linear-gradient(to right, #584980, #6b5b95);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                                     <span id="prevYearBtn" style="cursor: pointer; font-weight: bold; padding: 2px 8px; background: rgba(255,255,255,0.15); border-radius: 6px;">&lt;</span>
                                     <div style="display: flex; align-items: center; gap: 6px;">
@@ -632,15 +697,16 @@
                                 </div>
                             </th>
                         </tr>
-                        <tr>
-                            <th style="width: 15%;">Service Year<br><span class="sub-text" id="serviceYearDisplay">2026</span></th>
-                            <th style="width: 10%;">Shared in Ministry</th>
-                            <th style="width: 10%;">Bible Studies</th>
-                            <th style="width: 9%;">Auxiliary Pioneer</th>
-                            <th style="width: 11%;">Hours <span class="sub-text">(Pioneer)</span></th>
-                            <th style="width: 45%;">Remarks</th>
-                        </tr>
-                    </thead>
+                        <!-- Replace the second <tr> inside <thead> -->
+                                    <tr>
+                                        <th><span class="full">Service Year</span><span class="short">Month</span><br><span class="sub-text" id="serviceYearDisplay">2026</span></th>
+                                        <th><span class="full">Shared in Ministry</span><span class="short">Shr.</span></th>
+                                        <th><span class="full">Bible Studies</span><span class="short">BS</span></th>
+                                        <th><span class="full">Auxiliary Pioneer</span><span class="short">AP</span></th>
+                                        <th><span class="full">Hours <span class="sub-text">(Pioneer)</span></span><span class="short">Hrs</span></th>
+                                        <th>Remarks</th>
+                                    </tr>
+                             </thead>
                     <tbody id="s21TableBody">
                         <!-- Populated dynamically via script -->
                     </tbody>
@@ -728,6 +794,16 @@
     </div>
 </div>
 
+<div id="noteModal" class="note-modal">
+  <div class="note-box">
+    <div id="noteModalTitle" class="note-title"></div>
+    <textarea id="noteModalText" placeholder="Type a comment…"></textarea>
+    <div class="note-actions">
+      <button id="noteModalCancel" type="button">Cancel</button>
+      <button id="noteModalSave" type="button" class="save">Save</button>
+    </div>
+  </div>
+</div>
 
 <!-- PDF Print Preview Modal -->
 <div id="printPreviewModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
@@ -783,7 +859,7 @@ const calendarMonthNames = [
             const row = document.createElement('tr');
             row.id = `row-${m.id}`;
             row.innerHTML = `
-                <td><strong style="padding-left: 2px;">${m.name}</strong></td>
+                <td><strong style="padding-left: 15px;">${m.name}</strong></td>
                 <td class="text-center"><input type="checkbox" class="table-check ministry-check" id="${m.id}-ministry" data-month="${index}"></td>
                 <td><input type="number" min="0" class="text-center study-input" id="${m.id}-studies" data-month="${index}"></td>
                 <td class="text-center"><input type="checkbox" class="table-check aux-check" id="${m.id}-aux" data-month="${index}"></td>
@@ -3882,4 +3958,44 @@ document.addEventListener('change', e => {                 // when the user pick
   const el = e.target;
   if (el.classList && el.classList.contains('remark-select') && el.dataset.month !== undefined) refreshRemChip(s21Months[Number(el.dataset.month)]);
 });
+
+// ===== phone: tap a comment to read / edit it in a popup =====
+(function () {
+  const narrow = matchMedia('(max-width: 1024px)');
+  const body = document.getElementById('s21TableBody');
+  const modal = document.getElementById('noteModal');
+  const txt = document.getElementById('noteModalText');
+  const ttl = document.getElementById('noteModalTitle');
+  let target = null;
+
+  // read-only on phone, so a tap opens the popup instead of the keyboard
+  const sync = () => body.querySelectorAll('.remark-text').forEach(el => { el.readOnly = narrow.matches; });
+  narrow.addEventListener('change', sync); sync();
+
+  const close = () => { modal.classList.remove('show'); target = null; };
+
+  body.addEventListener('click', e => {
+    const el = e.target.closest('.remark-text');
+    if (!el || !narrow.matches || el.disabled) return;
+    target = el;
+    const m = s21Months.find(x => el.id.startsWith(x.id + '-'));
+    const p = currentSelectedPublisher;
+    ttl.textContent = `${m ? m.name : ''} · ${p ? `${p.LName || ''}, ${p.FNAME || ''}` : ''}`;
+    txt.value = el.value;
+    modal.classList.add('show');
+    txt.focus(); txt.setSelectionRange(txt.value.length, txt.value.length);
+  });
+
+  document.getElementById('noteModalSave').onclick = () => {
+    if (target) {
+      target.value = txt.value.trim();
+      target.dispatchEvent(new Event('change', { bubbles: true }));   // runs the normal auto-save
+    }
+    close();
+  };
+  document.getElementById('noteModalCancel').onclick = close;
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('show')) close(); });
+})();
+
 </script>
