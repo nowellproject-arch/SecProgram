@@ -977,9 +977,8 @@ class BackupRequest(BaseModel):
     payload: Dict[str, Any]
 
 @app.post("/api/backup")
-async def save_indexeddb_backup(data: BackupRequest):
+def save_indexeddb_backup(data: BackupRequest):
     clean_passcode = data.passcode.strip()
-
     if not clean_passcode:
         raise HTTPException(status_code=400, detail="Passcode parameter is required.")
 
@@ -993,8 +992,7 @@ async def save_indexeddb_backup(data: BackupRequest):
         if not existing:
             raise HTTPException(status_code=404, detail="Account not found for this passcode.")
 
-        # keep the login user name from changing by accident
-        payload = dict(data.payload)
+        payload = data.payload  # no copy
         cong = payload.get("CongInfo")
         if not isinstance(cong, list) or not cong or not isinstance(cong[0], dict):
             payload["CongInfo"] = [{}]

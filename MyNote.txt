@@ -603,7 +603,7 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Active PUBID sync/ ROw adjsuted"
+git commit -m "Backup Fiexing"
 git push origin main
 
 
