@@ -357,7 +357,8 @@
     .card div[style*="font-size: 13px"] { font-size: 15px !important; }
 
 
-
+    #publishers-table-body tr[data-id] { cursor: pointer; }
+    #publishers-table-body tr.sel { background: #dbeafe; }
 
   </style>
 </head>
@@ -561,7 +562,7 @@ function setAnalysisTable(columns,rows){
     ).join("");
 
     tbody.innerHTML=rows.map(row=>
-        `<tr>${columns.map(col=>
+        `<tr data-id="${row.id??row.IDPub??row.publisher?.IDPub??''}">${columns.map(col=>
             `<td>${typeof col.render==="function"
                 ? col.render(row)
                 : row[col.key]??""}</td>`
@@ -692,7 +693,7 @@ window.loadActivePublishers=async function(){
             const name=`${p.LName||""}, ${p.FNAME||""}`.replace(/^,\s*/,"").trim();
             const yearsInTruth=calculateYearsInTruth(p.Baptism);
 
-            return `<tr>
+            return `<tr data-id="${p.IDPub}">
                 <td><strong>${name}</strong></td>
                 <td>${privileges.join(" & ")}</td>
                 <td>${yearsInTruth}</td>
@@ -993,7 +994,14 @@ document.addEventListener("input",function(e){
     }
 });
 
-
+document.getElementById("publishers-table-body").addEventListener("click", async e => {
+    const tr = e.target.closest("tr[data-id]");
+    if (!tr || !tr.dataset.id) return;
+    await globalSelectedPubID(tr.dataset.id);
+    localStorage.setItem("selPubSync", Date.now());
+    document.querySelectorAll("#publishers-table-body tr.sel").forEach(r => r.classList.remove("sel"));
+    tr.classList.add("sel");
+});
 
 /* ============================================================
    11. Unbaptized Publishers List
@@ -1083,11 +1091,7 @@ window.loadUnbaptizedPublishers=async function(){
                 ?calculateUnbaptizedTime(rec.NUMBER)
                 :"";
 
-            return {
-                name,
-                age:calculateAge(p.Birthdate),
-                yearsUnbaptized
-            };
+            return { id:p.IDPub, name, age:calculateAge(p.Birthdate), yearsUnbaptized };
         });
 
         setAnalysisTable([
@@ -1189,11 +1193,8 @@ window.loadMSPublishers=async function(){
             const name=`${p.LName||""}, ${p.FNAME||""}`
                 .replace(/^,\s*/,"").trim();
 
-            return {
-                name,
-                yearsInTruth:calculateYearsInTruth(p.Baptism),
-                age:calculateAge(p.Birthdate)
-            };
+
+            return { id:p.IDPub, name, yearsInTruth:calculateYearsInTruth(p.Baptism), age:calculateAge(p.Birthdate) };
         });
 
         setAnalysisTable([
@@ -1275,10 +1276,7 @@ window.loadActiveBaptizedPublishers=async function(){
             const name=`${p.LName||""}, ${p.FNAME||""}`
                 .replace(/^,\s*/,"").trim();
 
-            return {
-                name,
-                yearsInTruth:yearsInTruth(p.Baptism)
-            };
+            return { id:p.IDPub, name, yearsInTruth:yearsInTruth(p.Baptism) };
         });
 
         setAnalysisTable([
@@ -1365,7 +1363,7 @@ window.loadElders = async function () {
                 .replace(/^,\s*/, "")
                 .trim();
 
-            return { name };
+            return { id: p.IDPub, name };
         });
 
         setAnalysisTable(
@@ -1643,6 +1641,7 @@ window.loadIrregularPublishers=async function(){
         title.textContent=`IRREGULAR PUBLISHERS (${irregular.length})`;
 
         const rows=irregular.map(p=>({
+            id:p.IDPub,
             name:p.Name,
             missedMonths:p.MissedMonths
         }));
@@ -1982,7 +1981,7 @@ window.loadNewPublishers=async function(){
 
         tbody.innerHTML=newPublishers.length
             ?newPublishers.map(x=>`
-                <tr>
+                <tr data-id="${x.publisher.IDPub}">
                     ${columns.map(col=>`
                         <td>${col.render(x)}</td>
                     `).join("")}
@@ -2148,7 +2147,7 @@ window.loadSixMonthAuxPioneers = async function(){
 
         tbody.innerHTML = auxPioneers.length
             ? auxPioneers.map(x=>`
-                <tr>
+                <tr data-id="${x.publisher.IDPub}">
                     ${columns.map(col=>`
                         <td>${col.render(x)}</td>
                     `).join("")}
@@ -2400,7 +2399,7 @@ window.loadSixMonthInactive = async function(){
 
             ? inactivePublishers
                 .map(x => `
-                    <tr>
+                    <tr data-id="${x.IDPub}">
                         ${columns
                             .map(col => `
                                 <td>
@@ -2698,7 +2697,7 @@ window.loadSixMonthMovedIn = async function(){
 
             ? movedInPublishers
                 .map(x => `
-                    <tr>
+                    <tr data-id="${x.IDPub}">
                         ${columns
                             .map(col => `
                                 <td>
@@ -2995,7 +2994,7 @@ window.loadSixMonthMovedOut = async function(){
 
             ? movedOutPublishers
                 .map(x => `
-                    <tr>
+                    <tr data-id="${x.IDPub}">
                         ${columns
                             .map(col => `
                                 <td>
@@ -3291,7 +3290,7 @@ window.loadSixMonthReactivated = async function(){
 
             ? movedInPublishers
                 .map(x => `
-                    <tr>
+                    <tr data-id="${x.IDPub}">
                         ${columns
                             .map(col => `
                                 <td>

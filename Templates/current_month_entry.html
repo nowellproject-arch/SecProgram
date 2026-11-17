@@ -159,6 +159,11 @@
     #sheet.open{transform:none;visibility:visible;transition:transform .22s ease,visibility 0s}
   }
 
+
+@media screen and (min-width: 1025px) {
+    .s21-app-container { min-height: 0; padding-bottom: 0; }
+    html, body { overflow-y: hidden; }
+}
 </style>
 </head>
 
@@ -425,7 +430,7 @@ function rows() {
     const lab = f ? f[0] : (s.rem || '＋');
     const d = s.lock ? 'disabled' : '';
     const dim = s.lock ? 'opacity-40' : '';
-    return `<div class="rowgrid grid items-center h-10 px-2 ${i % 2 ? 'bg-slate-50' : 'bg-white'}">
+    return `<div class="rowgrid grid items-center h-9 px-2 ${i % 2 ? 'bg-slate-50' : 'bg-white'}">
     <b class="text-xs pl-1 ${dim}"><span class="m-s">${MON[i]}</span><span class="m-l">${MLONG[i]}</span></b>
       <label class="flex justify-center ${dim}"><input type="checkbox" data-i="${i}" data-f="min" ${s.min ? 'checked' : ''} ${d} class="w-5 h-5 accent-[#6b5b95]"></label>
       <input class="num ${dim}" inputmode="numeric" maxlength="3" data-i="${i}" data-f="bs" value="${s.bs}" ${d}>

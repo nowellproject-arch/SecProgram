@@ -1,6 +1,6 @@
 <style>
     :root {
-        --row-height: 41px;
+        --row-height: 38px;
     }
 
     .s21-app-container {
@@ -494,7 +494,7 @@
 
 
     /* ===== rows copy the Current Month Entry look ===== */
-    :root { --row-height: 43px; }
+    :root { --row-height: 38px; }
     .s21-table tbody tr:nth-child(even) td { background: #f8fafc; }
     .s21-table td strong { font-size: 12px; font-weight: 700; }
     .s21-table input[type="number"] { font-size: 16px !important; font-weight: 700; color: #6b5b95; }
@@ -590,6 +590,11 @@
     }  
 
 #totalHours { font-size: 16px !important; font-weight: 700; color: #6b5b95; }
+
+@media screen and (min-width: 1025px) {
+    .s21-app-container { min-height: 0; padding-bottom: 0; }
+    html, body { overflow-y: hidden; }
+}
 
 </style>
 
@@ -4017,5 +4022,22 @@ document.addEventListener('change', e => {                 // when the user pick
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('show')) close(); });
 })();
+
+function syncSelectedPublisher() {
+    globalSelectedPubID().then(id => {
+        if (!id || String(selectedPubId) === String(id)) return;
+        const lb = document.getElementById("publisherListbox");
+        const el = lb && lb.querySelector(`[data-id="${id}"]`);
+        if (!el) return;
+        currentIndex = el._pubIndex;
+        selectedPubId = id;
+        currentSelectedPublisher = el._pubData;
+        selectPublisher(el._pubData, el);
+    });
+}
+addEventListener("storage", e => { if (e.key === "selPubSync") syncSelectedPublisher(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) syncSelectedPublisher(); });
+addEventListener("focus", syncSelectedPublisher);
+
 
 </script>
