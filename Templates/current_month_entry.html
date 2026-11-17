@@ -730,16 +730,15 @@ async function autoInactive() {
     const id = String(r.IdPubs), n = Number(r.NUMBER), rm = String(r.REMARKS || '').trim().toUpperCase();
     has.add(id);
     if (START.includes(rm) || rm.includes('MOVED IN')) start.set(id, Math.max(start.get(id) ?? -Infinity, n));
-    const h = Number(r.HRS) || 0, b = Number(r.BS) || 0;
-    if (!(T(r.MINISTRY) || h > 0 || b > 0)) return;
+    if (!T(r.MINISTRY)) return;
     if (!rep.has(id)) rep.set(id, new Set());
     rep.get(id).add(n);
   });
   const lo = active - 6, hi = active - 1;
   const flag = pubs.filter(p => {
-    if (!isActivePub(p) || T(p.New) || T(p.NEW) || T(p.SF)) return false;   // skip special pioneers
+    if (!isActivePub(p) || T(p.New) || T(p.NEW) || T(p.SF)) return false;
     const id = String(p.IDPub);
-    if (!has.has(id) || (start.get(id) ?? -Infinity) > lo) return false;   // no history, or started inside the 6 months
+    if (!has.has(id) || (start.get(id) ?? -Infinity) > lo) return false;
     const r = rep.get(id) || new Set();
     for (let n = lo; n <= hi; n++) if (r.has(n)) return false;
     return true;
@@ -748,7 +747,7 @@ async function autoInactive() {
   const nowTs = Date.now(), newRecs = [];
   flag.forEach(p => {
     const id = String(p.IDPub), old = recs.find(r => Number(r.NUMBER) === hi && String(r.IdPubs) === id);
-    const rec = Object.assign({ IdPubs: id, NUMBER: hi, MINISTRY: 0, BS: '', AUX: 0, HRS: '', Note: '', Date_entered: null, is_deleted: 0 }, old || {}, { REMARKS: 'INACTIVE', updated_at: nowTs });
+    const rec = Object.assign({ IdPubs: id, NUMBER: hi, MINISTRY: '', BS: '', AUX: '', HRS: '', Note: '', Date_entered: null, is_deleted: 0 }, old || {}, { REMARKS: 'INACTIVE', updated_at: nowTs });
     recs = recs.filter(r => !(Number(r.NUMBER) === hi && String(r.IdPubs) === id)); recs.push(rec);
     newRecs.push(rec); p.Status = 'Inactive';
   });

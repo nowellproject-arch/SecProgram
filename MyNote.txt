@@ -603,7 +603,7 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Backup Fiexing all"
+git commit -m "Backup 0 value"
 git push origin main
 
 
