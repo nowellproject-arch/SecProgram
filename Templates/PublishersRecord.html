@@ -523,16 +523,10 @@
 
     .s21-table { table-layout: fixed; width: 100%; }
     .s21-table thead tr:nth-child(2) th { font-size: 10px; padding: 4px 2px; }
-    .s21-table td { padding-left: 2px; padding-right: 2px; }
+    .s21-table td { padding-left: 7px; padding-right: 2px; }
     .s21-table td input[type="number"],
     .s21-table td input[type="text"] { width: 100%; min-width: 0; padding: 0 2px; text-align: center; }
     .s21-table input.remark-text { text-align: left; }
-
-    /* month name clipped to first 3 letters */
-    .s21-table td:first-child strong {
-        display: inline-block; width: 3.4ch; overflow: hidden;
-        white-space: nowrap; vertical-align: bottom;
-    }
 }
 
     .s21-table col.c-month { width: 40px; }
@@ -571,6 +565,32 @@
     .note-actions button { height: 36px; padding: 0 16px; border-radius: 10px; font-weight: 700; font-size: 13px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; }
     .note-actions .save { background: #6b5b95; border-color: #6b5b95; color: #fff; }
     
+
+
+    /* vertical column lines only */
+    .s21-table td {
+        border: none;
+        border-left: 1px solid rgba(107, 91, 149, 0.16);
+    }
+    .s21-table th {
+        border: none;
+        border-left: 1px solid rgba(255, 255, 255, 0.28);
+    }
+    .s21-table td:first-child,
+    .s21-table th:first-child { border-left: none; }
+    .s21-table tfoot td { border-top: 2px solid rgba(107, 91, 149, 0.2); }
+
+    /* month: full on desktop, short on phone */
+    .m-s { display: none; }
+    .s21-table td:first-child strong { padding-left: 15px; }
+    @media screen and (max-width: 1024px) {
+        .m-l { display: none; }
+        .m-s { display: inline; }
+        .s21-table td:first-child strong { padding-left: 6px; }
+    }  
+
+#totalHours { font-size: 16px !important; font-weight: 700; color: #6b5b95; }
+
 </style>
 
 <div class="s21-app-container">
@@ -859,7 +879,7 @@ const calendarMonthNames = [
             const row = document.createElement('tr');
             row.id = `row-${m.id}`;
             row.innerHTML = `
-                <td><strong style="padding-left: 15px;">${m.name}</strong></td>
+                <td><strong><span class="m-l">${m.name}</span><span class="m-s">${m.name.slice(0,3)}</span></strong></td>
                 <td class="text-center"><input type="checkbox" class="table-check ministry-check" id="${m.id}-ministry" data-month="${index}"></td>
                 <td><input type="number" min="0" class="text-center study-input" id="${m.id}-studies" data-month="${index}"></td>
                 <td class="text-center"><input type="checkbox" class="table-check aux-check" id="${m.id}-aux" data-month="${index}"></td>

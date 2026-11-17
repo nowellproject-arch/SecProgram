@@ -122,6 +122,7 @@
   .chip { min-width: 30px; padding: 0 7px; }
   .note { padding: 0 4px; }
 
+
   @media (min-width: 768px) {
     #layout .rowgrid { grid-template-columns: 8% 8% 9% 8% 10% 53%; }   /* abbreviated months */
   }
@@ -266,7 +267,7 @@
         <div class="bg-slate-50 rounded-xl border border-slate-200/80 p-3">
           <div class="flex items-center justify-between gap-2 mb-1">
             <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-600">All active publishers</h4>
-            <input id="sAct" readonly value="0" class="w-16 h-8 bg-white border border-slate-200 rounded-lg text-center font-extrabold text-sm text-[#6b5b95] shadow-2xs">
+            <input id="sAct" readonly value="0" class="w-16 h-8 bg-white border border-slate-200 rounded-lg text-center font-extrabold text-1g text-[#6b5b95] shadow-2xs">
           </div>
           <p class="text-[11px] leading-snug text-slate-400">
             Count all persons in congregation reporting in last 6 months.
@@ -282,7 +283,7 @@
           <b class="text-sm font-bold text-slate-800 group-hover:text-[#6b5b95] transition">Average weekend attendance</b>
           <span id="attIcon" class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-500">▼</span>
         </button>
-        <div id="attAvg" class="mt-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200/70 text-center text-2xl font-extrabold text-[#6b5b95]">0.0</div>
+        <div id="attAvg" class="mt-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200/70 text-center text-1g font-extrabold text-[#6b5b95]">0.0</div>
         
         <div id="attBody" class="hidden mt-3.5 pt-3 border-t border-slate-100 space-y-3">
           <div>
@@ -323,7 +324,7 @@
       </div>
       <select id="cat" class="w-full h-9 rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 focus:border-[#6b5b95] focus:ring-2 focus:ring-[#6b5b95]/20 focus:outline-none">
         <option value="ACTIVE">ACTIVE PUBLISHERS</option>
-        <option value="GROUP">BY GROUP</option>
+        <option value="GROUP" selected>BY GROUP</option>
         <option value="ALL">ALL</option>
         <option value="PUBREP">ALL PUBLISHERS REPORTED</option>
         <option value="AUXREP">ALL AUX REPORTED</option>
@@ -378,6 +379,7 @@ async function init() {
   db.close();
   await loadMonthly();
   if (closed && new Date().getDate() < 21) { setActive(active + 1); await loadMonthly(); }   // closed early: move on to the next month
+  await autoInactive();
   let id = null;
   try { if (typeof globalSelectedPubID === 'function') id = await globalSelectedPubID(); } catch (e) {}
   pub = pubs.find(p => String(p.IDPub) === String(id)) || sorted().find(isActivePub) || pubs[0] || null;
@@ -408,7 +410,7 @@ function paintAll() {
     $('pGroup').value = pub.GROUP || ''; $('pRP').checked = T(pub.RP);
     const s = String(pub.Status || '').trim() || 'Active';
     $('pStatus').textContent = 'Status: ' + s;
-    $('pStatus').className = 'ml-auto text-[11px] font-bold px-2 py-1 rounded-lg ' + (s === 'Active' ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-600');
+       $('pStatus').className = 'ml-auto text-[11px] font-bold px-2 py-1 rounded-lg ' + (s === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600');
   }
     build(); rows(); summary(); paintAtt(); navArrows(); refreshList();
 }
@@ -584,11 +586,12 @@ $('pp').onclick = () => cycle(-1); $('np').onclick = () => cycle(1);
 function catList(q) {
   const c = $('cat').value;
   const S = repSets();
+  const G = c === 'GROUP' ? missedSet() : null;
   const out = p => /^(inactive|moved out|disqualified|removed)$/i.test(String(p.Status || '').trim());
   const inCat = p => { const id = String(p.IDPub); switch (c) {
     case 'ALL': return true;
     case 'INACTIVE': return String(p.Status || '').trim().toLowerCase() === 'inactive';
-    case 'GROUP': return !out(p) && String(p.GROUP || '').trim() !== '';
+    case 'GROUP': return !out(p) && G.has(String(p.IDPub));
     case 'PUBREP': return !out(p) && S.pub.has(id);
     case 'AUXREP': return !out(p) && S.aux.has(id);
     case 'RPREP': return !out(p) && S.rp.has(id);
@@ -603,9 +606,10 @@ function catList(q) {
 function paintList() {
   const q = $('q').value.toLowerCase(), c = $('cat').value, l = catList(q), top = $('list').scrollTop;
   $('cnt').textContent = l.length;
-  $('list').innerHTML = l.map(p => `<button data-id="${p.IDPub}" class="w-full px-4 py-3 text-left text-sm ${pub && String(p.IDPub) === String(pub.IDPub) ? 'bg-[#6b5b95] text-white font-bold' : ''}">${c === 'GROUP' ? 'G' + p.GROUP + ' · ' : ''}${nameOf(p)}</button>`).join('');
+  $('list').innerHTML = l.map(p => `<button data-id="${p.IDPub}" class="w-full px-4 py-3 text-left text-sm ${pub && String(p.IDPub) === String(pub.IDPub) ? 'bg-[#6b5b95] text-white font-bold' : ''}">${c === 'GROUP' && p.GROUP ? 'G' + p.GROUP + ' · ' : ''}${nameOf(p)}</button>`).join('');
   $('list').scrollTop = top;
 }
+
 const DESK = matchMedia('(min-width:768px)');   // same breakpoint as the CSS
 const refreshList = () => { if (DESK.matches) paintList(); };
 DESK.addEventListener('change', refreshList);
@@ -616,7 +620,8 @@ $('openList').onclick = () => sheet(true); $('closeList').onclick = $('bd').oncl
 const CATNAME = { ACTIVE: 'Active Publishers', GROUP: 'By Group', ALL: 'All', PUBREP: 'All Publishers Reported', AUXREP: 'All Aux Reported',
   RPREP: 'All RP Reported', MAUX: 'Current Month Aux', RP: 'Regular Pioneers', INACTIVE: 'Inactives' };
 
- function catLabel() { $('catLabel').textContent = CATNAME[$('cat').value] || ''; }
+
+function catLabel() { $('catLabel').textContent = CATNAME[$('cat').value] || ''; }
 
   $('q').oninput = paintList;
 $('cat').onchange = () => { catLabel(); paintList(); navArrows(); };
@@ -641,6 +646,31 @@ function repSets() {
     const h = Number(r.HRS) || 0, b = Number(r.BS) || 0;
     if (!(T(r.MINISTRY) || h > 0 || b > 0)) return;
     (String(r.REMARKS || '').toUpperCase().includes('RP') ? s.rp : T(r.AUX) ? s.aux : s.pub).add(id);
+  });
+  return s;
+}
+
+function missedSet() {
+  const START = ['NEW UPB', 'NEW UBP', 'NEW', 'RETURNED', 'REACTIVATED', 'REINSTATED'];
+  const rep = new Map(), start = new Map();
+  recs.forEach(r => {
+    const id = String(r.IdPubs), n = Number(r.NUMBER), rm = String(r.REMARKS || '').trim().toUpperCase();
+    if (START.includes(rm) || rm.includes('MOVED IN')) start.set(id, Math.min(start.get(id) ?? Infinity, n));
+    const h = Number(r.HRS) || 0, b = Number(r.BS) || 0;
+    if (!(T(r.MINISTRY) || h > 0 || b > 0)) return;
+    if (!rep.has(id)) rep.set(id, new Set());
+    rep.get(id).add(n);
+  });
+  const s = new Set();
+  pubs.forEach(p => {
+    if (T(p.New) || T(p.NEW) || T(p.SF)) return;                 // special pioneers
+    const id = String(p.IDPub), r = rep.get(id) || new Set();
+    if (r.has(active)) return;                                   // reported this month
+    const from = start.get(id) ?? -Infinity;                     // no start flag = counts all months
+    for (let k = 1; k <= 5; k++) {
+      const n = active - k;
+      if (n >= from && !r.has(n)) { s.add(id); return; }         // only months on/after their start
+    }
   });
   return s;
 }
@@ -683,7 +713,49 @@ async function closeReport() {
   if (!ok) return;
   await saveMonthly({ Closed: 1 });
   setActive(active + 1);                       // move to the next reporting month, as the desktop page does
-  await loadMonthly(); paintAll();
+  await loadMonthly();
+  await autoInactive();
+  paintAll();
+}
+
+async function autoInactive() {
+  const START = ['NEW UPB', 'NEW UBP', 'NEW', 'RETURNED', 'REACTIVATED', 'REINSTATED'];
+  const start = new Map(), rep = new Map(), has = new Set();
+  recs.forEach(r => {
+    const id = String(r.IdPubs), n = Number(r.NUMBER), rm = String(r.REMARKS || '').trim().toUpperCase();
+    has.add(id);
+    if (START.includes(rm) || rm.includes('MOVED IN')) start.set(id, Math.max(start.get(id) ?? -Infinity, n));
+    const h = Number(r.HRS) || 0, b = Number(r.BS) || 0;
+    if (!(T(r.MINISTRY) || h > 0 || b > 0)) return;
+    if (!rep.has(id)) rep.set(id, new Set());
+    rep.get(id).add(n);
+  });
+  const lo = active - 6, hi = active - 1;
+  const flag = pubs.filter(p => {
+    if (!isActivePub(p) || T(p.New) || T(p.NEW) || T(p.SF)) return false;   // skip special pioneers
+    const id = String(p.IDPub);
+    if (!has.has(id) || (start.get(id) ?? -Infinity) > lo) return false;   // no history, or started inside the 6 months
+    const r = rep.get(id) || new Set();
+    for (let n = lo; n <= hi; n++) if (r.has(n)) return false;
+    return true;
+  });
+  if (!flag.length) return;
+  const nowTs = Date.now(), newRecs = [];
+  flag.forEach(p => {
+    const id = String(p.IDPub), old = recs.find(r => Number(r.NUMBER) === hi && String(r.IdPubs) === id);
+    const rec = Object.assign({ IdPubs: id, NUMBER: hi, MINISTRY: 0, BS: '', AUX: 0, HRS: '', Note: '', Date_entered: null, is_deleted: 0 }, old || {}, { REMARKS: 'INACTIVE', updated_at: nowTs });
+    recs = recs.filter(r => !(Number(r.NUMBER) === hi && String(r.IdPubs) === id)); recs.push(rec);
+    newRecs.push(rec); p.Status = 'Inactive';
+  });
+  queue = queue.then(async () => {
+    const db = await openDB(), tx = db.transaction(['RECORDS', 'PUBLISHERS'], 'readwrite');
+    const ro = tx.objectStore('RECORDS'), po = tx.objectStore('PUBLISHERS');
+    newRecs.forEach(rec => ro.put(rec));
+    flag.forEach(p => { const g = po.get(p.IDPub); g.onsuccess = () => { if (g.result) po.put(Object.assign(g.result, { Status: 'Inactive' })); }; });
+    await new Promise(r => tx.oncomplete = r); db.close();
+    if (typeof setSyncUnsaved === 'function') setSyncUnsaved();
+  }).catch(err => console.error('autoInactive failed', err));
+  await queue;
 }
 
 init();
