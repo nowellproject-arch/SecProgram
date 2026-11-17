@@ -120,7 +120,7 @@
   .rowgrid { grid-template-columns: 8% 8% 9% 8% 10% 53%; }      /* phone */
   .num { font-size: 14px; padding: 0; }
   .chip { min-width: 30px; padding: 0 7px; }
-  .note { padding: 0 4px; }
+   .note { padding: 0 4px 0 12px; }
 
 
   @media (min-width: 768px) {
@@ -442,7 +442,7 @@ function rows() {
       <input class="num ${dim}" inputmode="numeric" maxlength="3" data-i="${i}" data-f="bs" value="${s.bs}" ${d}>
       <label class="flex justify-center"><input type="checkbox" data-i="${i}" data-f="aux" ${s.aux ? 'checked' : ''} ${rp || noPub ? 'disabled' : ''} class="w-5 h-5 accent-[#6b5b95]"></label>
       <input class="num ${dim}" inputmode="decimal" maxlength="5" data-i="${i}" data-f="hr" value="${s.hr}" ${d}>
-      <div class="flex items-center gap-1 pl-1 ${dim}">
+      <div class="flex items-center gap-1 pl-2 ${dim}">
         <input class="note" data-i="${i}" data-f="note" value="${s.note.replace(/"/g, '&quot;')}" ${d}>
         <span class="chip ${chip}"><span class="lab">${lab}</span><select data-i="${i}" data-f="rem" ${d}>${OPTS.replace(`value="${s.rem}"`, `value="${s.rem}" selected`)}</select></span>
       </div></div>`;
