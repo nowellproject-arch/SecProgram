@@ -404,9 +404,8 @@ async def s88_page():
 # -------------------------------------------------------------------
 # Core API Endpoints
 # -------------------------------------------------------------------
-
 @app.post("/api/login")
-async def login(data: LoginRequest):
+def login(data: LoginRequest):
     conn = None
     try:
         conn = get_db_connection()
@@ -446,9 +445,10 @@ async def login(data: LoginRequest):
         if conn:
             conn.close()
 
+
 @app.get("/api/reports")
 @app.get("/api/restore")
-async def api_reports(passcode: str):
+def api_reports(passcode: str):
     conn = None
     try:
         conn = get_db_connection()
@@ -481,6 +481,41 @@ async def api_reports(passcode: str):
     finally:
         if conn:
             conn.close()
+
+
+@app.get("/api/backup-restore/{passcode}")
+def get_backup_payload(passcode: str):
+    conn = None
+    try:
+        clean_passcode = passcode.strip()
+
+        if not clean_passcode:
+            raise HTTPException(status_code=400, detail="Passcode is required.")
+
+        conn = get_db_connection()
+
+        rows = conn.run(
+            "SELECT updated_at FROM conginfo WHERE passcode = :passcode;",
+            passcode=clean_passcode
+        )
+
+        if not rows:
+            raise HTTPException(status_code=404, detail="No cloud backup found for this passcode.")
+
+        return {
+            "payload": load_payload(conn, clean_passcode),
+            "updated_at": rows[0][0]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Restore error: {str(e)}")
+    finally:
+        if conn and hasattr(conn, "close"):
+            conn.close()
+
 
 
 # -------------------------------------------------------------------
@@ -1030,8 +1065,8 @@ def save_indexeddb_backup(data: BackupRequest):
         if conn and hasattr(conn, "close"):
             conn.close()
 
-@app.get("/api/backup-restore/{passcode}")
-async def get_backup_payload(passcode: str):
+
+def get_backup_payload(passcode: str):
     conn = None
     try:
         clean_passcode = passcode.strip()
@@ -1383,8 +1418,8 @@ async def get_s21_data(data_payload: dict):
     return JSONResponse(content={"success": True, "payload": data_payload})
 
 
-@app.get("/api/check-passcode")
-async def check_passcode(passcode: str):
+
+def check_passcode(passcode: str):
     clean_passcode = passcode.strip()
 
     if not clean_passcode:
