@@ -1,3 +1,86 @@
+
+<!--
+========================================================
+PROJECT INFORMATION / AI DEVELOPER NOTES
+========================================================
+
+PROJECT TYPE:
+Python-based Cloud Web Application
+
+1. TECHNOLOGY AND HOSTING
+   - Backend: Python
+   - Frontend: HTML, CSS, and JavaScript
+   - Main HTML file: index.html
+   - Cloud Database: PostgreSQL
+   - Database Hosting: Neon (Free Tier)
+   - Source Code Repository: GitHub
+   - Application Deployment/Hosting: Render (Free Tier)
+   - Local Browser Storage: IndexedDB
+
+2. DATABASE AND DATA SOURCE
+   - Original database: Microsoft Access
+   - Data migration: Exported 5 tables from MS Access
+     into CSV files.
+   - Exported CSV files are renamed and packaged as
+     CRB (payload CSV).
+   - PostgreSQL in Neon serves as the cloud database.
+   - IndexedDB is used for local browser storage.
+
+3. MAIN APPLICATION FILE
+   - index.html
+
+4. APPLICATION TABS / HTML TEMPLATES
+
+   The main application consists of the following
+   HTML template files:
+
+   1. Templates/current_month_entry.html
+      - Current Month Entry
+
+   2. Templates/PublishersRecord.html
+      - Publishers Records
+
+   3. Templates/AnalysisReport.html
+      - Analysis and Reports
+
+   4. Templates/administration.html
+      - Administration
+
+5. GENERAL DEVELOPMENT GUIDELINES FOR AI
+
+   When modifying or improving this project:
+
+   - First, understand the existing application structure
+     and how its components work together.
+   - Preserve existing functionality unless I explicitly
+     request a change.
+   - Do not remove, rename, or modify existing database
+     tables, columns, or field names without permission.
+   - Maintain compatibility with the existing PostgreSQL
+     database in Neon.
+   - Consider IndexedDB local storage and cloud
+     synchronization when modifying data operations.
+   - Maintain compatibility with the existing Python
+     backend and Render deployment.
+   - Keep the existing HTML template paths and file names.
+   - Avoid unnecessary changes to unrelated parts
+     of the application.
+   - Explain where each code modification should be placed.
+   - Do not assume that a feature exists without first
+     checking the existing code.
+
+IMPORTANT:
+Before making changes, inspect the relevant existing code
+and understand its dependencies. Prioritize data integrity,
+backup and recovery, and compatibility between local
+IndexedDB storage and the cloud PostgreSQL database.
+
+========================================================
+END OF PROJECT INFORMATION
+========================================================
+-->
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -160,7 +243,7 @@
   }
 
 
-@media screen and (min-width: 1025px) {
+@media screen and (min-width: 1024px) {
     .s21-app-container { min-height: 0; padding-bottom: 0; }
     html, body { overflow-y: hidden; }
 }
@@ -385,12 +468,16 @@ async function init() {
   db.close();
   await loadMonthly();
   if (closed && new Date().getDate() < 21) { setActive(active + 1); await loadMonthly(); }   // closed early: move on to the next month
+    { const d2 = await openDB(), all = d2.objectStoreNames.contains('MonthlyRecords') ? await getAll(d2, 'MonthlyRecords') : []; d2.close();
+    const pr = all.find(r => Number(r.NUMBER) === active - 1);
+    if (!pr || Number(pr.Closed) !== 1) await saveMonthly({ Closed: 1 }, active - 1); }
   await autoInactive();
   let id = null;
   try { if (typeof globalSelectedPubID === 'function') id = await globalSelectedPubID(); } catch (e) {}
   pub = pubs.find(p => String(p.IDPub) === String(id)) || sorted().find(isActivePub) || pubs[0] || null;
   paintAll();
 }
+
 const nameOf = p => `${p.LName || ''}, ${p.FNAME ?? p.Fname ?? ''}`.replace(/^,\s*/, '').trim();
 const sorted = () => [...pubs].sort((a, b) => (a.LName || '').localeCompare(b.LName || '') || (a.FNAME || '').localeCompare(b.FNAME || ''));
 
@@ -703,17 +790,19 @@ $('attHead').onclick = () => { const o = $('attBody').classList.toggle('hidden')
 let attTimer = null;
 ATT.forEach(id => $(id).addEventListener('input', () => { $(id).value = $(id).value.replace(/[^0-9]/g, ''); avg(); clearTimeout(attTimer); attTimer = setTimeout(() => saveMonthly({}), 400); }));
 
-function saveMonthly(extra) {
+function saveMonthly(extra, month) {
   const v = id => { const x = $(id).value.trim(); return x === '' ? '' : Number(x); };
-  const n = active, ci = calInfo(n);
-  const vals = Object.assign({ NoMtgs1: v('noMtgs1'), AttendcMidweekTotal: v('attM'), NoMtgs2: v('noMtgs2'), AttendcPublickTotal: v('attW'),
-    ActivePublishers: pubs.filter(isActivePub).length }, extra);
+  const n = month ?? active, ci = calInfo(n);
+  const base = month == null
+    ? { NoMtgs1: v('noMtgs1'), AttendcMidweekTotal: v('attM'), NoMtgs2: v('noMtgs2'), AttendcPublickTotal: v('attW') }
+    : {};
+  const vals = Object.assign(base, { ActivePublishers: pubs.filter(isActivePub).length }, extra);
   queue = queue.then(() => new Promise(async res => {
     const db = await openDB(), tx = db.transaction('MonthlyRecords', 'readwrite'), os = tx.objectStore('MonthlyRecords');
     os.getAll().onsuccess = e => {
       const row = (e.target.result || []).find(r => Number(r.NUMBER) === n);
-      if (row) { Object.assign(row, vals); os.put(row); mrec = row; }
-      else { mrec = Object.assign({ NUMBER: n, MONTH_: MFULL[ci.m], Year: ci.y, ServiceYear: ci.sy, Closed: 0 }, vals); os.add(mrec); }
+      if (row) { Object.assign(row, vals); os.put(row); if (n === active) mrec = row; }
+      else { const nr = Object.assign({ NUMBER: n, MONTH_: MFULL[ci.m], Year: ci.y, ServiceYear: ci.sy, Closed: 0 }, vals); os.add(nr); if (n === active) mrec = nr; }
     };
     tx.oncomplete = () => { db.close(); if (typeof setSyncUnsaved === 'function') setSyncUnsaved(); res(); };
     tx.onerror = () => { db.close(); res(); };

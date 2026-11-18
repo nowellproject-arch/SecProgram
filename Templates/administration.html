@@ -1,3 +1,84 @@
+
+<!--
+========================================================
+PROJECT INFORMATION / AI DEVELOPER NOTES
+========================================================
+
+PROJECT TYPE:
+Python-based Cloud Web Application
+
+1. TECHNOLOGY AND HOSTING
+   - Backend: Python
+   - Frontend: HTML, CSS, and JavaScript
+   - Main HTML file: index.html
+   - Cloud Database: PostgreSQL
+   - Database Hosting: Neon (Free Tier)
+   - Source Code Repository: GitHub
+   - Application Deployment/Hosting: Render (Free Tier)
+   - Local Browser Storage: IndexedDB
+
+2. DATABASE AND DATA SOURCE
+   - Original database: Microsoft Access
+   - Data migration: Exported 5 tables from MS Access
+     into CSV files.
+   - Exported CSV files are renamed and packaged as
+     CRB (payload CSV).
+   - PostgreSQL in Neon serves as the cloud database.
+   - IndexedDB is used for local browser storage.
+
+3. MAIN APPLICATION FILE
+   - index.html
+
+4. APPLICATION TABS / HTML TEMPLATES
+
+   The main application consists of the following
+   HTML template files:
+
+   1. Templates/current_month_entry.html
+      - Current Month Entry
+
+   2. Templates/PublishersRecord.html
+      - Publishers Records
+
+   3. Templates/AnalysisReport.html
+      - Analysis and Reports
+
+   4. Templates/administration.html
+      - Administration
+
+5. GENERAL DEVELOPMENT GUIDELINES FOR AI
+
+   When modifying or improving this project:
+
+   - First, understand the existing application structure
+     and how its components work together.
+   - Preserve existing functionality unless I explicitly
+     request a change.
+   - Do not remove, rename, or modify existing database
+     tables, columns, or field names without permission.
+   - Maintain compatibility with the existing PostgreSQL
+     database in Neon.
+   - Consider IndexedDB local storage and cloud
+     synchronization when modifying data operations.
+   - Maintain compatibility with the existing Python
+     backend and Render deployment.
+   - Keep the existing HTML template paths and file names.
+   - Avoid unnecessary changes to unrelated parts
+     of the application.
+   - Explain where each code modification should be placed.
+   - Do not assume that a feature exists without first
+     checking the existing code.
+
+IMPORTANT:
+Before making changes, inspect the relevant existing code
+and understand its dependencies. Prioritize data integrity,
+backup and recovery, and compatibility between local
+IndexedDB storage and the cloud PostgreSQL database.
+
+========================================================
+END OF PROJECT INFORMATION
+========================================================
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>

@@ -603,7 +603,7 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Larger font 2"
+git commit -m "Anaysis mod & Auto close Month"
 git push origin main
 
 

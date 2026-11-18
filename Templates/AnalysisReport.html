@@ -1,3 +1,84 @@
+
+<!--
+========================================================
+PROJECT INFORMATION / AI DEVELOPER NOTES
+========================================================
+
+PROJECT TYPE:
+Python-based Cloud Web Application
+
+1. TECHNOLOGY AND HOSTING
+   - Backend: Python
+   - Frontend: HTML, CSS, and JavaScript
+   - Main HTML file: index.html
+   - Cloud Database: PostgreSQL
+   - Database Hosting: Neon (Free Tier)
+   - Source Code Repository: GitHub
+   - Application Deployment/Hosting: Render (Free Tier)
+   - Local Browser Storage: IndexedDB
+
+2. DATABASE AND DATA SOURCE
+   - Original database: Microsoft Access
+   - Data migration: Exported 5 tables from MS Access
+     into CSV files.
+   - Exported CSV files are renamed and packaged as
+     CRB (payload CSV).
+   - PostgreSQL in Neon serves as the cloud database.
+   - IndexedDB is used for local browser storage.
+
+3. MAIN APPLICATION FILE
+   - index.html
+
+4. APPLICATION TABS / HTML TEMPLATES
+
+   The main application consists of the following
+   HTML template files:
+
+   1. Templates/current_month_entry.html
+      - Current Month Entry
+
+   2. Templates/PublishersRecord.html
+      - Publishers Records
+
+   3. Templates/AnalysisReport.html
+      - Analysis and Reports
+
+   4. Templates/administration.html
+      - Administration
+
+5. GENERAL DEVELOPMENT GUIDELINES FOR AI
+
+   When modifying or improving this project:
+
+   - First, understand the existing application structure
+     and how its components work together.
+   - Preserve existing functionality unless I explicitly
+     request a change.
+   - Do not remove, rename, or modify existing database
+     tables, columns, or field names without permission.
+   - Maintain compatibility with the existing PostgreSQL
+     database in Neon.
+   - Consider IndexedDB local storage and cloud
+     synchronization when modifying data operations.
+   - Maintain compatibility with the existing Python
+     backend and Render deployment.
+   - Keep the existing HTML template paths and file names.
+   - Avoid unnecessary changes to unrelated parts
+     of the application.
+   - Explain where each code modification should be placed.
+   - Do not assume that a feature exists without first
+     checking the existing code.
+
+IMPORTANT:
+Before making changes, inspect the relevant existing code
+and understand its dependencies. Prioritize data integrity,
+backup and recovery, and compatibility between local
+IndexedDB storage and the cloud PostgreSQL database.
+
+========================================================
+END OF PROJECT INFORMATION
+========================================================
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -809,7 +890,16 @@ function filterData(category,evt){
         window.loadSixMonthReactivated?.();
          return;
     }
+    
+    if(category==="Special Pioneers"){
+    window.loadSP?.();
+    return;
+    }
 
+    if(category==="Regular Publishers"){
+    window.loadRegularPublishers?.();
+    return;
+    }
 
     renderTable(currentData);
 }
@@ -1052,6 +1142,9 @@ window.loadUnbaptizedPublishers=async function(){
 
         const unbaptized=publishers
             .filter(p=>String(p.Baptism??"").trim()==="")
+            .filter(p=>String(p.Baptism??"").trim()==="")
+            .filter(p=>["","ACTIVE"].includes(String(p.Status??"").trim().toUpperCase()))
+            .filter(p=>String(p.LName??"").trim()||String(p.FNAME??"").trim())
             .filter(p=>String(p.LName??"").trim()||String(p.FNAME??"").trim())
             .sort((a,b)=>{
                 const la=String(a.LName??"").trim().toUpperCase();
@@ -1060,6 +1153,7 @@ window.loadUnbaptizedPublishers=async function(){
                 const fb=String(b.FNAME??"").trim().toUpperCase();
                 return la.localeCompare(lb)||fa.localeCompare(fb);
             });
+
 
         const title=document.getElementById("list-title");
         const badge=document.getElementById("unbaptized-count");
@@ -1131,7 +1225,7 @@ window.loadMSPublishers=async function(){
         db.close();
 
         const msPublishers=publishers
-            .filter(p=>String(p.MS??"").trim().toUpperCase()==="TRUE")
+            .filter(p=>isTrue(p.MS))
             .filter(p=>{
                 const status=String(p.Status??"").trim().toUpperCase();
                 return status==="ACTIVE"||status==="";
@@ -1416,7 +1510,7 @@ window.loadRP=async function(){
         const lastNumber=Number(period.lastNumber);
 
         const rpPublishers=publishers
-            .filter(p=>String(p.RP??"").trim().toUpperCase()==="TRUE")
+            .filter(p=>isTrue(p.RP))
             .filter(p=>{
                 const status=String(p.Status??"").trim().toUpperCase();
                 return status==="ACTIVE"||status==="";
@@ -2361,26 +2455,8 @@ window.loadSixMonthInactive = async function(){
         // --------------------------------------------------
 
         const columns = [
-            {
-                label: "Name",
-
-                render: x =>
-                    `<strong>${x.Name}</strong>`
-            },
-
-            {
-                label: "No. of Months Inactive",
-
-                render: x =>
-                    `<strong>${x.MonthsAsInactive}</strong>`
-            },
-
-            {
-                label: "Months as Inactive",
-
-                render: x =>
-                    x.Months
-            }
+            { label: "Name", render: x => `<strong>${x.Name}</strong>` },
+            { label: "Month as Inactive", render: x => x.Months }
         ];
 
         header.innerHTML =
@@ -3333,9 +3409,101 @@ window.loadSixMonthReactivated = async function(){
 };
 
 
+window.loadSP=async function(){
+    try{
+        const db=await openIndexedDB();
+        const publishers=await new Promise((resolve,reject)=>{
+            const r=db.transaction("PUBLISHERS","readonly").objectStore("PUBLISHERS").getAll();
+            r.onsuccess=()=>resolve(r.result||[]);
+            r.onerror=()=>reject(r.error);
+        });
+        db.close();
 
+        const result=publishers
+            .filter(p=>isTrue(p.SF)||isTrue(p.New)) // field names: SF, New
+            .filter(p=>["","ACTIVE"].includes(String(p.Status??"").trim().toUpperCase()))
+            .filter(p=>String(p.LName??"").trim()||String(p.FNAME??"").trim())
+            .sort((a,b)=>String(a.LName??"").toUpperCase().localeCompare(String(b.LName??"").toUpperCase())
+                ||String(a.FNAME??"").toUpperCase().localeCompare(String(b.FNAME??"").toUpperCase()));
 
+        const title=document.getElementById("list-title");
+        const badge=document.getElementById("SP-count");
+        if(!title)return [];
+        if(badge)badge.textContent=result.length;
+        title.textContent=`SPECIAL PIONEERS (${result.length})`;
 
+        setAnalysisTable([
+            {label:"Name",render:row=>`<strong>${row.name}</strong>`}
+        ],result.map(p=>({
+            id:p.IDPub,
+            name:`${p.LName||""}, ${p.FNAME||""}`.replace(/^,\s*/,"").trim()
+        })));
+
+        return result;
+    }catch(err){
+        console.error("❌ loadSP error:",err);
+        return [];
+    }
+};
+
+window.loadRegularPublishers=async function(){
+    try{
+        const period=await window.getSixMonthReportingPeriod();
+        if(!period)return [];
+
+        const db=await openIndexedDB();
+        const tx=db.transaction(["PUBLISHERS","RECORDS"],"readonly");
+        const publishers=await new Promise((res,rej)=>{const r=tx.objectStore("PUBLISHERS").getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});
+        const records=await new Promise((res,rej)=>{const r=tx.objectStore("RECORDS").getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});
+        db.close();
+
+        const months=period.sixMonths.map(r=>Number(r.NUMBER));
+        const isReported=r=>{const m=String(r?.MINISTRY??"").trim();return m==="1"||m==="?";};
+
+        const getStartNumber=id=>{
+            const rows=records
+                .filter(r=>String(r.IdPubs)===String(id))
+                .filter(r=>{
+                    const k=String(r.REMARKS??"").trim().toUpperCase();
+                    return ["NEW UPB","NEW UBP","NEW","RETURNED","REACTIVATED","REINSTATED"].includes(k)||k.includes("MOVED IN");
+                })
+                .sort((a,b)=>Number(a.NUMBER)-Number(b.NUMBER));
+            return rows.length?Number(rows[0].NUMBER):null;
+        };
+
+        const result=publishers
+            .filter(p=>["","ACTIVE"].includes(String(p.Status??"").trim().toUpperCase()))
+            .filter(p=>!isTrue(p.RP)&&!isTrue(p.SF)&&!isTrue(p.SP))
+            .filter(p=>String(p.LName??"").trim()||String(p.FNAME??"").trim())
+            .map(p=>{
+                const start=getStartNumber(p.IDPub);
+                const applicable=months.filter(n=>start==null||n>=start);
+                if(!applicable.length)return null;
+                const allReported=applicable.every(n=>
+                    records.some(r=>String(r.IdPubs)===String(p.IDPub)&&Number(r.NUMBER)===n&&isReported(r)));
+                return allReported?{p,count:applicable.length}:null;
+            })
+            .filter(Boolean)
+            .sort((a,b)=>String(a.p.LName??"").toUpperCase().localeCompare(String(b.p.LName??"").toUpperCase())
+                ||String(a.p.FNAME??"").toUpperCase().localeCompare(String(b.p.FNAME??"").toUpperCase()));
+
+        const title=document.getElementById("list-title");
+        const badge=document.getElementById("RPubs-count");
+        if(!title)return [];
+        if(badge)badge.textContent=result.length;
+        title.textContent=`REGULAR PUBLISHERS (${result.length})`;
+
+        setAnalysisTable([
+            {label:"Name",render:x=>`<strong>${x.p.LName||""}, ${x.p.FNAME||""}</strong>`},
+            {label:"Months Reported",render:x=>x.count}
+        ],result.map(x=>({id:x.p.IDPub,...x})));
+
+        return result;
+    }catch(err){
+        console.error("❌ loadRegularPublishers error:",err);
+        return [];
+    }
+};
 
 </script>
 
