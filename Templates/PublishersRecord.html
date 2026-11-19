@@ -80,9 +80,7 @@ END OF PROJECT INFORMATION
 ========================================================
 -->
 <style>
-    :root {
-        --row-height: 38px;
-    }
+
 
     .s21-app-container {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -565,7 +563,6 @@ END OF PROJECT INFORMATION
 
 /* phone / tablet: bigger tap targets */
 @media screen and (max-width: 1024px) {
-    :root { --row-height: 44px; }
     .s21-table input[type="text"],
     .s21-table input[type="number"] { font-size: 16px !important; }   /* 16px stops iOS zooming on focus */
     .s21-table input[type="checkbox"] { width: 22px; height: 22px; display: block; margin: 0 auto; accent-color: #6b5b95; }
@@ -695,6 +692,113 @@ END OF PROJECT INFORMATION
     font-size: 14px !important;
     padding: 12px 16px !important;
 }
+
+
+/* =====================================================
+   FONT SIZE & ROW HEIGHT CONTROLS
+   Paste at the VERY END of <style>. Edit values only.
+   ===================================================== */
+:root {
+    /* ---- ROW HEIGHT (desktop / phone) ---- */
+    --row-height: 35px;
+    --row-height-mobile: 56px;
+
+    /* ---- LIST PANE (left) ---- */
+    --fs-list-title: 16px;
+    --fs-list-item: 16px;
+    --fs-list-count: 13px;
+    --fs-list-label: 13px;
+    --fs-list-input: 15px;
+    --list-item-pad-y: 12px;
+
+    /* ---- TOP CARD (name, dates, status) ---- */
+    --fs-card-name: 20px;
+    --fs-card-label: 13px;
+    --fs-card-input: 16px;
+    --fs-card-checks: 13px;
+    --fs-card-status: 13px;
+    --card-input-height: 36px;
+
+    /* ---- TABLE ---- */
+    --fs-table-year-bar: 15px;
+    --fs-table-header: 12px;
+    --fs-table-month: 15px;
+    --fs-table-numbers: 18px;
+    --fs-table-remarks: 16px;
+    --fs-table-chip: 13px;
+    --fs-table-total: 18px;
+
+    /* ---- SIDEBAR (right) ---- */
+    --fs-side-legend: 13px;
+    --fs-side-label: 14px;
+    --fs-side-button: 14px;
+}
+
+/* ---------- LIST PANE ---------- */
+.listbox-header-title { font-size: var(--fs-list-title); }
+.listbox-count { font-size: var(--fs-list-count); }
+.s21-listbox-pane .side-label { font-size: var(--fs-list-label); }
+.s21-listbox-pane .form-control { font-size: var(--fs-list-input) !important; height: var(--card-input-height); }
+#publisherListbox .listbox-item,
+.s21-listbox-pane #publisherListbox .listbox-item {
+    font-size: var(--fs-list-item) !important;
+    padding: var(--list-item-pad-y) 16px !important;
+}
+
+/* ---------- TOP CARD ---------- */
+.s21-header .row-group,
+.s21-header .side-label { font-size: var(--fs-card-label); }
+.s21-header .form-control,
+.s21-header input[type="text"],
+.s21-header input[type="date"] {
+    font-size: var(--fs-card-input) !important;
+    height: var(--card-input-height);
+}
+#pubNameDisplay, #editLName, #editFName, #editMName { font-size: var(--fs-card-name) !important; }
+.gender-box, .spiritual-box, .privileges-inline { font-size: var(--fs-card-checks); }
+.pub-status-label { font-size: var(--fs-card-status); }
+.pub-status-dropdown { font-size: var(--fs-card-status); height: var(--card-input-height); }
+
+/* ---------- TABLE ---------- */
+.s21-table td, .s21-table th { height: var(--row-height); }
+.s21-table thead tr:first-child th { font-size: var(--fs-table-year-bar); }
+.s21-table thead tr:first-child th strong { font-size: var(--fs-table-year-bar) !important; }
+.s21-table thead tr:nth-child(2) th { font-size: var(--fs-table-header); }
+.s21-table th .sub-text, .s21-table .sub-text { font-size: var(--fs-table-header); }
+.s21-table td strong,
+.s21-table td:first-child strong { font-size: var(--fs-table-month); }
+.s21-table input[type="number"],
+.s21-table input[type="text"] { font-size: var(--fs-table-numbers) !important; }
+.s21-table input.remark-text,
+#s21TableBody .remark-text { font-size: var(--fs-table-remarks) !important; }
+.rem-chip { font-size: var(--fs-table-chip); height: calc(var(--row-height) - 16px); }
+.rem-chip .remark-select { font-size: 16px !important; }
+#totalHours { font-size: var(--fs-table-total) !important; }
+.s21-table tfoot td strong { font-size: var(--fs-table-month); }
+
+/* ---------- SIDEBAR ---------- */
+.side-fieldset-legend { font-size: var(--fs-side-legend); }
+.s21-sidebar .side-label { font-size: var(--fs-side-label); }
+.custom-check .form-check-label { font-size: var(--fs-side-label); }
+.btn-action { font-size: var(--fs-side-button); }
+
+/* ---------- PHONE / TABLET OVERRIDES ---------- */
+@media screen and (max-width: 1024px) {
+    :root {
+        --row-height: var(--row-height-mobile);
+        --fs-table-header: 11px;
+        --fs-table-month: 14px;
+        --fs-table-numbers: 18px;
+        --fs-table-remarks: 16px;
+        --fs-card-name: 18px;
+    }
+    .s21-table td, .s21-table th { height: var(--row-height-mobile); }
+    .s21-table input[type="number"],
+    .s21-table input[type="text"] { font-size: var(--fs-table-numbers) !important; }
+    .s21-table input.remark-text { font-size: var(--fs-table-remarks) !important; }
+}
+
+
 </style>
 
 <div class="s21-app-container">

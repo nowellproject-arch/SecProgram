@@ -247,6 +247,110 @@ END OF PROJECT INFORMATION
     .s21-app-container { min-height: 0; padding-bottom: 0; }
     html, body { overflow-y: hidden; }
 }
+
+
+/* =====================================================
+   FONT SIZE & ROW HEIGHT CONTROLS
+   Paste at the VERY END of <style>. Edit values only.
+   ===================================================== */
+:root {
+    /* ---- ROW HEIGHT ---- */
+    --row-height: 34px;
+    --row-height-mobile: 56px;
+
+
+    /* ---- LIST PANE (publishers directory) ---- */
+    --fs-list-title: 17px;
+    --fs-list-item: 16px;
+    --fs-list-input: 15px;
+    --fs-list-count: 14px;
+    --list-item-pad-y: 12px;
+    --list-input-height: 40px;
+
+    /* ---- S-21 BANNER + TOP CARD ---- */
+    --fs-banner: 14px;
+    --fs-card-label: 13px;
+    --fs-card-name: 20px;
+    --fs-card-group: 16px;
+    --fs-card-status: 13px;
+    --card-input-height: 40px;
+
+    /* ---- TABLE ---- */
+    --fs-table-year-bar: 20px;
+    --fs-table-pill: 11px;
+    --fs-table-header: 13px;
+    --fs-table-month: 15px;
+    --fs-table-numbers: 18px;
+    --fs-table-comments: 16px;
+    --fs-table-chip: 13px;
+    --fs-table-total: 20px;
+    --fs-table-total-label: 13px;
+    --table-input-height: 40px;
+    --chip-height: 30px;
+
+    /* ---- RIGHT SIDE (report + attendance) ---- */
+    --fs-side-title: 14px;
+    --fs-side-month: 17px;
+    --fs-side-button: 13px;
+    --fs-side-text: 14px;
+    --fs-side-small: 12px;
+    --fs-side-input: 16px;
+    --fs-side-active: 18px;
+}
+
+/* ---------- LIST PANE ---------- */
+#sheet b { font-size: var(--fs-list-title) !important; }
+#cat, #q { font-size: var(--fs-list-input) !important; height: var(--list-input-height) !important; }
+#list > * { font-size: var(--fs-list-item) !important; padding-top: var(--list-item-pad-y) !important; padding-bottom: var(--list-item-pad-y) !important; }
+#cnt, #sheet .justify-between.text-xs { font-size: var(--fs-list-count) !important; }
+
+/* ---------- BANNER + TOP CARD ---------- */
+.mid h2 { font-size: var(--fs-banner) !important; }
+.mid label[for="pName"], .mid label.text-xs { font-size: var(--fs-card-label) !important; }
+#pName { font-size: var(--fs-card-name) !important; height: var(--card-input-height) !important; }
+#pGroup { font-size: var(--fs-card-group) !important; height: var(--card-input-height) !important; width: 64px !important; }
+#pStatus { font-size: var(--fs-card-status) !important; }
+
+/* ---------- TABLE ---------- */
+#syNum { font-size: var(--fs-table-year-bar) !important; }
+#syPill { font-size: var(--fs-table-pill) !important; }
+.mid .rowgrid:not(#rows .rowgrid) > div { font-size: var(--fs-table-header) !important; }
+#thYear { font-size: var(--fs-table-header) !important; }
+#rows .rowgrid { height: var(--row-height) !important; }
+#rows .rowgrid b { font-size: var(--fs-table-month) !important; }
+.num { font-size: var(--fs-table-numbers) !important; height: var(--table-input-height) !important; }
+.note { font-size: var(--fs-table-comments) !important; height: var(--table-input-height) !important; }
+.chip { font-size: var(--fs-table-chip) !important; height: var(--chip-height) !important; }
+#tot { font-size: var(--fs-table-total) !important; }
+#tot, #tot ~ * { font-size: var(--fs-table-total) !important; }
+.mid .border-t-2 span:not(#tot) { font-size: var(--fs-table-total-label) !important; }
+
+/* ---------- RIGHT SIDE ---------- */
+.side h2 { font-size: var(--fs-side-title) !important; }
+#mName { font-size: var(--fs-side-month) !important; }
+#mStatus { font-size: var(--fs-side-button) !important; }
+.side h4 { font-size: var(--fs-side-small) !important; }
+.side p { font-size: var(--fs-side-small) !important; }
+#sAct { font-size: var(--fs-side-active) !important; height: 38px !important; }
+#sum, #sum * { font-size: var(--fs-side-text) !important; }
+#attHead b { font-size: var(--fs-side-text) !important; }
+#attAvg { font-size: var(--fs-side-active) !important; }
+#attBody div.text-\[11px\] { font-size: var(--fs-side-small) !important; }
+#attBody input { font-size: var(--fs-side-input) !important; height: 40px !important; }
+
+/* ---------- PHONE OVERRIDES ---------- */
+@media (max-width: 767px) {
+    :root {
+        --row-height: var(--row-height-mobile);
+        --fs-table-header: 11px;
+        --fs-table-month: 14px;
+        --fs-table-numbers: 18px;
+        --fs-table-comments: 16px;
+        --fs-card-name: 18px;
+    }
+}
+
+
 </style>
 </head>
 
