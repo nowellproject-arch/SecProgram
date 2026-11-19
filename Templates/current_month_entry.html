@@ -884,13 +884,13 @@ function missedSet() {
   });
   const s = new Set();
   pubs.forEach(p => {
-    if (T(p.New) || T(p.NEW) || T(p.SF)) return;                 // special pioneers
+    if (T(p.New) || T(p.NEW) || T(p.SF)) return;
     const id = String(p.IDPub), r = rep.get(id) || new Set();
-    if (r.has(active)) return;                                   // reported this month
-    const from = start.get(id) ?? -Infinity;                     // no start flag = counts all months
-    for (let k = 1; k <= 5; k++) {
+    if (!r.has(active)) { s.add(id); return; }
+    const from = start.get(id) ?? -Infinity;
+    for (let k = 1; k <= 6; k++) {
       const n = active - k;
-      if (n >= from && !r.has(n)) { s.add(id); return; }         // only months on/after their start
+      if (n >= from && !r.has(n)) { s.add(id); return; }
     }
   });
   return s;
