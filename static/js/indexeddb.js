@@ -1470,6 +1470,6 @@ window.getYearlyReportingPeriod = async function() {
         lastNumber,
         lastMonth: lastMonth || null,
         yearlyMonths,
-        serviceYear: Number(lastMonth?.Year)
+        serviceYear: Number(lastMonth?.ServiceYear ?? lastMonth?.Year) || Number(firstMonth?.ServiceYear ?? firstMonth?.Year) || null
     };
 };

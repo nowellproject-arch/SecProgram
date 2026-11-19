@@ -154,10 +154,10 @@ END OF PROJECT INFORMATION
       }
 
       /* Optional: Reorder cards so Left Column items stay together before Right Column items */
-      .dashboard-grid > .card:nth-child(1) { order: 1; } /* Congregation Meetings */
-      .dashboard-grid > .card:nth-child(3) { order: 2; } /* Publisher Analysis */
-      .dashboard-grid > .card:nth-child(2) { order: 3; } /* Field Service Activity */
-      .dashboard-grid > .card:nth-child(4) { order: 4; } /* Active Publishers Table */
+        .dashboard-grid > .card:nth-child(1) { order: 1; } /* Congregation Meetings */
+        .dashboard-grid > .card:nth-child(2) { order: 2; } /* Field Service Activity */
+        .dashboard-grid > .card:nth-child(3) { order: 3; } /* Publisher Analysis */
+        .dashboard-grid > .card:nth-child(4) { order: 4; } /* Result table */
     }
 
 
@@ -453,14 +453,14 @@ END OF PROJECT INFORMATION
       <span style="font-weight:bold;">Congregation Meetings</span>
       <span id="analysis-service-year" style="font-size:12px;font-weight:800;color:#111;"></span>
     </div>
-    <div class="stats-row">
-      <span>Midweek Meetings Average</span>
-      <div><span class="val-highlight">106.9</span> <span class="val-sec">/ 112.7</span></div>
-    </div>
-    <div class="stats-row">
-      <span>Public Meeting / Watchtower</span>
-      <div><span class="val-highlight">111.1</span> <span class="val-sec">/ 127.0</span></div>
-    </div>
+        <div class="stats-row">
+        <span>Midweek Meetings Average</span>
+        <div><span class="val-highlight" id="mw-avg-6">-</span> <span class="val-sec">/ <span id="mw-avg-year">-</span></span></div>
+        </div>
+        <div class="stats-row">
+        <span>Public Meeting / Watchtower</span>
+        <div><span class="val-highlight" id="we-avg-6">-</span> <span class="val-sec">/ <span id="we-avg-year">-</span></span></div>
+        </div>
   </div>
 
   <div class="card">
@@ -801,7 +801,7 @@ function filterData(category,evt){
 
 
 
-    document.querySelectorAll(".dash-link")
+    document.querySelectorAll(".dash-link,.badge-sy-link")
         .forEach(btn=>btn.classList.remove("active"));
 
     if(evt&&evt.currentTarget){
@@ -898,6 +898,11 @@ function filterData(category,evt){
 
     if(category==="Regular Publishers"){
     window.loadRegularPublishers?.();
+    return;
+    }
+
+    if(category.startsWith("Year ")){
+    window.loadYearCategory?.(category);
     return;
     }
 
@@ -1046,34 +1051,170 @@ function renderAiTableResults(data) {
 window.renderAnalysisData=async function(){
     console.log("📊 Analysis tab initialized");
 
-    window.loadActivePublishers?.();
-
     await window.updateRecordsPeriodLabels?.();
+
+    const loaders=[
+        window.loadActiveBaptizedPublishers,
+        window.loadUnbaptizedPublishers,
+        window.loadElders,
+        window.loadMSPublishers,
+        window.loadRP,
+        window.loadRegularPublishers,
+        window.loadSP,
+        window.loadSixMonthAuxPioneers,
+        window.loadNewPublishers,
+        window.loadSixMonthInactive,
+        window.loadSixMonthReactivated,
+        window.loadIrregularPublishers,
+        window.loadSixMonthMovedIn,
+        window.loadSixMonthMovedOut,
+        ()=>window.loadYearCategory?.("Year Auxiliary Pioneers"),
+        ()=>window.loadYearCategory?.("Year New Publishers"),
+        ()=>window.loadYearCategory?.("Year Inactive"),
+        ()=>window.loadYearCategory?.("Year Reactivated"),
+        ()=>window.loadYearCategory?.("Year Irregular"),
+        ()=>window.loadYearCategory?.("Year Moved In"),
+        ()=>window.loadYearCategory?.("Year Moved Out"),
+        window.loadMeetingAverages
+    ];
+
+    // Run one at a time: they all write to the same result table
+    for(const fn of loaders){
+        try{ await fn?.(); }catch(e){ console.error(e); }
+    }
+
+    // Restore the default view
+    const sy=document.getElementById("analysis-service-year");
+    if(sy)sy.textContent="";
+    await window.loadActivePublishers?.();
 };
 
 /* ============================================================
    9. FUTURE ADDITIONAL FEATURES
-   ------------------------------------------------------------
-   >>> PASTE NEW ANALYSIS FEATURES BELOW THIS LINE <<<
-   
-   Example:
 
-   window.loadElders=async function(){
-       ...
-   };
-
-   window.loadRegularPioneers=async function(){
-       ...
-   };
-
-   window.loadSixMonthReport=async function(){
-       ...
-   };
-
-   DO NOT PUT NEW FUNCTIONS ABOVE THE MAIN SECTIONS
-   UNLESS THEY ARE COMMON HELPERS.
    ============================================================ */
 
+   /* ===== SERVICE YEAR ANALYSIS (right column buttons) ===== */
+(function(){
+    const rem=r=>String(r.REMARKS??r.Remarks??"").trim().toUpperCase();
+    const pid=r=>String(r.IdPubs??r.IDPub??r.idpubs??"").trim();
+    const auxTrue=v=>["1","TRUE","YES","Y","?","-1"].includes(String(v??"").trim().toUpperCase());
+    const isActive=p=>["","ACTIVE"].includes(String(p.Status??"").trim().toUpperCase());
+    const nameOf=p=>`${p.LName||""}, ${p.FNAME||""}`.replace(/^,\s*/,"").trim();
+
+    const CFG={
+        "Year Auxiliary Pioneers":{title:"AUX PIONEERS",badge:"AUX-year-count",active:true,
+            match:r=>auxTrue(r.AUX??r.aux??r.AuxPioneer)&&Number(r.HRS??r.Hours??0)>0,
+            label:"Months as Aux"},
+        "Year New Publishers":{title:"NEW PUBLISHERS",badge:"UPB-year-count",active:true,
+            match:r=>["NEW","NEW UBP","NEW UPB"].includes(rem(r)),label:"Month Started"},
+        "Year Inactive":{title:"INACTIVE",badge:"Inactive-year-count",
+            match:r=>rem(r)==="INACTIVE",label:"Months as Inactive"},
+        "Year Reactivated":{title:"REACTIVATED",badge:"Reactivated-year-count",
+            match:r=>rem(r)==="REACTIVATED",label:"Month Reactivated"},
+        "Year Moved In":{title:"MOVED IN",badge:"Moved-In-year-count",
+            match:r=>["MOVED IN","RP/MOVED IN","REINSTATED"].includes(rem(r)),label:"Month Moved In"},
+        "Year Moved Out":{title:"MOVED OUT",badge:"Moved-Out-year-count",
+            match:r=>["MOVED OUT","REMOVED","DISQUALIFIED"].includes(rem(r)),label:"Months Moved Out"}
+    };
+
+    async function base(){
+        const period=await window.getYearlyReportingPeriod();
+        const db=await openIndexedDB();
+        const tx=db.transaction(["RECORDS","PUBLISHERS"],"readonly");
+        const get=s=>new Promise((res,rej)=>{const r=tx.objectStore(s).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});
+        const records=await get("RECORDS");
+        const publishers=await get("PUBLISHERS");
+        db.close();
+        const first=Number(period.firstNumber);
+        const last=Math.min(Number(period.lastNumber),Number(period.activeNumber));
+        const monthName=n=>(period.yearlyMonths||[]).find(m=>Number(m.NUMBER)===n)?.MONTH_||`#${n}`;
+        return {period,records,publishers,first,last,monthName};
+    }
+
+    function show(period,title,badgeId,columns,rows){
+        const sy=Number(period?.serviceYear);
+        const syEl=document.getElementById("analysis-service-year");
+        if(syEl)syEl.textContent=Number.isFinite(sy)?`${sy} Service Year`:"";
+        const t=document.getElementById("list-title");
+        if(t)t.textContent=`${title} - SERVICE YEAR (${rows.length})`;
+        const b=document.getElementById(badgeId);
+        if(b)b.textContent=rows.length;
+        setAnalysisTable(columns,rows);
+    }
+
+    window.loadYearCategory=async function(category){
+        try{
+            if(category==="Year Irregular")return await loadYearIrregular();
+            const c=CFG[category];
+            if(!c)return;
+            const {period,records,publishers,first,last,monthName}=await base();
+
+            const byPub=new Map();
+            records.forEach(r=>{
+                const n=Number(r.NUMBER);
+                if(n<first||n>last||!c.match(r))return;
+                const id=pid(r);
+                if(!id)return;
+                if(!byPub.has(id))byPub.set(id,new Set());
+                byPub.get(id).add(n);
+            });
+
+            const rows=[...byPub.entries()].map(([id,set])=>{
+                const p=publishers.find(x=>String(x.IDPub)===id);
+                if(!p||(c.active&&!isActive(p)))return null;
+                const nums=[...set].sort((a,b)=>a-b);
+                return {id:p.IDPub,name:nameOf(p),count:nums.length,months:nums.map(monthName).join(", ")};
+            }).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name));
+
+            show(period,c.title,c.badge,[
+                {label:"Name",render:x=>`<strong>${x.name}</strong>`},
+                {label:"No. of Months",render:x=>x.count},
+                {label:c.label,render:x=>x.months}
+            ],rows);
+            return rows;
+        }catch(err){
+            console.error("❌ loadYearCategory error:",err);
+        }
+    };
+
+    async function loadYearIrregular(){
+        const {period,records,publishers,first,last,monthName}=await base();
+        const isReported=r=>{const m=String(r?.MINISTRY??"").trim();return m==="1"||m==="?";};
+        const startOf=id=>{
+            const rows=records.filter(r=>pid(r)===String(id)).filter(r=>{
+                const k=rem(r);
+                return ["NEW UPB","NEW UBP","NEW","RETURNED","REACTIVATED","REINSTATED"].includes(k)||k.includes("MOVED IN");
+            }).sort((a,b)=>Number(a.NUMBER)-Number(b.NUMBER));
+            return rows.length?Number(rows[0].NUMBER):null;
+        };
+
+        const rows=[];
+        publishers.filter(isActive).forEach(p=>{
+            const start=startOf(p.IDPub);
+            const missed=[];
+            for(let n=first;n<=last;n++){
+                if(start!=null&&n<start)continue;
+                const ok=records.some(r=>pid(r)===String(p.IDPub)&&Number(r.NUMBER)===n&&isReported(r));
+                if(!ok)missed.push(n);
+            }
+            if(missed.length)rows.push({
+                id:p.IDPub,
+                name:`${nameOf(p)} (FSG ${p.GROUP||""})`,
+                count:missed.length,
+                months:missed.map(monthName).join(", ")
+            });
+        });
+        rows.sort((a,b)=>a.name.localeCompare(b.name));
+
+        show(period,"IRREGULAR","Irregular-year-count",[
+            {label:"Name",render:x=>`<strong>${x.name}</strong>`},
+            {label:"No. Missed",render:x=>x.count},
+            {label:"Missed Months",render:x=>x.months}
+        ],rows);
+        return rows;
+    }
+})();
 
 /* ============================================================
    10. SEARCH BOX EVENT
@@ -1213,6 +1354,40 @@ window.loadUnbaptizedPublishers=async function(){
     }
 };
 
+window.loadMeetingAverages=async function(){
+    try{
+        const year=await window.getYearlyReportingPeriod();
+        const db=await openIndexedDB();
+        const records=await new Promise((res,rej)=>{
+            const r=db.transaction("MonthlyRecords","readonly").objectStore("MonthlyRecords").getAll();
+            r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);
+        });
+        db.close();
+
+        const first=Number(year.firstNumber);
+        const last=Math.min(Number(year.lastNumber),Number(year.activeNumber));
+
+        const avg=(from,to,mField,aField)=>{
+            let m=0,a=0;
+            records.forEach(r=>{
+                const n=Number(r.NUMBER);
+                if(n>=from&&n<=to){
+                    m+=Number(r[mField]||0);
+                    a+=Number(r[aField]||0);
+                }
+            });
+            return m>0?(a/m).toFixed(1):"-";
+        };
+        const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+
+        set("mw-avg-6",avg(first,last,"NoMtgs1","AttendcMidweekTotal"));
+        set("mw-avg-year",avg(first-12,last-12,"NoMtgs1","AttendcMidweekTotal"));
+        set("we-avg-6",avg(first,last,"NoMtgs2","AttendcPublickTotal"));
+        set("we-avg-year",avg(first-12,last-12,"NoMtgs2","AttendcPublickTotal"));
+    }catch(err){
+        console.error("❌ loadMeetingAverages error:",err);
+    }
+};
 
 window.loadMSPublishers=async function(){
     try{
@@ -1484,10 +1659,9 @@ window.loadRP=async function(){
     try{
         const period=await window.getYearlyReportingPeriod();
 
-        const serviceYearEl=document.getElementById("analysis-service-year");
-        if(serviceYearEl){
-            serviceYearEl.textContent=`${period.serviceYear} Service Year`;
-        }
+       const serviceYearEl=document.getElementById("analysis-service-year");
+        const sy=Number(period?.serviceYear);
+        if(serviceYearEl)serviceYearEl.textContent=Number.isFinite(sy)?`${sy} Service Year`:"";
 
         const db=await openIndexedDB();
 
@@ -2023,7 +2197,7 @@ window.loadNewPublishers=async function(){
                 
                 const number=Number(r.NUMBER);
 
-                return remark==="NEW UBP" &&
+                return ["NEW","NEW UBP","NEW UPB"].includes(remark) &&
                        number>=firstNumber &&
                        number<=lastNumber;
             })
