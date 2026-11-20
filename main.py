@@ -1419,6 +1419,7 @@ async def get_s21_data(data_payload: dict):
 
 
 
+@app.get("/api/check-passcode")
 def check_passcode(passcode: str):
     clean_passcode = passcode.strip()
 
