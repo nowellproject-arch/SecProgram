@@ -603,7 +603,7 @@ uvicorn main:app --reload
 taskkill /F /IM python.exe
 
 git add .
-git commit -m "Adjust s21 col on Phone Mode"
+git commit -m "2nd tab background returned"
 git push origin main
 
 
