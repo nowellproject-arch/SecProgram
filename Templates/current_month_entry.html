@@ -364,6 +364,17 @@ body.bg-slate-200\/70,
 }
 
 
+/* add at END of <style> */
+@media (max-width: 767px) {
+  #tblScroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #tblInner { min-width: 360px; width: 100%; }
+  #tblInner .rowgrid {
+    grid-template-columns: minmax(56px,8fr) minmax(40px,8fr) minmax(48px,9fr) minmax(40px,8fr) minmax(48px,10fr) minmax(110px,53fr) !important;
+  }
+  #tblInner .note { min-width: 60px; }
+  #tblInner .chip { min-width: 36px; }
+}
+
 </style>
 </head>
 
@@ -426,17 +437,22 @@ body.bg-slate-200\/70,
           <button id="ny" aria-label="Next service year" class="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 active:scale-95 transition flex items-center justify-center text-sm font-bold">&gt;</button>
         </div>
 
-        <!-- Column Headers -->
-        <div class="rowgrid grid grid-cols-[9% 6% 10% 7% 14% 100%] bg-[#6b5b95]/90 text-white text-[11px] font-bold tracking-wide py-2 px-2 text-center items-center">
-          <div id="thYear" class="text-left pl-1 text-[13px] font-extrabold"></div>
-          <div>Shared</div>
-          <div>BS</div>
-          <div>AUX</div>
-          <div>HRS</div>
-          <div class="text-left pl-2">Comments</div>
-        </div>
 
-        <div id="rows" class="divide-y divide-slate-200/80"></div>
+        <div id="tblScroll">
+          <div id="tblInner">
+            <!-- Column Headers -->
+            <div class="rowgrid grid grid-cols-[9% 6% 10% 7% 14% 100%] bg-[#6b5b95]/90 text-white text-[11px] font-bold tracking-wide py-2 px-2 text-center items-center">
+              <div id="thYear" class="text-left pl-1 text-[13px] font-extrabold"></div>
+              <div>Shared</div>
+              <div>BS</div>
+              <div>AUX</div>
+              <div>HRS</div>
+              <div class="text-left pl-2">Comments</div>
+            </div>
+
+            <div id="rows" class="divide-y divide-slate-200/80"></div>
+          </div>
+        </div>
 
         <div class="bg-[#6b5b95]/[0.06] border-t-2 border-[#6b5b95]/20 px-4 py-3 flex items-center justify-between">
           <span class="text-[11px] font-bold uppercase tracking-wider text-[#6b5b95]">Service Year Total</span>
