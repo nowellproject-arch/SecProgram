@@ -375,6 +375,14 @@ body.bg-slate-200\/70,
   #tblInner .chip { min-width: 36px; }
 }
 
+
+/* S-21 table: thin vertical column lines */
+.rowgrid > * + * { border-left: 1px solid #e2e8f0; align-self: stretch; }
+#tblInner > .rowgrid:first-child > * + * { border-left-color: rgba(255,255,255,.25); }
+#rows .rowgrid > label { align-items: center; }
+#rows .rowgrid > b { display: flex; align-items: center; }
+#rows .rowgrid > .num { height: 100% !important; border-radius: 0; }
+
 </style>
 </head>
 
