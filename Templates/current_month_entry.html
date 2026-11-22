@@ -889,24 +889,24 @@ function repSets() {
 
 function missedSet() {
   const START = ['NEW UPB', 'NEW UBP', 'NEW', 'RETURNED', 'REACTIVATED', 'REINSTATED'];
-  const rep = new Map(), start = new Map();
+  const rep = new Map(), excused = new Map(), start = new Map();
   recs.forEach(r => {
     const id = String(r.IdPubs), n = Number(r.NUMBER), rm = String(r.REMARKS || '').trim().toUpperCase();
     if (START.includes(rm) || rm.includes('MOVED IN')) start.set(id, Math.min(start.get(id) ?? Infinity, n));
-    const h = Number(r.HRS) || 0, b = Number(r.BS) || 0;
-    if (!(T(r.MINISTRY) || h > 0 || b > 0)) return;
-    if (!rep.has(id)) rep.set(id, new Set());
-    rep.get(id).add(n);
+    if (!rep.has(id)) { rep.set(id, new Set()); excused.set(id, new Set()); }
+    if (T(r.MINISTRY)) rep.get(id).add(n);
+    else if (String(r.Note || '').trim()) excused.get(id).add(n);
   });
   const s = new Set();
   pubs.forEach(p => {
     if (T(p.New) || T(p.NEW) || T(p.SF)) return;
-    const id = String(p.IDPub), r = rep.get(id) || new Set();
-    if (!r.has(active)) { s.add(id); return; }
+    const id = String(p.IDPub), r = rep.get(id) || new Set(), x = excused.get(id) || new Set();
+    const missed = n => !r.has(n) && !x.has(n);
+    if (missed(active)) { s.add(id); return; }
     const from = start.get(id) ?? -Infinity;
     for (let k = 1; k <= 6; k++) {
       const n = active - k;
-      if (n >= from && !r.has(n)) { s.add(id); return; }
+      if (n >= from && missed(n)) { s.add(id); return; }
     }
   });
   return s;
