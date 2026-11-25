@@ -399,7 +399,7 @@ END OF PROJECT INFORMATION
     .data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 11px;
+      font-size: 16px;
       text-align: left;
     }
 
@@ -407,7 +407,7 @@ END OF PROJECT INFORMATION
       position: sticky;
       top: 0;
       background: #f1f5f9;
-      padding: 3px 6px;
+      padding: 6px 10px; 
       font-weight: bold;
       color: var(--text-muted);
       border-bottom: 1px solid var(--border-color);
@@ -415,7 +415,7 @@ END OF PROJECT INFORMATION
     }
 
     .data-table td {
-      padding: 3px 6px;
+      padding: 6px 10px; 
       border-bottom: 1px solid #f1f5f9;
     }
 
@@ -423,16 +423,16 @@ END OF PROJECT INFORMATION
 
     /* bigger fonts to match the other tabs */
     .card-title { font-size: 15px; }
-    #analysis-service-year { font-size: 14px !important; }
-    .stats-row { font-size: 14px; min-height: 32px; }
-    .dash-link, .badge-sy-link { font-size: 14px; padding: 4px 6px; }
-    .dash-link .badge, .badge-sy-link .badge-year, .badge-year { font-size: 14px; }
-    .dash-link-plain { font-size: 14px; }
+    #analysis-service-year { font-size: 16px !important; }
+    .stats-row { font-size: 16px; min-height: 32px; }
+    .dash-link, .badge-sy-link { font-size: 16px; padding: 4px 6px; }
+    .dash-link .badge, .badge-sy-link .badge-year, .badge-year { font-size: 16px; }
+    .dash-link-plain { font-size: 16px; }
     .header-span { font-size: 12px; }
     .ai-label { font-size: 12px; }
-    .ai-input { font-size: 14px; padding: 6px 8px; }
-    .ai-btn { font-size: 14px; padding: 6px 14px; }
-    .data-table { font-size: 14px; }
+    .ai-input { font-size: 16px; padding: 6px 8px; }
+    .ai-btn { font-size: 16px; padding: 6px 14px; }
+    .data-table { font-size: 16px; }
     .data-table th, .data-table td { padding: 5px 8px; }
     #records-period-label, #records-service-year-label,
     .card div[style*="font-size: 13px"] { font-size: 15px !important; }
@@ -1974,19 +1974,18 @@ window.loadS88Attendance=async function(){
         const getRecord=number=>
             records.find(r=>Number(r.NUMBER)===Number(number));
 
-        const compactCell='padding:0 4px;height:22px;font-size:11px;line-height:20px;';
+        const compactCell='padding:0 6px;height:30px;font-size:16px;line-height:28px;';
 
-        const makeInput=(number,field,value)=>`
-            <input
-                type="number"
-                min="0"
-                value="${value??""}"
-                data-s88-number="${number}"
-                data-s88-field="${field}"
-                style="width:80%;height:19px;padding:0 2px;box-sizing:border-box;text-align:center;font-size:10px;"
-            >
-        `;
-
+            const makeInput=(number,field,value)=>`
+                <input
+                    type="number"
+                    min="0"
+                    value="${value??""}"
+                    data-s88-number="${number}"
+                    data-s88-field="${field}"
+                    style="width:80%;height:26px;padding:0 2px;box-sizing:border-box;text-align:center;font-size:16px;"
+                >
+            `;
         const makeAverage=(number,prefix)=>{
             const record=getRecord(number);
 
@@ -2005,15 +2004,15 @@ window.loadS88Attendance=async function(){
 
         let html=`
             <tr>
-                <td colspan="4" style="text-align:center;font-weight:bold;background:#f3f3f3;padding:2px;font-size:10px;">
+                <td colspan="4" style="text-align:center;font-weight:bold;background:#f3f3f3;padding:4px;font-size:14px;">
                     MIDWEEK MEETING
                 </td>
             </tr>
-            <tr style="font-size:9px;font-weight:bold;text-align:center;height:20px;">
-                <td style="width:25%;padding:1px;">MONTH</td>
-                <td style="width:25%;padding:1px;">NO. OF MEETINGS</td>
-                <td style="width:25%;padding:1px;">TOTAL ATTENDANCE</td>
-                <td style="width:25%;padding:1px;">AVERAGE</td>
+            <tr style="font-size:14px;font-weight:bold;text-align:center;height:30px;">
+                <td style="width:25%;padding:2px;">MONTH</td>
+                <td style="width:25%;padding:2px;">NO. OF MEETINGS</td>
+                <td style="width:25%;padding:2px;">TOTAL ATTENDANCE</td>
+                <td style="width:25%;padding:2px;">AVERAGE</td>
             </tr>
         `;
 
@@ -2045,15 +2044,15 @@ window.loadS88Attendance=async function(){
                 <td colspan="4" style="height:3px;background:#ddd;padding:0;"></td>
             </tr>
             <tr>
-                <td colspan="4" style="text-align:center;font-weight:bold;background:#f3f3f3;padding:2px;font-size:10px;">
+                 <td colspan="4" style="text-align:center;font-weight:bold;background:#f3f3f3;padding:4px;font-size:14px;">
                     WEEKEND MEETING
                 </td>
             </tr>
-            <tr style="font-size:9px;font-weight:bold;text-align:center;height:20px;">
-                <td style="width:25%;padding:1px;">MONTH</td>
-                <td style="width:25%;padding:1px;">NO. OF MEETINGS</td>
-                <td style="width:25%;padding:1px;">TOTAL ATTENDANCE</td>
-                <td style="width:25%;padding:1px;">AVERAGE</td>
+           <tr style="font-size:14px;font-weight:bold;text-align:center;height:30px;">
+                <td style="width:25%;padding:2px;">MONTH</td>
+                <td style="width:25%;padding:2px;">NO. OF MEETINGS</td>
+                <td style="width:25%;padding:2px;">TOTAL ATTENDANCE</td>
+                <td style="width:25%;padding:2px;">AVERAGE</td>
             </tr>
         `;
 
